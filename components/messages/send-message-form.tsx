@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
 import { useTemplates } from "@/lib/api/templates";
@@ -14,6 +15,7 @@ import {
   type SendMessageDraft,
 } from "@/lib/validation/send-message";
 import type { ManualRecipient, MessageChannel } from "@/lib/api/types";
+import { PhoneField } from "@/components/forms/phone-field";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Badge } from "@/components/ui/badge";
@@ -42,16 +44,21 @@ import { Textarea } from "@/components/ui/textarea";
 const NO_TEMPLATE = "__none__";
 
 export function SendMessageForm({
-  eventId,
+  eventId: fixedEventId,
   initialRegistrationId,
 }: {
-  eventId: string;
+  eventId?: string;
   initialRegistrationId?: string;
 }) {
+  const { data: eventsResponse } = useEvents();
+  const events = eventsResponse?.data;
+  const [localEventId, setLocalEventId] = useState("");
+  const effectiveEventId = fixedEventId ?? localEventId;
+
   const { data: registrations, isLoading: loadingRegs } =
-    useRegistrations(eventId);
-  const { data: templates } = useTemplates(eventId);
-  const sendMessage = useSendMessage(eventId);
+    useRegistrations(effectiveEventId);
+  const { data: templates } = useTemplates(effectiveEventId);
+  const sendMessage = useSendMessage(effectiveEventId || undefined);
 
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -96,8 +103,9 @@ export function SendMessageForm({
     registrationIds: Array.from(selected),
     manualRecipients,
   };
+  const hasEventId = Boolean(effectiveEventId);
   const count = recipientCount(draft);
-  const validationError = validateSendMessage(draft);
+  const validationError = validateSendMessage(draft, { hasEventId });
 
   const allSelected =
     (registrations?.length ?? 0) > 0 &&
@@ -140,7 +148,7 @@ export function SendMessageForm({
       toast.error(validationError);
       return;
     }
-    sendMessage.mutate(toSendMessageInput(draft), {
+    sendMessage.mutate(toSendMessageInput(draft, { hasEventId }), {
       onSuccess: (result) => {
         toast.success(
           `${result.queued} mensagem(ns) enfileirada(s)` +
@@ -157,7 +165,7 @@ export function SendMessageForm({
     });
   }
 
-  if (loadingRegs) return <LoadingSpinner />;
+  if (loadingRegs && effectiveEventId) return <LoadingSpinner />;
 
   return (
     <div className="space-y-4">
@@ -166,6 +174,24 @@ export function SendMessageForm({
           <CardTitle className="text-base">Mensagem</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
+          {!fixedEventId && (
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Evento</Label>
+              <Select value={localEventId} onValueChange={setLocalEventId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o evento (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {events?.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Canal de envio</Label>
             <Select
@@ -316,13 +342,11 @@ export function SendMessageForm({
                   setManualDraft((d) => ({ ...d, email: e.target.value }))
                 }
               />
-              <Input
-                placeholder="+55 11 99999-9999"
-                type="tel"
+              <PhoneField
                 className="min-w-40 flex-1"
-                value={manualDraft.phone}
-                onChange={(e) =>
-                  setManualDraft((d) => ({ ...d, phone: e.target.value }))
+                value={manualDraft.phone ?? ""}
+                onChange={(phone) =>
+                  setManualDraft((d) => ({ ...d, phone }))
                 }
               />
               <Button

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -7,6 +9,7 @@ import {
   CalendarDays,
   Copy,
   ExternalLink,
+  ImageIcon,
   Link2,
   MapPin,
   MoreVertical,
@@ -73,9 +76,95 @@ function EventCard({ event }: { event: EventObject }) {
   }
 
   return (
-    <Card className="transition-shadow hover:shadow-md">
-      <CardContent className="flex items-start gap-4 p-4">
-        <Link href={`/events/${event.id}/edit`} className="min-w-0 flex-1">
+    <Card className="overflow-hidden transition-shadow hover:shadow-md">
+      {/* Capa 16:9 */}
+      <div className="relative aspect-video bg-muted">
+        {event.coverUrl ? (
+          <Image
+            src={event.coverUrl}
+            alt={event.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+          </div>
+        )}
+        {/* Menu flutuante sobre a imagem */}
+        <div className="absolute right-2 top-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+                aria-label="Ações do evento"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {event.status === "published" && (
+                <DropdownMenuItem asChild>
+                  <a href={publicUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Ver página pública
+                  </a>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={copyLink}>
+                <Link2 className="mr-2 h-4 w-4" />
+                Copiar link
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDuplicate} disabled={duplicate.isPending}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir
+                  </DropdownMenuItem>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir evento?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso apaga o evento, formulário, inscrições, templates,
+                      automações e landing. Ação irreversível.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() =>
+                        deleteEvent.mutate(event.id, {
+                          onSuccess: () => toast.success("Evento excluído"),
+                          onError: (e) => toast.error(e.message),
+                        })
+                      }
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      {/* Info do evento */}
+      <CardContent className="p-4">
+        <Link href={`/events/${event.id}/edit`} className="block">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate font-semibold">{event.title}</h3>
             <EventStatusBadge status={event.status} />
@@ -101,74 +190,17 @@ function EventCard({ event }: { event: EventObject }) {
             )}
           </div>
         </Link>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Ações do evento">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {event.status === "published" && (
-              <DropdownMenuItem asChild>
-                <a href={publicUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Ver página pública
-                </a>
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={copyLink}>
-              <Link2 className="mr-2 h-4 w-4" />
-              Copiar link
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDuplicate} disabled={duplicate.isPending}>
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  onSelect={(e) => e.preventDefault()}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Excluir
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Excluir evento?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Isso apaga o evento, formulário, inscrições, templates,
-                    automações e landing. Ação irreversível.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={() =>
-                      deleteEvent.mutate(event.id, {
-                        onSuccess: () => toast.success("Evento excluído"),
-                        onError: (e) => toast.error(e.message),
-                      })
-                    }
-                  >
-                    Excluir
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </CardContent>
     </Card>
   );
 }
 
 export default function EventsPage() {
-  const { data: events, isLoading, isError, refetch, isRefetching } = useEvents();
+  const [page, setPage] = useState(1);
+  const limit = 20;
+  const { data: response, isLoading, isError, refetch, isRefetching } = useEvents(page, limit);
+  const events = response?.data;
+  const totalPages = response ? Math.ceil(response.total / limit) : 0;
 
   return (
     <div className="space-y-6">
@@ -202,7 +234,7 @@ export default function EventsPage() {
         </div>
       )}
 
-      {events && events.length === 0 && (
+      {response && events?.length === 0 && (
         <div className="rounded-xl border border-dashed p-12 text-center">
           <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
           <h2 className="mt-4 font-semibold">Nenhum evento ainda</h2>
@@ -218,9 +250,33 @@ export default function EventsPage() {
         </div>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {events?.map((event) => <EventCard key={event.id} event={event} />)}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
