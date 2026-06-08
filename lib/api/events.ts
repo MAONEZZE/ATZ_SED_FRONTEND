@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { EventObject, EventStatus } from "@/lib/api/types";
+import type { EventObject, EventStatus, PaginatedResponse } from "@/lib/api/types";
 
 export interface EventInput {
   title: string;
@@ -26,10 +26,11 @@ export interface EventUpdateInput extends Partial<EventInput> {
   evolutionToken?: string;
 }
 
-export function useEvents() {
+export function useEvents(page = 1, limit = 20) {
   return useQuery({
-    queryKey: queryKeys.events,
-    queryFn: () => api.get<EventObject[]>("/events"),
+    queryKey: queryKeys.events({ page, limit }),
+    queryFn: () =>
+      api.get<PaginatedResponse<EventObject>>(`/events?page=${page}&limit=${limit}`),
   });
 }
 
@@ -44,7 +45,7 @@ export function useEvent(id: string) {
 function useInvalidateEvents() {
   const queryClient = useQueryClient();
   return (id?: string) => {
-    void queryClient.invalidateQueries({ queryKey: queryKeys.events });
+    void queryClient.invalidateQueries({ queryKey: ["events"] });
     if (id) void queryClient.invalidateQueries({ queryKey: queryKeys.event(id) });
   };
 }
