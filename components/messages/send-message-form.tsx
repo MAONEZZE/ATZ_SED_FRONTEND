@@ -55,8 +55,9 @@ export function SendMessageForm({
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
 
-  const { data: registrations, isLoading: loadingRegs } =
-    useRegistrations(effectiveEventId);
+  const { data: registrationsResponse, isLoading: loadingRegs } =
+    useRegistrations(effectiveEventId ?? "", { limit: 100 });
+  const registrations = registrationsResponse?.data ?? [];
   const { data: templates } = useTemplates(effectiveEventId);
   const sendMessage = useSendMessage(effectiveEventId || undefined);
 
@@ -75,7 +76,7 @@ export function SendMessageForm({
   // pré-seleção vinda do atalho da tabela de inscritos (?to=)
   const appliedInitial = useRef(false);
   useEffect(() => {
-    if (appliedInitial.current || !initialRegistrationId || !registrations)
+    if (appliedInitial.current || !initialRegistrationId || registrations.length === 0)
       return;
     if (registrations.some((r) => r.id === initialRegistrationId)) {
       setSelected(new Set([initialRegistrationId]));
@@ -108,14 +109,14 @@ export function SendMessageForm({
   const validationError = validateSendMessage(draft, { hasEventId });
 
   const allSelected =
-    (registrations?.length ?? 0) > 0 &&
-    selected.size === registrations?.length;
+    registrations.length > 0 &&
+    selected.size === registrations.length;
 
   function toggleAll() {
     if (allSelected) {
       setSelected(new Set());
     } else {
-      setSelected(new Set((registrations ?? []).map((r) => r.id)));
+      setSelected(new Set(registrations.map((r) => r.id)));
     }
   }
 
@@ -272,11 +273,11 @@ export function SendMessageForm({
           <Badge variant="secondary">{count} selecionado(s)</Badge>
         </CardHeader>
         <CardContent className="space-y-4">
-          {(registrations?.length ?? 0) > 0 ? (
+          {registrations.length > 0 ? (
             <>
               <label className="flex items-center gap-2 text-sm font-medium">
                 <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
-                Usar inscritos do evento ({registrations!.length})
+                Usar inscritos do evento ({registrations.length})
               </label>
 
               <div className="max-h-72 overflow-y-auto rounded-lg border">
@@ -290,7 +291,7 @@ export function SendMessageForm({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {registrations!.map((r) => (
+                    {registrations.map((r) => (
                       <TableRow
                         key={r.id}
                         className="cursor-pointer"

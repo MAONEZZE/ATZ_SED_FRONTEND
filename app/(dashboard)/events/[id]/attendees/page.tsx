@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Download, Eye, Loader2, Search, Send, Users } from "lucide-react";
 import { exportRegistrationsCsv, useRegistrations } from "@/lib/api/registrations";
@@ -11,6 +11,7 @@ import type { FunnelStatus, Registration } from "@/lib/api/types";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { StatusSelect } from "@/components/attendees/status-select";
 import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
+import { SendMessageDialog } from "@/components/messages/send-message-dialog";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -35,14 +36,16 @@ const ALL = "all";
 
 export default function AttendeesPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const eventId = params.id;
 
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 30;
   const [selected, setSelected] = useState<Registration | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [sendTo, setSendTo] = useState<string | null>(null);
 
   async function handleExport() {
     setExporting(true);
@@ -60,26 +63,21 @@ export default function AttendeesPage() {
   }
 
   function openSendMessage(registrationId: string) {
-    router.push(`/events/${eventId}/messages?to=${registrationId}`);
+    setSendTo(registrationId);
   }
 
-  const { data: registrations, isLoading } = useRegistrations(
-    eventId,
-    statusFilter === ALL ? undefined : (statusFilter as FunnelStatus),
-  );
+  const { data: response, isLoading } = useRegistrations(eventId, {
+    status: statusFilter === ALL ? undefined : (statusFilter as FunnelStatus),
+    search: search.trim() || undefined,
+    page,
+    limit,
+  });
+  const registrations = response?.data ?? [];
+  const totalPages = response ? Math.ceil(response.total / limit) : 0;
 
-  // busca em tempo real, client-side (sem submit)
-  const filtered = useMemo(() => {
-    if (!registrations) return [];
-    const term = search.trim().toLowerCase();
-    if (!term) return registrations;
-    return registrations.filter(
-      (r) =>
-        r.name.toLowerCase().includes(term) ||
-        r.email.toLowerCase().includes(term) ||
-        r.phone.toLowerCase().includes(term),
-    );
-  }, [registrations, search]);
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, search]);
 
   function openDetails(registration: Registration) {
     setSelected(registration);
@@ -127,7 +125,7 @@ export default function AttendeesPage() {
 
       {isLoading && <LoadingSpinner />}
 
-      {!isLoading && filtered.length === 0 && (
+      {!isLoading && registrations.length === 0 && (
         <div className="rounded-xl border border-dashed p-12 text-center">
           <Users className="mx-auto h-12 w-12 text-muted-foreground" />
           <p className="mt-4 font-semibold">Nenhum inscrito encontrado</p>
@@ -140,7 +138,7 @@ export default function AttendeesPage() {
       )}
 
       {/* Tabela em desktop */}
-      {filtered.length > 0 && (
+      {registrations.length > 0 && (
         <div className="hidden rounded-xl border md:block">
           <Table>
             <TableHeader>
@@ -154,7 +152,7 @@ export default function AttendeesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((registration) => (
+              {registrations.map((registration) => (
                 <TableRow key={registration.id}>
                   <TableCell className="font-medium">{registration.name}</TableCell>
                   <TableCell>{registration.email}</TableCell>
@@ -193,9 +191,9 @@ export default function AttendeesPage() {
       )}
 
       {/* Cards em mobile */}
-      {filtered.length > 0 && (
+      {registrations.length > 0 && (
         <div className="space-y-3 md:hidden">
-          {filtered.map((registration) => (
+          {registrations.map((registration) => (
             <Card key={registration.id}>
               <CardContent className="space-y-3 p-4">
                 <button
@@ -221,10 +219,41 @@ export default function AttendeesPage() {
         </div>
       )}
 
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+
       <AttendeeDetailSheet
         registration={selected}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
+      />
+
+      <SendMessageDialog
+        open={sendTo !== null}
+        onOpenChange={(o) => !o && setSendTo(null)}
+        eventId={eventId}
+        initialRegistrationId={sendTo ?? undefined}
       />
     </div>
   );
