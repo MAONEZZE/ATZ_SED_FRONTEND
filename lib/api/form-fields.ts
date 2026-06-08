@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { FieldType, FormField } from "@/lib/api/types";
+import type { FieldType, FormField, PaginatedResponse } from "@/lib/api/types";
 
 export interface FormFieldInput {
   label: string;
@@ -19,7 +19,12 @@ export type FormFieldUpdateInput = Omit<Partial<FormFieldInput>, "type">;
 export function useFormFields(eventId: string) {
   return useQuery({
     queryKey: queryKeys.formFields(eventId),
-    queryFn: () => api.get<FormField[]>(`/events/${eventId}/form-fields`),
+    queryFn: async () => {
+      const res = await api.get<PaginatedResponse<FormField>>(
+        `/events/${eventId}/form-fields?limit=100`,
+      );
+      return res.data;
+    },
     enabled: Boolean(eventId),
   });
 }

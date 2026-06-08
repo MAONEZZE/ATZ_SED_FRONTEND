@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { Automation, AutomationTrigger } from "@/lib/api/types";
+import type { Automation, AutomationTrigger, PaginatedResponse } from "@/lib/api/types";
 
 export interface AutomationInput {
   templateId: string;
@@ -34,7 +34,12 @@ export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
 export function useAutomations(eventId: string) {
   return useQuery({
     queryKey: queryKeys.automations(eventId),
-    queryFn: () => api.get<Automation[]>(`/events/${eventId}/automations`),
+    queryFn: async () => {
+      const res = await api.get<PaginatedResponse<Automation>>(
+        `/events/${eventId}/automations?limit=100`,
+      );
+      return res.data;
+    },
     enabled: Boolean(eventId),
   });
 }

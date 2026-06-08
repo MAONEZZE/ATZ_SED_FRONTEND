@@ -7,6 +7,7 @@ import type {
   MessageChannel,
   MessageTemplate,
   MessageTemplateWithAutomation,
+  PaginatedResponse,
 } from "@/lib/api/types";
 
 export interface TemplateInput {
@@ -32,7 +33,12 @@ export const TEMPLATE_VARIABLES = [
 export function useTemplates(eventId: string) {
   return useQuery({
     queryKey: queryKeys.templates(eventId),
-    queryFn: () => api.get<MessageTemplate[]>(`/events/${eventId}/templates`),
+    queryFn: async () => {
+      const res = await api.get<PaginatedResponse<MessageTemplate>>(
+        `/events/${eventId}/templates?limit=100`,
+      );
+      return res.data;
+    },
     enabled: Boolean(eventId),
   });
 }
@@ -41,10 +47,12 @@ export function useTemplates(eventId: string) {
 export function useTemplatesWithAutomation(eventId: string) {
   return useQuery({
     queryKey: [...queryKeys.templates(eventId), { include: "automation" }],
-    queryFn: () =>
-      api.get<MessageTemplateWithAutomation[]>(
-        `/events/${eventId}/templates?include=automation`,
-      ),
+    queryFn: async () => {
+      const res = await api.get<PaginatedResponse<MessageTemplateWithAutomation>>(
+        `/events/${eventId}/templates?include=automation&limit=100`,
+      );
+      return res.data;
+    },
     enabled: Boolean(eventId),
   });
 }
