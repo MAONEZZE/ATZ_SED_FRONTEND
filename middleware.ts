@@ -1,0 +1,36 @@
+import { NextResponse, type NextRequest } from "next/server";
+import { createMiddlewareSupabase } from "@/lib/auth/supabase-server";
+
+const ADMIN_PREFIX = "/admin";
+
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next({ request });
+  const supabase = createMiddlewareSupabase(request, response);
+
+  // getUser() valida o token no servidor do Supabase (mais seguro que getSession no edge)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  if (!user) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (pathname.startsWith(ADMIN_PREFIX)) {
+    const role = (user.user_metadata as Record<string, unknown>)?.role;
+    if (role !== "admin") {
+      return NextResponse.redirect(new URL("/events", request.url));
+    }
+  }
+
+  return response;
+}
+
+export const config = {
+  // Apenas rotas do grupo (dashboard) — públicas ficam fora
+  matcher: ["/events/:path*", "/admin/:path*", "/settings/:path*"],
+};

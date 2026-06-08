@@ -1,0 +1,24 @@
+{
+  "extends": ["next/core-web-vitals", "next/typescript"],
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@supabase/*"],
+            "message": "Supabase só pode ser importado dentro de lib/auth/ (princípio do wrapper authClient)."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["lib/auth/**/*.ts", "lib/auth/**/*.tsx", "middleware.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ]
+}
