@@ -8,26 +8,32 @@ import { queryKeys } from "@/lib/api/query-keys";
 import { authClient } from "@/lib/auth/auth-client";
 import type {
   MessageLog,
+  PaginatedResponse,
   SendMessageInput,
   SendMessageResult,
 } from "@/lib/api/types";
 
 /** Envio manual (POST /messaging/send) — 202 com resumo queued/skipped */
-export function useSendMessage(eventId: string) {
+export function useSendMessage(eventId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: SendMessageInput) =>
-      api.post<SendMessageResult>(`/events/${eventId}/messaging/send`, input),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.messageLogs(eventId) }),
+      api.post<SendMessageResult>(`/messaging/send`, { eventId, ...input }),
+    onSuccess: () => {
+      if (eventId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.messageLogs(eventId) });
+      }
+    },
   });
 }
 
-export function useMessageLogs(eventId: string, limit = 100) {
+export function useMessageLogs(eventId: string, page = 1, limit = 30) {
   return useQuery({
-    queryKey: queryKeys.messageLogs(eventId),
+    queryKey: queryKeys.messageLogs(eventId, { page, limit }),
     queryFn: () =>
-      api.get<MessageLog[]>(`/events/${eventId}/messaging/logs?limit=${limit}`),
+      api.get<PaginatedResponse<MessageLog>>(
+        `/events/${eventId}/messaging/logs?page=${page}&limit=${limit}`,
+      ),
     enabled: Boolean(eventId),
   });
 }

@@ -13,7 +13,10 @@ export const queryKeys = {
   templates: (eventId: string) => ["events", eventId, "templates"] as const,
   automations: (eventId: string) => ["events", eventId, "automations"] as const,
   landing: (eventId: string) => ["events", eventId, "landing"] as const,
-  messageLogs: (eventId: string) => ["events", eventId, "message-logs"] as const,
+  messageLogs: (eventId: string, params?: { page?: number; limit?: number }) =>
+    params
+      ? (["events", eventId, "message-logs", params] as const)
+      : (["events", eventId, "message-logs"] as const),
   profile: ["profile"] as const,
   // Visão global (todos os eventos do usuário)
   allTemplates: ["global", "templates"] as const,
