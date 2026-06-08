@@ -105,6 +105,16 @@ export interface MessageTemplate {
   updatedAt: string;
 }
 
+/** Referência mínima ao evento, anexada nos endpoints globais de mensageria */
+export interface EventRef {
+  id: string;
+  title: string;
+}
+
+export type TemplateWithEvent = MessageTemplate & { event: EventRef };
+export type AutomationWithEvent = Automation & { event: EventRef };
+export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
+
 /** Resumo de automação anexado via GET /templates?include=automation */
 export interface TemplateAutomationSummary {
   id: string;
@@ -215,11 +225,12 @@ export interface ManualRecipient {
 }
 
 export interface SendMessageInput {
+  eventId?: string;
   channel: MessageChannel;
   templateId?: string;
   subject?: string;
   body?: string;
-  registrationIds: string[];
+  registrationIds?: string[];
   manualRecipients: ManualRecipient[];
 }
 
@@ -243,4 +254,12 @@ export interface ApiErrorBody {
   message: string | string[];
   requestId?: string;
   timestamp?: string;
+}
+
+/** Envelope paginado retornado por todos os endpoints de listagem */
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
 }
