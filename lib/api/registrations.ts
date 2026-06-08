@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, apiFetchBlob } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { FunnelStatus, Registration } from "@/lib/api/types";
+import type { FunnelStatus, PaginatedResponse, Registration } from "@/lib/api/types";
 
 /** Baixa o CSV de inscrições (mesmos filtros da listagem) */
 export function exportRegistrationsCsv(
@@ -19,12 +19,22 @@ export function exportRegistrationsCsv(
   );
 }
 
-export function useRegistrations(eventId: string, status?: FunnelStatus) {
+export function useRegistrations(
+  eventId: string,
+  params: { status?: FunnelStatus; search?: string; page?: number; limit?: number } = {},
+) {
+  const { status, search, page = 1, limit = 30 } = params;
+  const qs = new URLSearchParams();
+  if (status) qs.set("status", status);
+  if (search) qs.set("search", search);
+  qs.set("page", String(page));
+  qs.set("limit", String(limit));
+
   return useQuery({
-    queryKey: queryKeys.registrations(eventId, status),
+    queryKey: queryKeys.registrations(eventId, params),
     queryFn: () =>
-      api.get<Registration[]>(
-        `/events/${eventId}/registrations${status ? `?status=${status}` : ""}`,
+      api.get<PaginatedResponse<Registration>>(
+        `/events/${eventId}/registrations?${qs.toString()}`,
       ),
     enabled: Boolean(eventId),
   });
