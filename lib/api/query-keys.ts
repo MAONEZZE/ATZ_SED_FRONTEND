@@ -19,7 +19,10 @@ export const queryKeys = {
       : (["events", eventId, "message-logs"] as const),
   profile: ["profile"] as const,
   // Visão global (todos os eventos do usuário)
-  allTemplates: ["global", "templates"] as const,
-  allAutomations: ["global", "automations"] as const,
-  allMessageLogs: ["global", "message-logs"] as const,
+  allTemplates: (params?: { page?: number; limit?: number }) =>
+    params ? (["global", "templates", params] as const) : (["global", "templates"] as const),
+  allAutomations: (params?: { page?: number; limit?: number }) =>
+    params ? (["global", "automations", params] as const) : (["global", "automations"] as const),
+  allMessageLogs: (params?: { page?: number; limit?: number }) =>
+    params ? (["global", "message-logs", params] as const) : (["global", "message-logs"] as const),
 };
