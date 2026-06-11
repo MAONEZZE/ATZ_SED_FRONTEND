@@ -10,8 +10,6 @@ export const VARIABLE_DESCRIPTIONS: { variable: string; description: string }[] 
   { variable: "capacidade", description: "Capacidade total de vagas do evento" },
   { variable: "dress_code", description: "Dress code do evento" },
   { variable: "link_grupo", description: "Link do grupo de comunicação (WhatsApp/Telegram)" },
-  { variable: "invite", description: "Convite de agenda (.ics) — só funciona em e-mails, gera arquivo para salvar no Google Agenda / iCal" },
-  { variable: "invite_recorrente", description: "Convite recorrente (.ics) — gera arquivo de agenda com regra de recorrência para eventos periódicos" },
 ];
 
 export function TemplateVariablesInfo() {

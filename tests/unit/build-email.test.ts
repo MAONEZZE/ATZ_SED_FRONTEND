@@ -96,6 +96,45 @@ describe("buildEmail — sombra", () => {
   });
 });
 
+describe("buildEmail — header sólido vs gradiente", () => {
+  it("usa cor sólida quando headerGradient = false", () => {
+    const html = build({ headerGradient: false, headerColor1: "#0d0d0d" });
+    expect(html).toContain("background-color:#0d0d0d");
+    expect(html).not.toContain("linear-gradient(135deg, #0d0d0d");
+  });
+
+  it("desenha borda inferior do header quando headerBorderWidth > 0", () => {
+    const html = build({ headerBorderWidth: 2, headerBorderColor: "#111111" });
+    expect(html).toContain("border-bottom:2px solid #111111");
+  });
+});
+
+describe("buildEmail — lado da borda do card", () => {
+  it("top → border-top", () => {
+    const html = build({ cardBorderSide: "top", cardBorderWidth: 2, cardBorderColor: "#c9a84c" });
+    expect(html).toContain("border-top:2px solid #c9a84c");
+  });
+
+  it("all → border completa", () => {
+    const html = build({ cardBorderSide: "all", cardBorderWidth: 1, cardBorderColor: "#e8e8e8" });
+    expect(html).toContain("border:1px solid #e8e8e8");
+  });
+});
+
+describe("buildEmail — subtítulo e decoração", () => {
+  it("renderiza subtítulo quando preenchido", () => {
+    expect(build({ subtitle: "Subtítulo XYZ" })).toContain("Subtítulo XYZ");
+  });
+
+  it("omite subtítulo quando vazio", () => {
+    expect(build({ subtitle: "" })).not.toContain("Subtítulo XYZ");
+  });
+
+  it("renderiza decoração (emoji) quando preenchida", () => {
+    expect(build({ headerDecor: "🌟" })).toContain("🌟");
+  });
+});
+
 describe("buildEmail — escape de HTML", () => {
   it("escapa textos simples (rótulos, valores)", () => {
     const html = build({ infoValue1: 'A & B <x> "y"' });

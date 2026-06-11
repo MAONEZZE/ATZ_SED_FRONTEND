@@ -50,6 +50,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const NO_TEMPLATE = "__none__";
 const NO_EVENT = "__none_event__";
@@ -82,7 +87,8 @@ export function SendMessageForm({
   const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
   const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
   const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
-  const [showVars, setShowVars] = useState(false);
+  const [inviteIcs, setInviteIcs] = useState(false);
+  const [inviteRecurrent, setInviteRecurrent] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [manualRecipients, setManualRecipients] = useState<ManualRecipient[]>([]);
   const [manualDraft, setManualDraft] = useState<ManualRecipient>({
@@ -150,6 +156,8 @@ export function SendMessageForm({
     setBody("");
     setActiveStyle(null);
     setLayoutConfig(null);
+    setInviteIcs(false);
+    setInviteRecurrent(false);
   }
 
   const draft: SendMessageDraft = {
@@ -159,8 +167,11 @@ export function SendMessageForm({
     body,
     registrationIds: Array.from(selected),
     manualRecipients,
+    inviteIcs,
+    inviteRecurrent,
   };
   const hasEventId = Boolean(effectiveEventId);
+  const inviteEnabled = channel === "email" && hasEventId;
   const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
   const count = recipientCount(draft);
   const validationError = validateSendMessage(draft);
@@ -220,6 +231,8 @@ export function SendMessageForm({
         setTemplateId(null);
         setActiveStyle(null);
         setLayoutConfig(null);
+        setInviteIcs(false);
+        setInviteRecurrent(false);
       },
       onError: (e) => toast.error(e.message),
     });
@@ -316,22 +329,30 @@ export function SendMessageForm({
                 </div>
               )}
               <div className="space-y-2 sm:col-span-2">
-                <div className={channel === "email" ? "flex gap-3 items-start" : ""}>
+                <div className={channel === "email" ? "flex gap-3 items-stretch" : ""}>
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="send-body">Mensagem *</Label>
                       <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 gap-1.5 text-xs"
-                          aria-pressed={showVars}
-                          onClick={() => setShowVars((v) => !v)}
-                        >
-                          <Info className="h-3.5 w-3.5" />
-                          Variáveis
-                        </Button>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-7 gap-1.5 text-xs"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                              Variáveis
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            align="end"
+                            className="max-h-[60vh] w-80 overflow-y-auto p-0"
+                          >
+                            <TemplateVariablesInfo />
+                          </PopoverContent>
+                        </Popover>
                         {channel === "email" && (
                           <Button
                             type="button"
@@ -391,7 +412,6 @@ export function SendMessageForm({
                       </div>
                     )}
 
-                    {showVars && <TemplateVariablesInfo />}
                   </div>
 
                   {channel === "email" && (
@@ -410,6 +430,48 @@ export function SendMessageForm({
                           {EMAIL_TEMPLATE_LABELS[key]}
                         </Button>
                       ))}
+
+                      {/* toggles de convite (.ics) — alinhados ao fundo do campo Mensagem */}
+                      <div className="mt-auto flex flex-col gap-1.5 pt-4">
+                        <Button
+                          type="button"
+                          variant={inviteIcs ? "default" : "outline"}
+                          size="sm"
+                          className="w-28 text-xs"
+                          aria-pressed={inviteIcs}
+                          disabled={!inviteEnabled}
+                          title={
+                            inviteEnabled
+                              ? undefined
+                              : "Vincule um evento para habilitar"
+                          }
+                          onClick={() => {
+                            setInviteIcs((v) => !v);
+                            setInviteRecurrent(false);
+                          }}
+                        >
+                          Invite
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={inviteRecurrent ? "default" : "outline"}
+                          size="sm"
+                          className="w-28 text-xs"
+                          aria-pressed={inviteRecurrent}
+                          disabled={!inviteEnabled}
+                          title={
+                            inviteEnabled
+                              ? undefined
+                              : "Vincule um evento para habilitar"
+                          }
+                          onClick={() => {
+                            setInviteRecurrent((v) => !v);
+                            setInviteIcs(false);
+                          }}
+                        >
+                          Invite Recorrente
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>

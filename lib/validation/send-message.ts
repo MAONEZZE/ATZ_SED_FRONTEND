@@ -12,6 +12,10 @@ export interface SendMessageDraft {
   body: string;
   registrationIds: string[];
   manualRecipients: ManualRecipient[];
+  /** Anexa convite de agenda (.ics) — só e-mail com evento vinculado. */
+  inviteIcs?: boolean;
+  /** Anexa convite de agenda recorrente (.ics). */
+  inviteRecurrent?: boolean;
 }
 
 export function recipientCount(draft: Pick<SendMessageDraft, "registrationIds" | "manualRecipients">): number {
@@ -45,10 +49,34 @@ export function validateManualRecipient(
   return null;
 }
 
+/**
+ * Insere um token de convite no corpo. Em HTML (body completo), coloca o token
+ * ANTES de </body> — fora disso o token cairia depois de </html> e seria
+ * descartado por clientes/parsers de e-mail, impedindo o backend de detectá-lo.
+ */
+function injectInviteToken(body: string, token: string): string {
+  if (body.includes(token)) return body;
+  const closeIdx = body.toLowerCase().lastIndexOf("</body>");
+  if (closeIdx !== -1) {
+    return `${body.slice(0, closeIdx)}${token}\n${body.slice(closeIdx)}`;
+  }
+  return `${body}\n${token}`;
+}
+
 export function toSendMessageInput(
   draft: SendMessageDraft,
   opts: { hasEventId: boolean },
 ): SendMessageInput {
+  let body = draft.templateId ? undefined : draft.body.trim();
+
+  // Tokens de convite (.ics) só em e-mail — backend resolve a data pelo evento.
+  if (body !== undefined && draft.channel === "email") {
+    if (draft.inviteIcs) body = injectInviteToken(body, "{{invite}}");
+    if (draft.inviteRecurrent) {
+      body = injectInviteToken(body, "{{invite_recorrente}}");
+    }
+  }
+
   return {
     channel: draft.channel,
     templateId: draft.templateId ?? undefined,
@@ -56,7 +84,7 @@ export function toSendMessageInput(
       !draft.templateId && draft.channel === "email" && draft.subject.trim()
         ? draft.subject.trim()
         : undefined,
-    body: draft.templateId ? undefined : draft.body.trim(),
+    body,
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
   };

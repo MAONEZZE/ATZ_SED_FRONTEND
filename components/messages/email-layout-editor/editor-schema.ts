@@ -49,6 +49,20 @@ const ALIGN_OPTIONS = [
   { label: "À direita", value: "right" },
 ];
 
+const CARD_SIDE_OPTIONS = [
+  { label: "Esquerda", value: "left" },
+  { label: "Topo", value: "top" },
+  { label: "Toda", value: "all" },
+  { label: "Nenhuma", value: "none" },
+];
+
+const TITLE_WEIGHT_OPTIONS = [
+  { label: "Leve (300)", value: "300" },
+  { label: "Normal (400)", value: "400" },
+  { label: "Médio (600)", value: "600" },
+  { label: "Forte (700)", value: "700" },
+];
+
 export const EDITOR_SCHEMA: EditorSection[] = [
   {
     id: "content",
@@ -60,6 +74,8 @@ export const EDITOR_SCHEMA: EditorSection[] = [
         fields: [
           { key: "eyebrow", label: "Texto superior / eyebrow", type: "text" },
           { key: "title", label: "Título", type: "textarea" },
+          { key: "subtitle", label: "Subtítulo (opcional)", type: "text" },
+          { key: "headerDecor", label: "Decoração / emoji (opcional)", type: "text" },
         ],
       },
       {
@@ -101,8 +117,9 @@ export const EDITOR_SCHEMA: EditorSection[] = [
     title: "Cores",
     groups: [
       {
-        label: "Header (gradiente)",
+        label: "Header",
         fields: [
+          { key: "headerGradient", label: "Usar gradiente", type: "toggle" },
           { key: "headerColor1", label: "Cor 1", type: "color", half: true },
           { key: "headerColor2", label: "Cor 2", type: "color", half: true },
           { key: "headerColor3", label: "Cor 3", type: "color" },
@@ -114,13 +131,23 @@ export const EDITOR_SCHEMA: EditorSection[] = [
             max: 360,
             unit: "°",
           },
+          {
+            key: "headerBorderWidth",
+            label: "Borda inferior",
+            type: "range",
+            min: 0,
+            max: 6,
+            unit: "px",
+          },
+          { key: "headerBorderColor", label: "Cor da borda inferior", type: "color" },
         ],
       },
       {
         label: "Identidade",
         fields: [
-          { key: "accentColor", label: "Cor de destaque / accent", type: "color" },
-          { key: "titleColor", label: "Título do header", type: "color" },
+          { key: "accentColor", label: "Cor de destaque / accent", type: "color", half: true },
+          { key: "titleColor", label: "Título do header", type: "color", half: true },
+          { key: "subtitleColor", label: "Subtítulo", type: "color" },
         ],
       },
       {
@@ -130,6 +157,8 @@ export const EDITOR_SCHEMA: EditorSection[] = [
           { key: "emailBg", label: "Fundo do email", type: "color", half: true },
           { key: "cardBg", label: "Fundo do card", type: "color", half: true },
           { key: "footerBg", label: "Fundo do footer", type: "color", half: true },
+          { key: "footerGradient", label: "Footer com gradiente", type: "toggle" },
+          { key: "footerColor2", label: "Footer — cor 2 (gradiente)", type: "color" },
         ],
       },
       {
@@ -137,9 +166,11 @@ export const EDITOR_SCHEMA: EditorSection[] = [
         fields: [
           { key: "strongTextColor", label: "Texto forte", type: "color", half: true },
           { key: "normalTextColor", label: "Texto normal", type: "color", half: true },
+          { key: "greetingColor", label: "Saudação", type: "color", half: true },
           { key: "footerTextColor", label: "Texto do footer", type: "color", half: true },
           { key: "footerNoticeColor", label: "Aviso do footer", type: "color", half: true },
-          { key: "cardDividerColor", label: "Linha divisória do card", type: "color" },
+          { key: "cardDividerColor", label: "Linha divisória do card", type: "color", half: true },
+          { key: "cardBorderColor", label: "Borda do card", type: "color" },
         ],
       },
     ],
@@ -165,6 +196,13 @@ export const EDITOR_SCHEMA: EditorSection[] = [
             unit: "px",
           },
           {
+            key: "titleWeight",
+            label: "Peso do título",
+            type: "select",
+            options: TITLE_WEIGHT_OPTIONS,
+          },
+          { key: "titleItalic", label: "Título em itálico", type: "toggle" },
+          {
             key: "bodySize",
             label: "Tamanho do corpo",
             type: "range",
@@ -186,6 +224,23 @@ export const EDITOR_SCHEMA: EditorSection[] = [
             type: "range",
             min: 0,
             max: 8,
+            unit: "px",
+          },
+          {
+            key: "greetingSize",
+            label: "Tamanho da saudação",
+            type: "range",
+            min: 10,
+            max: 22,
+            unit: "px",
+          },
+          { key: "greetingUppercase", label: "Saudação em maiúsculas", type: "toggle" },
+          {
+            key: "greetingSpacing",
+            label: "Espaçamento da saudação",
+            type: "range",
+            min: 0,
+            max: 6,
             unit: "px",
           },
         ],
@@ -245,8 +300,14 @@ export const EDITOR_SCHEMA: EditorSection[] = [
             unit: "px",
           },
           {
+            key: "cardBorderSide",
+            label: "Lado da borda do card",
+            type: "select",
+            options: CARD_SIDE_OPTIONS,
+          },
+          {
             key: "cardBorderWidth",
-            label: "Borda esquerda do card",
+            label: "Espessura da borda do card",
             type: "range",
             min: 0,
             max: 10,

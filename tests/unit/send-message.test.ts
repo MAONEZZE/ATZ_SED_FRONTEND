@@ -104,4 +104,61 @@ describe("toSendMessageInput", () => {
     }, { hasEventId: true });
     expect(input.subject).toBeUndefined();
   });
+
+  it("email com invite anexa token {{invite}} ao body", () => {
+    const input = toSendMessageInput({
+      ...base,
+      channel: "email",
+      body: "Corpo",
+      registrationIds: ["a"],
+      inviteIcs: true,
+    }, { hasEventId: true });
+    expect(input.body).toContain("{{invite}}");
+  });
+
+  it("email com invite recorrente anexa token {{invite_recorrente}}", () => {
+    const input = toSendMessageInput({
+      ...base,
+      channel: "email",
+      body: "Corpo",
+      registrationIds: ["a"],
+      inviteRecurrent: true,
+    }, { hasEventId: true });
+    expect(input.body).toContain("{{invite_recorrente}}");
+  });
+
+  it("não duplica token já presente no body", () => {
+    const input = toSendMessageInput({
+      ...base,
+      channel: "email",
+      body: "Corpo {{invite}}",
+      registrationIds: ["a"],
+      inviteIcs: true,
+    }, { hasEventId: true });
+    expect(input.body?.match(/\{\{invite\}\}/g)?.length).toBe(1);
+  });
+
+  it("em HTML insere o token antes de </body> (não após </html>)", () => {
+    const input = toSendMessageInput({
+      ...base,
+      channel: "email",
+      body: "<!DOCTYPE html><html><body><p>Oi</p></body></html>",
+      registrationIds: ["a"],
+      inviteIcs: true,
+    }, { hasEventId: true });
+    const b = input.body ?? "";
+    expect(b.indexOf("{{invite}}")).toBeGreaterThan(-1);
+    expect(b.indexOf("{{invite}}")).toBeLessThan(b.indexOf("</body>"));
+  });
+
+  it("whatsapp ignora invite (token só em email)", () => {
+    const input = toSendMessageInput({
+      ...base,
+      channel: "whatsapp",
+      body: "Corpo",
+      registrationIds: ["a"],
+      inviteIcs: true,
+    }, { hasEventId: true });
+    expect(input.body).not.toContain("{{invite}}");
+  });
 });

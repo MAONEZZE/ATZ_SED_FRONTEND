@@ -57,8 +57,17 @@ function useInvalidateGlobal() {
 export function useCreateTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    mutationFn: ({ eventId, input }: { eventId: string; input: TemplateInput }) =>
-      api.post(`/events/${eventId}/templates`, input),
+    // eventId null/"" → template global (rota /messaging/templates aceita eventId null)
+    mutationFn: ({
+      eventId,
+      input,
+    }: {
+      eventId: string | null;
+      input: TemplateInput;
+    }) =>
+      eventId
+        ? api.post(`/events/${eventId}/templates`, input)
+        : api.post(`/messaging/templates`, { ...input, eventId: null }),
     onSuccess: invalidate,
   });
 }
@@ -71,10 +80,13 @@ export function useUpdateTemplateGlobal() {
       id,
       input,
     }: {
-      eventId: string;
+      eventId: string | null;
       id: string;
       input: Partial<TemplateInput>;
-    }) => api.patch(`/events/${eventId}/templates/${id}`, input),
+    }) =>
+      eventId
+        ? api.patch(`/events/${eventId}/templates/${id}`, input)
+        : api.patch(`/messaging/templates/${id}`, input),
     onSuccess: invalidate,
   });
 }
@@ -82,8 +94,10 @@ export function useUpdateTemplateGlobal() {
 export function useDeleteTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    mutationFn: ({ eventId, id }: { eventId: string; id: string }) =>
-      api.delete(`/events/${eventId}/templates/${id}`),
+    mutationFn: ({ eventId, id }: { eventId: string | null; id: string }) =>
+      eventId
+        ? api.delete(`/events/${eventId}/templates/${id}`)
+        : api.delete(`/messaging/templates/${id}`),
     onSuccess: invalidate,
   });
 }

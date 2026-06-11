@@ -152,7 +152,7 @@ function TemplatesTab() {
                 <TableCell>
                   <ChannelBadge channel={t.channel} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">{t.event.title}</TableCell>
+                <TableCell className="text-muted-foreground">{t.event?.title ?? "Global"}</TableCell>
                 <TableCell>
                   <RowActions>
                     <Button

@@ -89,7 +89,8 @@ export interface Registration {
 
 export interface MessageTemplate {
   id: string;
-  eventId: string;
+  /** null = template global (não vinculado a um evento). */
+  eventId: string | null;
   name: string;
   channel: MessageChannel;
   subject: string | null;
@@ -104,7 +105,7 @@ export interface EventRef {
   title: string;
 }
 
-export type TemplateWithEvent = MessageTemplate & { event: EventRef };
+export type TemplateWithEvent = MessageTemplate & { event: EventRef | null };
 export type AutomationWithEvent = Automation & { event: EventRef };
 export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
 

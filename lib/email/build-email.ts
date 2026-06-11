@@ -3,8 +3,10 @@
  *
  * Retorna o documento completo (<!DOCTYPE html> … </html>), 100% baseado em
  * <table> com todos os estilos inline (sem classes CSS), compatível com clientes
- * de e-mail e pronto para envio via Resend. Função isolada e sem dependências de
- * React, reutilizável por backend/worker no futuro.
+ * de e-mail e pronto para envio via Resend. Estrutura fiel aos templates de
+ * referência (header, corpo, card de informações com coluna de ícone + divisória,
+ * footer com despedida acima da assinatura/ícones). Função isolada, sem React,
+ * reutilizável por backend/worker no futuro.
  */
 
 import {
@@ -30,56 +32,96 @@ function fontStack(key: string): string {
   return EMAIL_FONT_STACKS[key] ?? EMAIL_FONT_STACKS["Helvetica/Arial"];
 }
 
-/** SVG inline do Instagram (rect arredondado + 2 círculos). */
-function instagramSvg(color: string): string {
-  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" rx="5" stroke="${color}" stroke-width="2"/><circle cx="12" cy="12" r="4" stroke="${color}" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="${color}"/></svg>`;
-}
-
-/** SVG inline do YouTube (corpo + play). */
-function youtubeSvg(color: string): string {
-  return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.97C18.88 4 12 4 12 4s-6.88 0-8.59.45A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.97C5.12 20 12 20 12 20s6.88 0 8.59-.45a2.78 2.78 0 0 0 1.95-1.97A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" stroke="${color}" stroke-width="2" stroke-linejoin="round"/><polygon points="9.75,15.02 15.5,12 9.75,8.98" fill="${color}"/></svg>`;
+/**
+ * Ícone social como <img> PNG (icons8 CDN) — compatível com clientes de e-mail
+ * (Gmail/Outlook removem SVG inline). A cor segue `footerTextColor`.
+ */
+function socialIcon(name: string, color: string, alt: string): string {
+  const hex = color.replace(/^#/, "") || "cccccc";
+  return `<img src="https://img.icons8.com/ios-filled/100/${hex}/${name}.png" width="20" height="20" alt="${escapeHtml(
+    alt,
+  )}" style="display:block;border:0;outline:none;text-decoration:none;" />`;
 }
 
 export function buildEmail(config: EmailLayoutConfig): string {
   const c = config;
   const font = fontStack(c.fontFamily);
   const docTitle = escapeHtml(c.title.split(/\r?\n/)[0] ?? "");
-  const greetingSize = c.bodySize + 1;
 
   const containerShadow = c.containerShadow
-    ? "box-shadow:0 4px 20px rgba(0,0,0,0.10);"
+    ? "box-shadow:0 4px 20px rgba(0,0,0,0.12);"
     : "";
 
-  const cardBorderLeft =
-    c.cardBorderWidth > 0
-      ? `border-left:${c.cardBorderWidth}px solid ${c.accentColor};`
+  // ── Header background ──
+  const headerBg = c.headerGradient
+    ? `background:${c.headerColor1};background:linear-gradient(${c.gradientAngle}deg, ${c.headerColor1} 0%, ${c.headerColor2} 60%, ${c.headerColor3} 100%);`
+    : `background-color:${c.headerColor1};`;
+  const headerBorder =
+    c.headerBorderWidth > 0
+      ? `border-bottom:${c.headerBorderWidth}px solid ${c.headerBorderColor};`
       : "";
+
+  const titleStyle = `margin:0;font-size:${c.titleSize}px;font-weight:${c.titleWeight};${
+    c.titleItalic ? "font-style:italic;" : ""
+  }color:${c.titleColor};line-height:1.3;`;
+
+  const subtitle = c.subtitle.trim()
+    ? `<p style="margin:8px 0 0 0;font-size:13px;font-weight:700;color:${c.subtitleColor};letter-spacing:3px;text-transform:uppercase;">${escapeHtml(
+        c.subtitle,
+      )}</p>`
+    : "";
+  const headerDecor = c.headerDecor.trim()
+    ? `<p style="margin:10px 0 0 0;font-size:22px;line-height:1;">${escapeHtml(
+        c.headerDecor,
+      )}</p>`
+    : "";
+
+  // ── Saudação ──
+  const greetingStyle = `margin:0 0 14px 0;font-size:${c.greetingSize}px;font-weight:600;color:${c.greetingColor};${
+    c.greetingUppercase ? "text-transform:uppercase;" : ""
+  }${c.greetingSpacing > 0 ? `letter-spacing:${c.greetingSpacing}px;` : ""}`;
+
+  // ── Borda destacada do card ──
+  let cardBorder = "";
+  if (c.cardBorderWidth > 0 && c.cardBorderSide !== "none") {
+    if (c.cardBorderSide === "all") {
+      cardBorder = `border:${c.cardBorderWidth}px solid ${c.cardBorderColor};`;
+    } else {
+      cardBorder = `border-${c.cardBorderSide}:${c.cardBorderWidth}px solid ${c.cardBorderColor};`;
+    }
+  }
 
   // ── Ícones sociais (renderizados condicionalmente como <td>) ──
   const socialCells: string[] = [];
   if (c.showInstagram) {
     socialCells.push(
-      `<td style="padding-left:14px;vertical-align:middle;line-height:0;"><a href="${escapeHtml(
+      `<td style="vertical-align:middle;text-align:right;padding-left:14px;width:1%;white-space:nowrap;"><a href="${escapeHtml(
         c.instagramUrl,
-      )}" target="_blank" style="text-decoration:none;">${instagramSvg(
+      )}" target="_blank" style="text-decoration:none;display:inline-block;">${socialIcon(
+        "instagram-new",
         c.footerTextColor,
+        "Instagram",
       )}</a></td>`,
     );
   }
   if (c.showYoutube) {
     socialCells.push(
-      `<td style="padding-left:14px;vertical-align:middle;line-height:0;"><a href="${escapeHtml(
+      `<td style="vertical-align:middle;text-align:right;padding-left:14px;width:1%;white-space:nowrap;"><a href="${escapeHtml(
         c.youtubeUrl,
-      )}" target="_blank" style="text-decoration:none;">${youtubeSvg(
+      )}" target="_blank" style="text-decoration:none;display:inline-block;">${socialIcon(
+        "youtube-play",
         c.footerTextColor,
+        "YouTube",
       )}</a></td>`,
     );
   }
-  const socialTable = socialCells.length
-    ? `<table cellpadding="0" cellspacing="0" border="0" align="right"><tr>${socialCells.join(
-        "",
-      )}</tr></table>`
-    : "";
+
+  const footerBg = c.footerGradient
+    ? `background:${c.footerBg};background:linear-gradient(135deg, ${c.footerBg} 0%, ${c.footerColor2} 100%);`
+    : `background-color:${c.footerBg};`;
+
+  const labelStyle = `margin:0;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${c.accentColor};font-weight:700;`;
+  const valueStyle = `margin:4px 0 0 0;font-size:13px;color:${c.strongTextColor};font-weight:600;`;
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -97,45 +139,57 @@ export function buildEmail(config: EmailLayoutConfig): string {
 
 <!-- Header -->
 <tr>
-<td style="height:${c.headerHeight}px;vertical-align:middle;padding:0 ${c.sidePadding}px;text-align:${c.headerAlign};background:${c.headerColor1};background:linear-gradient(${c.gradientAngle}deg, ${c.headerColor1} 0%, ${c.headerColor2} 60%, ${c.headerColor3} 100%);">
-<p style="margin:0 0 12px 0;font-size:${c.eyebrowSize}px;letter-spacing:${c.eyebrowSpacing}px;text-transform:uppercase;color:${c.accentColor};font-weight:700;">${escapeHtml(c.eyebrow)}</p>
-<h1 style="margin:0;font-size:${c.titleSize}px;font-weight:700;color:${c.titleColor};line-height:1.25;">${nl2br(c.title)}</h1>
+<td style="height:${c.headerHeight}px;vertical-align:middle;padding:0 ${c.sidePadding}px;text-align:${c.headerAlign};${headerBg}${headerBorder}">
+<p style="margin:0 0 8px 0;font-size:${c.eyebrowSize}px;letter-spacing:${c.eyebrowSpacing}px;text-transform:uppercase;color:${c.accentColor};">${escapeHtml(c.eyebrow)}</p>
+<h1 style="${titleStyle}">${nl2br(c.title)}</h1>
+${subtitle}
+${headerDecor}
 </td>
 </tr>
 
 <!-- Body -->
 <tr>
-<td style="padding:34px ${c.sidePadding}px 26px ${c.sidePadding}px;">
-<p style="margin:0 0 14px 0;font-size:${greetingSize}px;font-weight:700;color:${c.strongTextColor};letter-spacing:1px;text-transform:uppercase;">${escapeHtml(c.greeting)}</p>
-<p style="margin:0 0 14px 0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.8;">${c.paragraph1}</p>
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.8;">${c.paragraph2}</p>
+<td style="padding:34px ${c.sidePadding}px 26px ${c.sidePadding}px;background-color:${c.emailBg};">
+<p style="${greetingStyle}">${escapeHtml(c.greeting)}</p>
+<p style="margin:0 0 14px 0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${c.paragraph1}</p>
+<p style="margin:0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${c.paragraph2}</p>
 </td>
 </tr>
 
 <!-- Info Card -->
 <tr>
-<td style="padding:0 ${c.sidePadding}px 36px ${c.sidePadding}px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${c.cardBg};border-radius:${c.cardRadius}px;${cardBorderLeft}">
+<td style="padding:0 ${c.sidePadding}px 36px ${c.sidePadding}px;background-color:${c.emailBg};">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${c.cardBg};border-radius:${c.cardRadius}px;${cardBorder}">
 <tr>
-<td style="padding:20px 22px;">
-<p style="margin:0 0 4px 0;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${c.accentColor};font-weight:700;">${escapeHtml(c.infoLabel1)}</p>
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.strongTextColor};line-height:1.5;">${escapeHtml(c.locationIcon)} ${escapeHtml(c.infoValue1)}</p>
-</td>
-</tr>
+<td style="padding:20px 20px 20px 16px;">
+
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
 <tr>
-<td style="border-top:1px solid ${c.cardDividerColor};padding:0;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td width="50%" style="padding:16px 22px;vertical-align:top;">
-<p style="margin:0 0 4px 0;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${c.accentColor};font-weight:700;">${escapeHtml(c.infoLabel2)}</p>
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.strongTextColor};">${escapeHtml(c.infoValue2)}</p>
-</td>
-<td width="50%" style="padding:16px 22px;vertical-align:top;border-left:1px solid ${c.cardDividerColor};">
-<p style="margin:0 0 4px 0;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${c.accentColor};font-weight:700;">${escapeHtml(c.infoLabel3)}</p>
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.strongTextColor};">${escapeHtml(c.infoValue3)}</p>
+<td style="vertical-align:top;padding-right:10px;padding-top:2px;"><span style="font-size:16px;">${escapeHtml(c.locationIcon)}</span></td>
+<td>
+<p style="${labelStyle}">${escapeHtml(c.infoLabel1)}</p>
+<p style="${valueStyle}">${escapeHtml(c.infoValue1)}</p>
 </td>
 </tr>
 </table>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:14px;">
+<tr><td style="border-top:1px solid ${c.cardDividerColor};height:1px;line-height:1px;font-size:1px;">&nbsp;</td></tr>
+</table>
+
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr>
+<td width="50%" style="vertical-align:top;">
+<p style="${labelStyle}">${escapeHtml(c.infoLabel2)}</p>
+<p style="${valueStyle}">${escapeHtml(c.infoValue2)}</p>
+</td>
+<td width="50%" style="vertical-align:top;">
+<p style="${labelStyle}">${escapeHtml(c.infoLabel3)}</p>
+<p style="${valueStyle}">${escapeHtml(c.infoValue3)}</p>
+</td>
+</tr>
+</table>
+
 </td>
 </tr>
 </table>
@@ -144,17 +198,17 @@ export function buildEmail(config: EmailLayoutConfig): string {
 
 <!-- Footer -->
 <tr>
-<td style="background-color:${c.footerBg};padding:28px ${c.sidePadding}px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<td style="padding:22px ${c.sidePadding}px 18px ${c.sidePadding}px;${footerBg}">
+<p style="margin:0 0 3px 0;font-size:13px;color:${c.footerTextColor};">${escapeHtml(c.farewell)}</p>
+<table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:14px;">
 <tr>
-<td style="text-align:left;vertical-align:middle;">
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.footerTextColor};line-height:1.5;">${escapeHtml(c.farewell)}</p>
-<p style="margin:2px 0 0 0;font-size:${c.bodySize}px;color:${c.footerTextColor};font-weight:700;line-height:1.5;">${escapeHtml(c.signature)}</p>
+<td style="vertical-align:middle;">
+<p style="margin:0;font-size:13px;color:${c.footerTextColor};font-weight:600;">${escapeHtml(c.signature)}</p>
 </td>
-<td style="text-align:right;vertical-align:middle;">${socialTable}</td>
+${socialCells.join("\n")}
 </tr>
 </table>
-<p style="margin:18px 0 0 0;font-size:11px;color:${c.footerNoticeColor};line-height:1.6;text-align:left;">${escapeHtml(c.autoNotice)}</p>
+<p style="margin:0;font-size:11px;color:${c.footerNoticeColor};line-height:1.6;">${escapeHtml(c.autoNotice)}</p>
 </td>
 </tr>
 

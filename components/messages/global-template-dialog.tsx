@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const NO_EVENT = "__none_event__";
+
 export function GlobalTemplateDialog({
   template,
   open,
@@ -83,10 +85,6 @@ export function GlobalTemplateDialog({
   }
 
   function handleSave() {
-    if (!eventId) {
-      toast.error("Selecione o evento");
-      return;
-    }
     if (!name.trim() || !body.trim()) {
       toast.error("Nome e corpo da mensagem são obrigatórios");
       return;
@@ -105,7 +103,7 @@ export function GlobalTemplateDialog({
       onError: (e: Error) => toast.error(e.message),
     };
     if (template) update.mutate({ eventId: template.eventId, id: template.id, input }, onDone);
-    else create.mutate({ eventId, input }, onDone);
+    else create.mutate({ eventId: eventId || null, input }, onDone);
   }
 
   return (
@@ -117,12 +115,17 @@ export function GlobalTemplateDialog({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Evento *</Label>
-            <Select value={eventId} onValueChange={setEventId} disabled={isEdit}>
+            <Label>Evento (opcional)</Label>
+            <Select
+              value={eventId || NO_EVENT}
+              onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
+              disabled={isEdit}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o evento" />
+                <SelectValue placeholder="Sem evento (global)" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={NO_EVENT}>Sem evento (global)</SelectItem>
                 {events?.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
                     {e.title}
