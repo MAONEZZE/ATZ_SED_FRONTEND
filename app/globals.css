@@ -99,3 +99,25 @@
     @apply glass rounded-xl shadow-lg shadow-black/5 dark:shadow-black/20;
   }
 }
+
+/* react-phone-number-input — alinhar seletor de país ao tema */
+.phone-field .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+  border: 1px solid hsl(var(--input));
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+}
+.phone-field .PhoneInputCountrySelect {
+  color: inherit;
+  background: transparent;
+}
+.phone-field .PhoneInputCountrySelect option {
+  color: #000;
+}
+.phone-field .PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+}

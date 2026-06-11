@@ -13,12 +13,9 @@ export const eventStatusTransitions: Record<EventStatus, EventStatus[]> = {
 };
 
 export const funnelStatusTransitions: Record<FunnelStatus, FunnelStatus[]> = {
-  pending: ["screening", "approved", "rejected", "waitlist"],
-  screening: ["qualification", "approved", "rejected", "waitlist"],
-  qualification: ["approved", "rejected", "waitlist"],
-  waitlist: ["approved", "rejected"],
-  approved: [],
-  rejected: [],
+  pending: ["approved", "rejected"],
+  approved: ["pending", "rejected"],
+  rejected: ["pending", "approved"],
 };
 
 export function canTransitionEvent(from: EventStatus, to: EventStatus): boolean {

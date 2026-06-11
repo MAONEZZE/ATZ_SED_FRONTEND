@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input/core";
+import { phoneMetadata } from "@/lib/phone/metadata";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import {
@@ -25,8 +27,16 @@ function buildSchema(fields: PublicFormField[]) {
         break;
       case "phone":
         schema = field.required
-          ? z.string().min(8, "Telefone inválido")
-          : z.string();
+          ? z
+              .string()
+              .min(1, "Campo obrigatório")
+              .refine((v) => isValidPhoneNumber(v, phoneMetadata), "Telefone inválido")
+          : z
+              .string()
+              .refine(
+                (v) => !v || isValidPhoneNumber(v, phoneMetadata),
+                "Telefone inválido",
+              );
         break;
       case "multiselect":
         schema = field.required

@@ -28,6 +28,8 @@ export const TEMPLATE_VARIABLES = [
   "capacidade",
   "dress_code",
   "link_grupo",
+  "invite",
+  "invite_recorrente",
 ] as const;
 
 export function useTemplates(eventId: string) {

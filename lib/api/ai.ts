@@ -5,14 +5,15 @@ import { consumeSse } from "@/lib/api/sse";
 import { authClient } from "@/lib/auth/auth-client";
 import type { EmailStyleResponse } from "@/lib/api/types";
 
-export function generateEmailStyles(content: string): Promise<EmailStyleResponse> {
-  return api.post<EmailStyleResponse>("/ai/email-style", { content });
+export function generateEmailStyles(
+  variables: string,
+  content?: string,
+): Promise<EmailStyleResponse> {
+  const body: Record<string, string> = { variables };
+  if (content?.trim()) body.content = content;
+  return api.post<EmailStyleResponse>("/ai/email-style", body);
 }
 
-/**
- * Chat da landing via SSE (POST + fetch-stream).
- * Frames: data:{"chunk":"..."} ... data:[DONE]; erro: data:{"error":"..."}
- */
 export async function streamLandingChat(options: {
   message: string;
   landing: unknown;

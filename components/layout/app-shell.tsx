@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LogOut, Settings, Shield } from "lucide-react";
+import { CalendarDays, LogOut, MessageSquare, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useProfile } from "@/lib/api/profile";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -20,7 +20,10 @@ import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 // Configurações vive apenas no dropdown do perfil (não na navbar)
-const navItems = [{ href: "/events", label: "Eventos", icon: CalendarDays }];
+const navItems = [
+  { href: "/events", label: "Eventos", icon: CalendarDays },
+  { href: "/messages", label: "Mensagens", icon: MessageSquare },
+];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();

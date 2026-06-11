@@ -254,7 +254,7 @@ export default function EventsPage() {
         {events?.map((event) => <EventCard key={event.id} event={event} />)}
       </div>
 
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"

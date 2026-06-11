@@ -13,8 +13,9 @@ import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { VariableTextarea } from "@/components/ui/variable-textarea";
 import { Badge } from "@/components/ui/badge";
+import { TemplateVariablesInfo } from "@/components/messages/template-variables-info";
 import {
   Dialog,
   DialogContent,
@@ -162,7 +163,7 @@ export function GlobalTemplateDialog({
 
           <div className="space-y-2">
             <Label htmlFor="gtpl-body">Mensagem *</Label>
-            <Textarea
+            <VariableTextarea
               id="gtpl-body"
               ref={bodyRef}
               rows={6}
@@ -183,6 +184,7 @@ export function GlobalTemplateDialog({
                 </button>
               ))}
             </div>
+            <TemplateVariablesInfo />
           </div>
         </div>
 

@@ -5,11 +5,8 @@ export type EventStatus = "draft" | "published" | "cancelled" | "ended";
 
 export type FunnelStatus =
   | "pending"
-  | "screening"
-  | "qualification"
   | "approved"
-  | "rejected"
-  | "waitlist";
+  | "rejected";
 
 export type FieldType =
   | "text"
@@ -26,14 +23,10 @@ export type MessageChannel = "whatsapp" | "email";
 
 export type AutomationTrigger =
   | "on_registration"
-  | "on_screening"
-  | "on_qualification"
   | "on_approval"
   | "on_rejection"
-  | "on_waitlist"
   | "before_event"
-  | "after_event"
-  | "after_approval";
+  | "after_event";
 
 export type LandingSectionType =
   | "hero"

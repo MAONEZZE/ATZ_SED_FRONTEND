@@ -121,9 +121,26 @@ export default function EditEventPage() {
         </div>
 
         {!readonly && (
-          <div className="flex flex-wrap items-center justify-end gap-3">
-            {/* Dirty check: Salvar só ativa com mudanças */}
-            <Button type="submit" disabled={!isDirty || updateEvent.isPending}>
+          <div className="flex flex-wrap items-center gap-3">
+            {canTransitionEvent(event.status, "ended") && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={updateStatus.isPending}
+                onClick={() => changeStatus("ended")}
+              >
+                <Square className="mr-2 h-4 w-4" />
+                Encerrar evento
+              </Button>
+            )}
+            {canTransitionEvent(event.status, "cancelled") && (
+              <CancelEventDialog eventId={event.id} slug={event.slug} />
+            )}
+            <Button
+              type="submit"
+              className="ml-auto"
+              disabled={!isDirty || updateEvent.isPending}
+            >
               {updateEvent.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -141,9 +158,9 @@ export default function EditEventPage() {
           disabled={readonly}
         />
 
-        <div className="space-y-3 rounded-xl border p-4">
-          <h3 className="font-semibold">Status</h3>
-          {canTransitionEvent(event.status, "published") && (
+        {canTransitionEvent(event.status, "published") && (
+          <div className="space-y-3 rounded-xl border p-4">
+            <h3 className="font-semibold">Status</h3>
             <Button
               type="button"
               className="w-full"
@@ -153,28 +170,8 @@ export default function EditEventPage() {
               <Rocket className="mr-2 h-4 w-4" />
               Publicar
             </Button>
-          )}
-          {canTransitionEvent(event.status, "ended") && (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={updateStatus.isPending}
-              onClick={() => changeStatus("ended")}
-            >
-              <Square className="mr-2 h-4 w-4" />
-              Encerrar evento
-            </Button>
-          )}
-          {canTransitionEvent(event.status, "cancelled") && (
-            <CancelEventDialog eventId={event.id} slug={event.slug} />
-          )}
-          {readonly && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma transição disponível.
-            </p>
-          )}
-        </div>
+          </div>
+        )}
       </aside>
     </div>
   );

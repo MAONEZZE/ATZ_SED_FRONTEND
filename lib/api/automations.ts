@@ -16,17 +16,12 @@ export interface AutomationInput {
 export const DELAYED_TRIGGERS: AutomationTrigger[] = [
   "before_event",
   "after_event",
-  "after_approval",
 ];
 
 export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
   on_registration: "Ao se inscrever",
-  on_screening: "Ao entrar em triagem",
-  on_qualification: "Ao entrar em qualificação",
   on_approval: "Ao ser aprovado",
   on_rejection: "Ao ser rejeitado",
-  on_waitlist: "Ao entrar na lista de espera",
-  after_approval: "Após aprovação (com atraso)",
   before_event: "Antes do evento",
   after_event: "Depois do evento",
 };

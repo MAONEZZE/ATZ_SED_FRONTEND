@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Eye, Loader2, Search, Send, Users } from "lucide-react";
+import { Download, Eye, Loader2, Search, Users } from "lucide-react";
 import { exportRegistrationsCsv, useRegistrations } from "@/lib/api/registrations";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
@@ -11,7 +11,6 @@ import type { FunnelStatus, Registration } from "@/lib/api/types";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { StatusSelect } from "@/components/attendees/status-select";
 import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
-import { SendMessageDialog } from "@/components/messages/send-message-dialog";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,11 +40,10 @@ export default function AttendeesPage() {
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 30;
+  const limit = 10;
   const [selected, setSelected] = useState<Registration | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [sendTo, setSendTo] = useState<string | null>(null);
 
   async function handleExport() {
     setExporting(true);
@@ -62,8 +60,14 @@ export default function AttendeesPage() {
     }
   }
 
-  function openSendMessage(registrationId: string) {
-    setSendTo(registrationId);
+  function handleStatusFilter(value: string) {
+    setStatusFilter(value);
+    setPage(1);
+  }
+
+  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+    setSearch(e.target.value);
+    setPage(1);
   }
 
   const { data: response, isLoading } = useRegistrations(eventId, {
@@ -74,10 +78,6 @@ export default function AttendeesPage() {
   });
   const registrations = response?.data ?? [];
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
-
-  useEffect(() => {
-    setPage(1);
-  }, [statusFilter, search]);
 
   function openDetails(registration: Registration) {
     setSelected(registration);
@@ -93,10 +93,10 @@ export default function AttendeesPage() {
             placeholder="Buscar por nome, e-mail ou telefone..."
             className="pl-9"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={handleSearch}
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={handleStatusFilter}>
           <SelectTrigger className="sm:w-[200px]" aria-label="Filtrar por status">
             <SelectValue />
           </SelectTrigger>
@@ -148,7 +148,7 @@ export default function AttendeesPage() {
                 <TableHead>Telefone</TableHead>
                 <TableHead>Inscrição</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-24" />
+                <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -164,24 +164,14 @@ export default function AttendeesPage() {
                     <StatusSelect eventId={eventId} registration={registration} />
                   </TableCell>
                   <TableCell>
-                    <div className="flex">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Enviar mensagem para ${registration.name}`}
-                        onClick={() => openSendMessage(registration.id)}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Ver detalhes de ${registration.name}`}
-                        onClick={() => openDetails(registration)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Ver detalhes de ${registration.name}`}
+                      onClick={() => openDetails(registration)}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -219,7 +209,7 @@ export default function AttendeesPage() {
         </div>
       )}
 
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
@@ -244,16 +234,10 @@ export default function AttendeesPage() {
       )}
 
       <AttendeeDetailSheet
+        eventId={eventId}
         registration={selected}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-      />
-
-      <SendMessageDialog
-        open={sendTo !== null}
-        onOpenChange={(o) => !o && setSendTo(null)}
-        eventId={eventId}
-        initialRegistrationId={sendTo ?? undefined}
       />
     </div>
   );

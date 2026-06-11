@@ -14,27 +14,23 @@ import type { AutomationInput } from "@/lib/api/automations";
 
 /* ---------- Queries agregadas (todos os eventos do usuário) ---------- */
 
-export function useAllTemplates(page = 1, limit = 50) {
+export function useAllTemplates(page = 1, limit = 20) {
   return useQuery({
     queryKey: queryKeys.allTemplates({ page, limit }),
-    queryFn: async () => {
-      const res = await api.get<PaginatedResponse<TemplateWithEvent>>(
+    queryFn: () =>
+      api.get<PaginatedResponse<TemplateWithEvent>>(
         `/templates?page=${page}&limit=${limit}`,
-      );
-      return res.data;
-    },
+      ),
   });
 }
 
-export function useAllAutomations(page = 1, limit = 50) {
+export function useAllAutomations(page = 1, limit = 20) {
   return useQuery({
     queryKey: queryKeys.allAutomations({ page, limit }),
-    queryFn: async () => {
-      const res = await api.get<PaginatedResponse<AutomationWithEvent>>(
+    queryFn: () =>
+      api.get<PaginatedResponse<AutomationWithEvent>>(
         `/automations?page=${page}&limit=${limit}`,
-      );
-      return res.data;
-    },
+      ),
   });
 }
 

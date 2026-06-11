@@ -26,23 +26,24 @@ describe("eventStatusTransitions", () => {
 });
 
 describe("funnelStatusTransitions", () => {
-  it("pending segue o contrato", () => {
-    expect(funnelStatusTransitions.pending).toEqual([
-      "screening",
-      "approved",
-      "rejected",
-      "waitlist",
-    ]);
+  it("pending pode aprovar ou rejeitar", () => {
+    expect(canTransitionFunnel("pending", "approved")).toBe(true);
+    expect(canTransitionFunnel("pending", "rejected")).toBe(true);
   });
 
-  it("waitlist pode aprovar ou rejeitar (contrato)", () => {
-    expect(canTransitionFunnel("waitlist", "approved")).toBe(true);
-    expect(canTransitionFunnel("waitlist", "rejected")).toBe(true);
-    expect(canTransitionFunnel("waitlist", "screening")).toBe(false);
+  it("approved pode voltar a pending ou rejeitar", () => {
+    expect(canTransitionFunnel("approved", "pending")).toBe(true);
+    expect(canTransitionFunnel("approved", "rejected")).toBe(true);
   });
 
-  it("approved e rejected são terminais", () => {
-    expect(funnelStatusTransitions.approved).toHaveLength(0);
-    expect(funnelStatusTransitions.rejected).toHaveLength(0);
+  it("rejected pode voltar a pending ou aprovar", () => {
+    expect(canTransitionFunnel("rejected", "pending")).toBe(true);
+    expect(canTransitionFunnel("rejected", "approved")).toBe(true);
+  });
+
+  it("todos os status têm transições disponíveis", () => {
+    expect(funnelStatusTransitions.pending.length).toBeGreaterThan(0);
+    expect(funnelStatusTransitions.approved.length).toBeGreaterThan(0);
+    expect(funnelStatusTransitions.rejected.length).toBeGreaterThan(0);
   });
 });

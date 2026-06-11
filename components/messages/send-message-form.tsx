@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Plus, Send, Trash2 } from "lucide-react";
+import { Info, Loader2, Paintbrush, Plus, Send, Trash2 } from "lucide-react";
+import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
+import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
+import { buildEmail } from "@/lib/email/build-email";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
 import { useTemplates } from "@/lib/api/templates";
 import {
+  WHATSAPP_RECIPIENT_LIMIT,
   recipientCount,
   toSendMessageInput,
   validateManualRecipient,
@@ -15,7 +19,13 @@ import {
   type SendMessageDraft,
 } from "@/lib/validation/send-message";
 import type { ManualRecipient, MessageChannel } from "@/lib/api/types";
+import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import { PhoneField } from "@/components/forms/phone-field";
+import {
+  TemplateVariablesInfo,
+  VARIABLE_DESCRIPTIONS,
+} from "@/components/messages/template-variables-info";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +49,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+import { VariableTextarea } from "@/components/ui/variable-textarea";
 
 const NO_TEMPLATE = "__none__";
+const NO_EVENT = "__none_event__";
 
 export function SendMessageForm({
   eventId: fixedEventId,
@@ -57,7 +68,10 @@ export function SendMessageForm({
 
   const { data: registrationsResponse, isLoading: loadingRegs } =
     useRegistrations(effectiveEventId ?? "", { limit: 100 });
-  const registrations = registrationsResponse?.data ?? [];
+  const registrations = useMemo(
+    () => registrationsResponse?.data ?? [],
+    [registrationsResponse?.data],
+  );
   const { data: templates } = useTemplates(effectiveEventId);
   const sendMessage = useSendMessage(effectiveEventId || undefined);
 
@@ -65,6 +79,10 @@ export function SendMessageForm({
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
+  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
+  const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
+  const [showVars, setShowVars] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [manualRecipients, setManualRecipients] = useState<ManualRecipient[]>([]);
   const [manualDraft, setManualDraft] = useState<ManualRecipient>({
@@ -72,6 +90,34 @@ export function SendMessageForm({
     email: "",
     phone: "",
   });
+
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  function insertVariable(variable: string) {
+    const token = `{{${variable}}}`;
+    const ta = bodyTextareaRef.current;
+    if (!ta) {
+      setBody((prev) => prev + token);
+      return;
+    }
+    const start = ta.selectionStart ?? body.length;
+    const end = ta.selectionEnd ?? body.length;
+    const next = body.slice(0, start) + token + body.slice(end);
+    setBody(next);
+    requestAnimationFrame(() => {
+      ta.focus();
+      const pos = start + token.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }
+
+  const handleIframeLoad = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe?.contentDocument?.documentElement) return;
+    const h = iframe.contentDocument.documentElement.scrollHeight;
+    if (h > 0) iframe.style.height = `${h}px`;
+  }, []);
 
   // pré-seleção vinda do atalho da tabela de inscritos (?to=)
   const appliedInitial = useRef(false);
@@ -84,6 +130,14 @@ export function SendMessageForm({
     appliedInitial.current = true;
   }, [initialRegistrationId, registrations]);
 
+
+  function applyEmailTemplate(key: EmailTemplateKey) {
+    const preset = EMAIL_LAYOUT_PRESETS[key];
+    setLayoutConfig(preset);
+    setBody(buildEmail(preset));
+    setActiveStyle(key);
+  }
+
   const channelTemplates = useMemo(
     () => (templates ?? []).filter((t) => t.channel === channel),
     [templates, channel],
@@ -92,8 +146,10 @@ export function SendMessageForm({
 
   function changeChannel(next: MessageChannel) {
     setChannel(next);
-    // template do canal anterior deixa de valer
     setTemplateId(null);
+    setBody("");
+    setActiveStyle(null);
+    setLayoutConfig(null);
   }
 
   const draft: SendMessageDraft = {
@@ -105,8 +161,9 @@ export function SendMessageForm({
     manualRecipients,
   };
   const hasEventId = Boolean(effectiveEventId);
+  const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
   const count = recipientCount(draft);
-  const validationError = validateSendMessage(draft, { hasEventId });
+  const validationError = validateSendMessage(draft);
 
   const allSelected =
     registrations.length > 0 &&
@@ -161,6 +218,8 @@ export function SendMessageForm({
         setBody("");
         setSubject("");
         setTemplateId(null);
+        setActiveStyle(null);
+        setLayoutConfig(null);
       },
       onError: (e) => toast.error(e.message),
     });
@@ -178,11 +237,15 @@ export function SendMessageForm({
           {!fixedEventId && (
             <div className="space-y-2 sm:col-span-2">
               <Label>Evento</Label>
-              <Select value={localEventId} onValueChange={setLocalEventId}>
+              <Select
+                value={localEventId || NO_EVENT}
+                onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o evento (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={NO_EVENT}>Nenhum</SelectItem>
                   {events?.map((e) => (
                     <SelectItem key={e.id} value={e.id}>
                       {e.title}
@@ -253,14 +316,103 @@ export function SendMessageForm({
                 </div>
               )}
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="send-body">Mensagem *</Label>
-                <Textarea
-                  id="send-body"
-                  rows={5}
-                  placeholder="Escreva a mensagem..."
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
+                <div className={channel === "email" ? "flex gap-3 items-start" : ""}>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="send-body">Mensagem *</Label>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1.5 text-xs"
+                          aria-pressed={showVars}
+                          onClick={() => setShowVars((v) => !v)}
+                        >
+                          <Info className="h-3.5 w-3.5" />
+                          Variáveis
+                        </Button>
+                        {channel === "email" && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 gap-1.5 text-xs"
+                            disabled={!activeStyle}
+                            title={
+                              activeStyle
+                                ? undefined
+                                : "Escolha um estilo para habilitar"
+                            }
+                            onClick={() => setLayoutEditorOpen(true)}
+                          >
+                            <Paintbrush className="h-3.5 w-3.5" />
+                            Editar layout
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {bodyIsHtml ? (
+                      <iframe
+                        ref={iframeRef}
+                        srcDoc={body}
+                        title="preview do e-mail"
+                        className="w-full rounded-md border"
+                        style={{ minHeight: "300px" }}
+                        sandbox="allow-same-origin"
+                        onLoad={handleIframeLoad}
+                      />
+                    ) : (
+                      <VariableTextarea
+                        id="send-body"
+                        ref={bodyTextareaRef}
+                        rows={15}
+                        placeholder="Escreva a mensagem..."
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                      />
+                    )}
+
+                    {!bodyIsHtml && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {VARIABLE_DESCRIPTIONS.map(({ variable }) => (
+                          <Button
+                            key={variable}
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 px-2 font-mono text-xs"
+                            onClick={() => insertVariable(variable)}
+                          >
+                            {`{{${variable}}}`}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+
+                    {showVars && <TemplateVariablesInfo />}
+                  </div>
+
+                  {channel === "email" && (
+                    <div className="flex shrink-0 flex-col gap-1.5">
+                      {/* espaçador para alinhar o 1º botão com o topo do campo Mensagem */}
+                      <div className="h-[30px]" aria-hidden />
+                      {(Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map((key) => (
+                        <Button
+                          key={key}
+                          type="button"
+                          variant={activeStyle === key ? "default" : "outline"}
+                          size="sm"
+                          className="w-28 text-xs"
+                          onClick={() => applyEmailTemplate(key)}
+                        >
+                          {EMAIL_TEMPLATE_LABELS[key]}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -273,6 +425,11 @@ export function SendMessageForm({
           <Badge variant="secondary">{count} selecionado(s)</Badge>
         </CardHeader>
         <CardContent className="space-y-4">
+          {channel === "whatsapp" && (
+            <p className={`text-sm ${count > WHATSAPP_RECIPIENT_LIMIT ? "text-destructive" : "text-muted-foreground"}`}>
+              WhatsApp: {count}/{WHATSAPP_RECIPIENT_LIMIT} destinatários
+            </p>
+          )}
           {registrations.length > 0 ? (
             <>
               <label className="flex items-center gap-2 text-sm font-medium">
@@ -356,6 +513,7 @@ export function SendMessageForm({
                 size="icon"
                 aria-label="Adicionar destinatário"
                 onClick={addManualRecipient}
+                disabled={channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -409,6 +567,17 @@ export function SendMessageForm({
           Enviar mensagem ({count})
         </Button>
       </div>
+
+      <EmailLayoutEditorModal
+        open={layoutEditorOpen}
+        initialConfig={layoutConfig}
+        draftKey={effectiveEventId || "global"}
+        onSave={(cfg, html) => {
+          setLayoutConfig(cfg);
+          setBody(html);
+        }}
+        onClose={() => setLayoutEditorOpen(false)}
+      />
     </div>
   );
 }

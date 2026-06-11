@@ -78,7 +78,7 @@ describe("toSendMessageInput", () => {
       templateId: "t1",
       subject: "Assunto",
       registrationIds: ["a"],
-    });
+    }, { hasEventId: true });
     expect(input.templateId).toBe("t1");
     expect(input.subject).toBeUndefined();
     expect(input.body).toBeUndefined();
@@ -91,7 +91,7 @@ describe("toSendMessageInput", () => {
       subject: " Assunto ",
       body: " Corpo ",
       registrationIds: ["a"],
-    });
+    }, { hasEventId: true });
     expect(input.subject).toBe("Assunto");
     expect(input.body).toBe("Corpo");
   });
@@ -101,7 +101,7 @@ describe("toSendMessageInput", () => {
       ...base,
       subject: "Assunto",
       registrationIds: ["a"],
-    });
+    }, { hasEventId: true });
     expect(input.subject).toBeUndefined();
   });
 });

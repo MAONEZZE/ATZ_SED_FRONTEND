@@ -18,9 +18,15 @@ export function recipientCount(draft: Pick<SendMessageDraft, "registrationIds" |
   return draft.registrationIds.length + draft.manualRecipients.length;
 }
 
+export const WHATSAPP_RECIPIENT_LIMIT = 30;
+
 /** Retorna mensagem de erro ou null se o rascunho é enviável */
-export function validateSendMessage(draft: SendMessageDraft): string | null {
+export function validateSendMessage(
+  draft: SendMessageDraft,
+): string | null {
   if (recipientCount(draft) === 0) return "Selecione ao menos um destinatário";
+  if (draft.channel === "whatsapp" && recipientCount(draft) > WHATSAPP_RECIPIENT_LIMIT)
+    return `WhatsApp: máximo ${WHATSAPP_RECIPIENT_LIMIT} destinatários por disparo`;
   if (!draft.templateId && !draft.body.trim())
     return "Escreva a mensagem ou selecione um template";
   return null;
@@ -39,7 +45,10 @@ export function validateManualRecipient(
   return null;
 }
 
-export function toSendMessageInput(draft: SendMessageDraft): SendMessageInput {
+export function toSendMessageInput(
+  draft: SendMessageDraft,
+  opts: { hasEventId: boolean },
+): SendMessageInput {
   return {
     channel: draft.channel,
     templateId: draft.templateId ?? undefined,
@@ -48,7 +57,7 @@ export function toSendMessageInput(draft: SendMessageDraft): SendMessageInput {
         ? draft.subject.trim()
         : undefined,
     body: draft.templateId ? undefined : draft.body.trim(),
-    registrationIds: draft.registrationIds,
+    registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
   };
 }

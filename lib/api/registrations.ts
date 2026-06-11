@@ -40,6 +40,18 @@ export function useRegistrations(
   });
 }
 
+export function useUpdateRegistration(eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, answers }: { id: string; answers: Record<string, unknown> }) =>
+      api.patch<Registration>(`/events/${eventId}/registrations/${id}`, { answers }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["events", eventId, "registrations"],
+      }),
+  });
+}
+
 export function useUpdateRegistrationStatus(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({

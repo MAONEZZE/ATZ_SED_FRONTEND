@@ -10,16 +10,6 @@ export const funnelStatusConfig: Record<
     className:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
   },
-  screening: {
-    label: "Triagem",
-    className:
-      "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
-  },
-  qualification: {
-    label: "Qualificação",
-    className:
-      "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
-  },
   approved: {
     label: "Aprovado",
     className:
@@ -28,12 +18,7 @@ export const funnelStatusConfig: Record<
   rejected: {
     label: "Rejeitado",
     className: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-  },
-  waitlist: {
-    label: "Lista de espera",
-    className:
-      "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-  },
+  }
 };
 
 export const eventStatusConfig: Record<

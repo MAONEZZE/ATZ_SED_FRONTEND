@@ -104,7 +104,11 @@ function SendTab() {
 /* ---------------- Templates ---------------- */
 
 function TemplatesTab() {
-  const { data: templates, isLoading } = useAllTemplates();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const { data: response, isLoading } = useAllTemplates(page, limit);
+  const templates = response?.data;
+  const totalPages = response ? Math.ceil(response.total / limit) : 0;
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateWithEvent | null>(null);
@@ -114,6 +118,7 @@ function TemplatesTab() {
   return (
     <div className="space-y-4">
       <TabToolbar
+        left={response ? `${response.total} template(s)` : null}
         right={
           <Button
             onClick={() => {
@@ -202,6 +207,30 @@ function TemplatesTab() {
         </Table>
       </div>
 
+      {totalPages > 0 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+
       <GlobalTemplateDialog
         template={editing}
         open={dialogOpen}
@@ -211,10 +240,12 @@ function TemplatesTab() {
   );
 }
 
-/* ---------------- Automações ---------------- */
-
 function AutomationsTab() {
-  const { data: automations, isLoading } = useAllAutomations();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const { data: response, isLoading } = useAllAutomations(page, limit);
+  const automations = response?.data;
+  const totalPages = response ? Math.ceil(response.total / limit) : 0;
   const deleteAutomation = useDeleteAutomationGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<AutomationWithEvent | null>(null);
@@ -224,6 +255,7 @@ function AutomationsTab() {
   return (
     <div className="space-y-4">
       <TabToolbar
+        left={response ? `${response.total} automação(ões)` : null}
         right={
           <Button
             onClick={() => {
@@ -324,6 +356,30 @@ function AutomationsTab() {
         </Table>
       </div>
 
+      {totalPages > 0 && (
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            Anterior
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {page} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+
       <GlobalAutomationDialog
         automation={editing}
         open={dialogOpen}
@@ -337,7 +393,7 @@ function AutomationsTab() {
 
 function LogsTab() {
   const [page, setPage] = useState(1);
-  const limit = 30;
+  const limit = 10;
   const { data: response, isLoading } = useAllMessageLogs(page, limit);
   const logs = response?.data;
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
@@ -400,7 +456,7 @@ function LogsTab() {
         </Table>
       </div>
 
-      {totalPages > 1 && (
+      {totalPages > 0 && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"

@@ -6,32 +6,18 @@ import type { ReactNode } from "react";
 import {
   ClipboardList,
   ExternalLink,
-  LayoutTemplate,
-  MessageSquare,
   Pencil,
   Users,
-  Zap,
 } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { segment: "edit", label: "Detalhes", icon: Pencil },
   { segment: "form", label: "Formulário", icon: ClipboardList },
   { segment: "attendees", label: "Inscritos", icon: Users },
-  { segment: "messages", label: "Mensagens", icon: MessageSquare },
-  { segment: "automations", label: "Automações", icon: Zap },
-  { segment: "landing", label: "Landing", icon: LayoutTemplate },
 ];
 
 export default function EventLayout({ children }: { children: ReactNode }) {
@@ -41,20 +27,6 @@ export default function EventLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="space-y-4">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/events">Eventos</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{event?.title ?? "..."}</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">
           {event?.title ?? ""}

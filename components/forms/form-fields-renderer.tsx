@@ -3,6 +3,7 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { answerKeyForField } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
+import { PhoneField } from "@/components/forms/phone-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -57,15 +58,27 @@ export function FormFieldsRenderer({
               <Textarea id={key} disabled={disabled} {...form.register(key)} />
             )}
 
-            {(field.type === "text" ||
-              field.type === "email" ||
-              field.type === "phone") && (
+            {(field.type === "text" || field.type === "email") && (
               <Input
                 id={key}
-                type={field.type === "email" ? "email" : field.type === "phone" ? "tel" : "text"}
-                placeholder={field.type === "phone" ? "+55 (11) 99999-9999" : undefined}
+                type={field.type === "email" ? "email" : "text"}
                 disabled={disabled}
                 {...form.register(key)}
+              />
+            )}
+
+            {field.type === "phone" && (
+              <Controller
+                control={form.control}
+                name={key}
+                render={({ field: rhf }) => (
+                  <PhoneField
+                    id={key}
+                    value={(rhf.value as string) ?? ""}
+                    onChange={rhf.onChange}
+                    disabled={disabled}
+                  />
+                )}
               />
             )}
 
