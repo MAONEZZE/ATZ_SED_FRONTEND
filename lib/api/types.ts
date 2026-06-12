@@ -58,7 +58,6 @@ export interface EventObject {
   endDate: string | null;
   postRegistrationMessage: string | null;
   evolutionInstance: string | null;
-  evolutionToken: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -175,7 +174,6 @@ export interface Profile {
   email: string;
   photoUrl: string | null;
   evolutionInstance: string | null;
-  evolutionToken: string | null;
   roles: { id: string; role: UserRole }[];
   createdAt: string;
   updatedAt: string;

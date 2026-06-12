@@ -8,7 +8,6 @@ import type { Profile } from "@/lib/api/types";
 export interface ProfileUpdateInput {
   name?: string;
   evolutionInstance?: string;
-  evolutionToken?: string;
 }
 
 export function useProfile() {

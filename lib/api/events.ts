@@ -23,7 +23,6 @@ export interface EventInput {
 
 export interface EventUpdateInput extends Partial<EventInput> {
   evolutionInstance?: string;
-  evolutionToken?: string;
 }
 
 export function useEvents(page = 1, limit = 20) {
