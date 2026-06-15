@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function fieldOptions(field: PublicFormField): string[] {
+function fieldOptions(field: PublicFormField): string[] {
   if (Array.isArray(field.options)) {
     return field.options.filter((o): o is string => typeof o === "string");
   }

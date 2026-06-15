@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { CalendarDays, Heart, MapPin, Shirt, Users } from "lucide-react";
+import { CalendarDays, MapPin, Shirt, Users } from "lucide-react";
 import { getPublicEvent, getPublicFormFields } from "@/lib/api/public";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";

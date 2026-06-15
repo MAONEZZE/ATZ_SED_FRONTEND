@@ -125,7 +125,7 @@ async function rawApiFetch(path: string, options: ApiFetchOptions = {}): Promise
   return response;
 }
 
-export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const response = await rawApiFetch(path, options);
 
   if (response.status === 204) {
