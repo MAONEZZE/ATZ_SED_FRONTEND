@@ -7,6 +7,7 @@ import { PhoneField } from "@/components/forms/phone-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -83,7 +84,19 @@ export function FormFieldsRenderer({
             )}
 
             {field.type === "date" && (
-              <Input id={key} type="date" disabled={disabled} {...form.register(key)} />
+              <Controller
+                control={form.control}
+                name={key}
+                render={({ field: rhf }) => (
+                  <DateTimePicker
+                    id={key}
+                    mode="date"
+                    disabled={disabled}
+                    value={(rhf.value as string) ?? ""}
+                    onChange={rhf.onChange}
+                  />
+                )}
+              />
             )}
 
             {field.type === "select" && options.length > 0 && (
