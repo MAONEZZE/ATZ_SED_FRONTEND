@@ -75,6 +75,29 @@
     --sidebar-border: 45 8% 20%;
     --sidebar-ring: 41 19% 52%;
   }
+
+  /* Página pública: tema claro sempre, independente do .dark herdado do html */
+  .force-light {
+    --background: 50 20% 98%;
+    --foreground: 50 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 50 10% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 50 10% 12%;
+    --primary: 50 26% 36%;
+    --primary-foreground: 50 30% 97%;
+    --secondary: 50 18% 92%;
+    --secondary-foreground: 50 26% 24%;
+    --muted: 50 14% 93%;
+    --muted-foreground: 50 8% 42%;
+    --accent: 50 22% 88%;
+    --accent-foreground: 50 26% 22%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 50 12% 86%;
+    --input: 50 12% 84%;
+    --ring: 50 26% 36%;
+  }
 }
 
 @layer base {

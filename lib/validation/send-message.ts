@@ -1,5 +1,6 @@
 import type {
   ManualRecipient,
+  MessageAttachment,
   MessageChannel,
   SendMessageInput,
 } from "@/lib/api/types";
@@ -16,6 +17,8 @@ export interface SendMessageDraft {
   inviteIcs?: boolean;
   /** Anexa convite de agenda recorrente (.ics). */
   inviteRecurrent?: boolean;
+  /** Documentos anexados (e-mail e WhatsApp). */
+  attachments?: MessageAttachment[];
 }
 
 export function recipientCount(draft: Pick<SendMessageDraft, "registrationIds" | "manualRecipients">): number {
@@ -31,7 +34,7 @@ export function validateSendMessage(
   if (recipientCount(draft) === 0) return "Selecione ao menos um destinatário";
   if (draft.channel === "whatsapp" && recipientCount(draft) > WHATSAPP_RECIPIENT_LIMIT)
     return `WhatsApp: máximo ${WHATSAPP_RECIPIENT_LIMIT} destinatários por disparo`;
-  if (!draft.templateId && !draft.body.trim())
+  if (!draft.body.trim())
     return "Escreva a mensagem ou selecione um template";
   return null;
 }
@@ -67,10 +70,13 @@ export function toSendMessageInput(
   draft: SendMessageDraft,
   opts: { hasEventId: boolean },
 ): SendMessageInput {
-  let body = draft.templateId ? undefined : draft.body.trim();
+  // O template apenas preenche os campos; o conteúdo enviado é sempre o que está
+  // em subject/body (HTML do layout incluso). templateId NÃO é enviado — evita
+  // que o backend renderize o body salvo do template e deduplique por template.
+  let body = draft.body.trim();
 
   // Tokens de convite (.ics) só em e-mail — backend resolve a data pelo evento.
-  if (body !== undefined && draft.channel === "email") {
+  if (body && draft.channel === "email") {
     if (draft.inviteIcs) body = injectInviteToken(body, "{{invite}}");
     if (draft.inviteRecurrent) {
       body = injectInviteToken(body, "{{invite_recorrente}}");
@@ -79,13 +85,16 @@ export function toSendMessageInput(
 
   return {
     channel: draft.channel,
-    templateId: draft.templateId ?? undefined,
     subject:
-      !draft.templateId && draft.channel === "email" && draft.subject.trim()
+      draft.channel === "email" && draft.subject.trim()
         ? draft.subject.trim()
         : undefined,
     body,
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
+    attachments:
+      draft.attachments && draft.attachments.length > 0
+        ? draft.attachments
+        : undefined,
   };
 }

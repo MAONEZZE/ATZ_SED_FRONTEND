@@ -28,6 +28,11 @@ function nl2br(value: string): string {
   return escapeHtml(value).replace(/\r?\n/g, "<br>");
 }
 
+/** Campos que aceitam HTML: mantém as tags, só converte quebras de linha. */
+function htmlNl2br(value: string): string {
+  return value.replace(/\r?\n/g, "<br>");
+}
+
 function fontStack(key: string): string {
   return EMAIL_FONT_STACKS[key] ?? EMAIL_FONT_STACKS["Helvetica/Arial"];
 }
@@ -151,8 +156,8 @@ ${headerDecor}
 <tr>
 <td style="padding:34px ${c.sidePadding}px 26px ${c.sidePadding}px;background-color:${c.emailBg};">
 <p style="${greetingStyle}">${escapeHtml(c.greeting)}</p>
-<p style="margin:0 0 14px 0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${c.paragraph1}</p>
-<p style="margin:0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${c.paragraph2}</p>
+<p style="margin:0 0 14px 0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${htmlNl2br(c.paragraph1)}</p>
+<p style="margin:0;font-size:${c.bodySize}px;color:${c.normalTextColor};line-height:1.7;">${htmlNl2br(c.paragraph2)}</p>
 </td>
 </tr>
 

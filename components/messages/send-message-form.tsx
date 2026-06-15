@@ -2,14 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Info, Loader2, Paintbrush, Plus, Send, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  Info,
+  Loader2,
+  Paintbrush,
+  Paperclip,
+  Plus,
+  Send,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
-import { useTemplates } from "@/lib/api/templates";
+import { useAllTemplates } from "@/lib/api/global-messaging";
 import {
   WHATSAPP_RECIPIENT_LIMIT,
   recipientCount,
@@ -18,7 +28,14 @@ import {
   validateSendMessage,
   type SendMessageDraft,
 } from "@/lib/validation/send-message";
-import type { ManualRecipient, MessageChannel } from "@/lib/api/types";
+import type {
+  FunnelStatus,
+  ManualRecipient,
+  MessageAttachment,
+  MessageChannel,
+} from "@/lib/api/types";
+import { funnelStatusConfig } from "@/lib/utils/status-maps";
+import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import { PhoneField } from "@/components/forms/phone-field";
@@ -58,6 +75,25 @@ import {
 
 const NO_TEMPLATE = "__none__";
 const NO_EVENT = "__none_event__";
+const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024; // 10MB por arquivo
+
+/** Lê um File e devolve mimeType + conteúdo base64 (sem prefixo data:). */
+function readAsAttachment(file: File): Promise<MessageAttachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Falha ao ler o arquivo"));
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve({
+        filename: file.name,
+        mimeType: file.type || "application/octet-stream",
+        contentBase64: base64,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export function SendMessageForm({
   eventId: fixedEventId,
@@ -71,13 +107,34 @@ export function SendMessageForm({
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
 
+  // status selecionados para exibir na tabela (vazio = todos). Filtro client-side.
+  const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
+
   const { data: registrationsResponse, isLoading: loadingRegs } =
     useRegistrations(effectiveEventId ?? "", { limit: 100 });
   const registrations = useMemo(
     () => registrationsResponse?.data ?? [],
     [registrationsResponse?.data],
   );
-  const { data: templates } = useTemplates(effectiveEventId);
+  const visibleRegistrations = useMemo(
+    () =>
+      statusFilter.size === 0
+        ? registrations
+        : registrations.filter((r) => statusFilter.has(r.status)),
+    [registrations, statusFilter],
+  );
+
+  function toggleStatusFilter(s: FunnelStatus) {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(s)) next.delete(s);
+      else next.add(s);
+      return next;
+    });
+  }
+  // Templates são globais (sem evento) — lista igual à aba Templates.
+  const { data: templatesResponse } = useAllTemplates(1, 100);
+  const templates = templatesResponse?.data;
   const sendMessage = useSendMessage(effectiveEventId || undefined);
 
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
@@ -96,9 +153,12 @@ export function SendMessageForm({
     email: "",
     phone: "",
   });
+  const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
+  const attachInputRef = useRef<HTMLInputElement>(null);
 
   function insertVariable(variable: string) {
     const token = `{{${variable}}}`;
@@ -121,8 +181,12 @@ export function SendMessageForm({
   const handleIframeLoad = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe?.contentDocument?.documentElement) return;
-    const h = iframe.contentDocument.documentElement.scrollHeight;
-    if (h > 0) iframe.style.height = `${h}px`;
+    const doc = iframe.contentDocument;
+    const h = Math.max(
+      doc.documentElement.scrollHeight,
+      doc.body?.scrollHeight ?? 0,
+    );
+    if (h > 0) iframe.style.height = `${h + 4}px`;
   }, []);
 
   // pré-seleção vinda do atalho da tabela de inscritos (?to=)
@@ -137,18 +201,41 @@ export function SendMessageForm({
   }, [initialRegistrationId, registrations]);
 
 
-  function applyEmailTemplate(key: EmailTemplateKey) {
-    const preset = EMAIL_LAYOUT_PRESETS[key];
-    setLayoutConfig(preset);
-    setBody(buildEmail(preset));
-    setActiveStyle(key);
-  }
-
   const channelTemplates = useMemo(
     () => (templates ?? []).filter((t) => t.channel === channel),
     [templates, channel],
   );
   const selectedTemplate = channelTemplates.find((t) => t.id === templateId);
+
+  function applyEmailTemplate(key: EmailTemplateKey) {
+    const preset = EMAIL_LAYOUT_PRESETS[key];
+    // Estilo HTML: se há template selecionado, sua mensagem vira o Parágrafo 1.
+    const cfg = selectedTemplate
+      ? { ...preset, paragraph1: selectedTemplate.body }
+      : preset;
+    setLayoutConfig(cfg);
+    setBody(buildEmail(cfg));
+    setActiveStyle(key);
+  }
+
+  // Seleciona template: preenche assunto/mensagem. Se houver layout HTML ativo,
+  // injeta a mensagem no Parágrafo 1 (vale antes ou depois de aplicar o estilo).
+  function selectTemplate(value: string) {
+    const id = value === NO_TEMPLATE ? null : value;
+    setTemplateId(id);
+    const tpl = id ? channelTemplates.find((t) => t.id === id) : null;
+    if (channel === "email") setSubject(tpl?.subject ?? "");
+    if (channel === "email" && layoutConfig) {
+      const cfg = {
+        ...layoutConfig,
+        paragraph1: tpl?.body ?? layoutConfig.paragraph1,
+      };
+      setLayoutConfig(cfg);
+      setBody(buildEmail(cfg));
+    } else {
+      setBody(tpl?.body ?? "");
+    }
+  }
 
   function changeChannel(next: MessageChannel) {
     setChannel(next);
@@ -169,6 +256,7 @@ export function SendMessageForm({
     manualRecipients,
     inviteIcs,
     inviteRecurrent,
+    attachments,
   };
   const hasEventId = Boolean(effectiveEventId);
   const inviteEnabled = channel === "email" && hasEventId;
@@ -177,15 +265,17 @@ export function SendMessageForm({
   const validationError = validateSendMessage(draft);
 
   const allSelected =
-    registrations.length > 0 &&
-    selected.size === registrations.length;
+    visibleRegistrations.length > 0 &&
+    visibleRegistrations.every((r) => selected.has(r.id));
 
   function toggleAll() {
-    if (allSelected) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(registrations.map((r) => r.id)));
-    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      const ids = visibleRegistrations.map((r) => r.id);
+      if (allSelected) ids.forEach((id) => next.delete(id));
+      else ids.forEach((id) => next.add(id));
+      return next;
+    });
   }
 
   function toggleOne(id: string) {
@@ -212,6 +302,51 @@ export function SendMessageForm({
     setManualDraft({ name: "", email: "", phone: "" });
   }
 
+  function importCsv(file: File | undefined) {
+    if (csvInputRef.current) csvInputRef.current.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const { recipients, skipped } = parseRecipientsCsv(reader.result as string);
+      // adiciona todos os que têm nome — a validação por canal acontece no envio
+      if (recipients.length === 0) {
+        toast.error(
+          "Nenhum destinatário válido no CSV (verifique colunas Nome, Email, Telefone).",
+        );
+        return;
+      }
+      setManualRecipients((prev) => [...prev, ...recipients]);
+      toast.success(
+        `${recipients.length} destinatário(s) importado(s)` +
+          (skipped > 0 ? `, ${skipped} ignorado(s)` : ""),
+      );
+    };
+    reader.onerror = () => toast.error("Falha ao ler o CSV");
+    reader.readAsText(file);
+  }
+
+  async function addAttachments(files: FileList | null) {
+    // captura os arquivos ANTES de limpar o input — FileList é referência viva
+    // e zerar input.value esvaziaria a lista recém-selecionada
+    const list = files ? Array.from(files) : [];
+    if (attachInputRef.current) attachInputRef.current.value = "";
+    if (list.length === 0) return;
+    const accepted: File[] = [];
+    for (const file of list) {
+      if (file.size > ATTACHMENT_MAX_SIZE) {
+        toast.error(`"${file.name}" excede 10MB e foi ignorado.`);
+        continue;
+      }
+      accepted.push(file);
+    }
+    try {
+      const read = await Promise.all(accepted.map(readAsAttachment));
+      setAttachments((prev) => [...prev, ...read]);
+    } catch {
+      toast.error("Falha ao anexar arquivo(s).");
+    }
+  }
+
   function onSend() {
     if (validationError) {
       toast.error(validationError);
@@ -226,6 +361,7 @@ export function SendMessageForm({
         result.skippedReason?.forEach((reason) => toast.warning(reason));
         setSelected(new Set());
         setManualRecipients([]);
+        setAttachments([]);
         setBody("");
         setSubject("");
         setTemplateId(null);
@@ -289,9 +425,7 @@ export function SendMessageForm({
             <Label>Template de mensagem</Label>
             <Select
               value={templateId ?? NO_TEMPLATE}
-              onValueChange={(v) =>
-                setTemplateId(v === NO_TEMPLATE ? null : v)
-              }
+              onValueChange={selectTemplate}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um template" />
@@ -309,15 +443,7 @@ export function SendMessageForm({
             </Select>
           </div>
 
-          {selectedTemplate ? (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Prévia do template</Label>
-              <p className="whitespace-pre-line rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-                {selectedTemplate.body}
-              </p>
-            </div>
-          ) : (
-            <>
+          <>
               {channel === "email" && (
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="send-subject">Assunto</Label>
@@ -379,7 +505,8 @@ export function SendMessageForm({
                         ref={iframeRef}
                         srcDoc={body}
                         title="preview do e-mail"
-                        className="w-full rounded-md border"
+                        scrolling="no"
+                        className="block w-full overflow-hidden rounded-md border"
                         style={{ minHeight: "300px" }}
                         sandbox="allow-same-origin"
                         onLoad={handleIframeLoad}
@@ -476,8 +603,65 @@ export function SendMessageForm({
                   )}
                 </div>
               </div>
-            </>
-          )}
+          </>
+
+          <div className="space-y-2 sm:col-span-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-baseline gap-2">
+                <Label className="shrink-0">Anexo</Label>
+                <span className="truncate text-[11px] text-muted-foreground">
+                  Documentos enviados junto à mensagem (e-mail e WhatsApp). Máx.
+                  10MB por arquivo.
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 shrink-0 gap-1.5 text-xs"
+                onClick={() => attachInputRef.current?.click()}
+              >
+                <Paperclip className="h-3.5 w-3.5" />
+                Anexar documento
+              </Button>
+            </div>
+            <input
+              ref={attachInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => void addAttachments(e.target.files)}
+            />
+            {attachments.length > 0 && (
+              <ul className="space-y-1">
+                {attachments.map((a, index) => (
+                  <li
+                    key={`${a.filename}-${index}`}
+                    className="flex items-center justify-between rounded-lg border px-3 py-1.5 text-sm"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{a.filename}</span>
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      aria-label={`Remover ${a.filename}`}
+                      onClick={() =>
+                        setAttachments((prev) =>
+                          prev.filter((_, i) => i !== index),
+                        )
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -492,58 +676,131 @@ export function SendMessageForm({
               WhatsApp: {count}/{WHATSAPP_RECIPIENT_LIMIT} destinatários
             </p>
           )}
-          {registrations.length > 0 ? (
-            <>
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
-                Usar inscritos do evento ({registrations.length})
-              </label>
 
-              <div className="max-h-72 overflow-y-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10" />
-                      <TableHead>Nome</TableHead>
-                      <TableHead>E-mail</TableHead>
-                      <TableHead>Status</TableHead>
+          <div className="max-h-72 overflow-y-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleAll}
+                      disabled={visibleRegistrations.length === 0}
+                      aria-label="Selecionar todos"
+                    />
+                  </TableHead>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button
+                          type="button"
+                          className="-ml-1 flex items-center gap-1 rounded px-1 py-0.5 font-medium hover:bg-muted hover:text-foreground"
+                        >
+                          Status
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-48 p-2">
+                        <p className="px-1 pb-1 text-xs text-muted-foreground">
+                          Mostrar status
+                        </p>
+                        {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map(
+                          (s) => (
+                            <label
+                              key={s}
+                              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted"
+                            >
+                              <Checkbox
+                                checked={statusFilter.has(s)}
+                                onCheckedChange={() => toggleStatusFilter(s)}
+                              />
+                              {funnelStatusConfig[s].label}
+                            </label>
+                          ),
+                        )}
+                        {statusFilter.size > 0 && (
+                          <button
+                            type="button"
+                            className="mt-1 w-full rounded px-1 py-1 text-left text-xs text-muted-foreground hover:bg-muted"
+                            onClick={() => setStatusFilter(new Set())}
+                          >
+                            Limpar filtro
+                          </button>
+                        )}
+                      </PopoverContent>
+                    </Popover>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleRegistrations.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
+                      {!effectiveEventId
+                        ? "Vincule um evento para listar os inscritos, ou adicione destinatários manualmente."
+                        : statusFilter.size > 0
+                          ? "Nenhum inscrito com esse status."
+                          : "Nenhum inscrito ainda — adicione destinatários manualmente."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  visibleRegistrations.map((r) => (
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer"
+                      onClick={() => toggleOne(r.id)}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selected.has(r.id)}
+                          onCheckedChange={() => toggleOne(r.id)}
+                          aria-label={`Selecionar ${r.name}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{r.name}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {r.email}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {r.phone}
+                      </TableCell>
+                      <TableCell>
+                        <FunnelStatusBadge status={r.status} />
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {registrations.map((r) => (
-                      <TableRow
-                        key={r.id}
-                        className="cursor-pointer"
-                        onClick={() => toggleOne(r.id)}
-                      >
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selected.has(r.id)}
-                            onCheckedChange={() => toggleOne(r.id)}
-                            aria-label={`Selecionar ${r.name}`}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">{r.name}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {r.email}
-                        </TableCell>
-                        <TableCell>
-                          <FunnelStatusBadge status={r.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Nenhum inscrito ainda — adicione destinatários manualmente.
-            </p>
-          )}
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
 
           <div className="space-y-2">
-            <Label>Adicionar destinatários manualmente</Label>
+            <div className="flex items-center justify-between">
+              <Label>Adicionar destinatários manualmente</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => csvInputRef.current?.click()}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Importar CSV
+              </Button>
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(e) => importCsv(e.target.files?.[0])}
+              />
+            </div>
             <div className="flex flex-wrap gap-2">
               <Input
                 placeholder="Nome"
