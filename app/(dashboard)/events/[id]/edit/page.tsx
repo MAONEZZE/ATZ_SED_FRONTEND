@@ -155,6 +155,7 @@ export default function EditEventPage() {
           eventId={event.id}
           slug={event.slug}
           coverUrl={event.coverUrl}
+          updatedAt={event.updatedAt}
           disabled={readonly}
         />
 

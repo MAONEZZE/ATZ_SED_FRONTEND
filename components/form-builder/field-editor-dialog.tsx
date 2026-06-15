@@ -7,6 +7,7 @@ import {
   useCreateFormField,
   useUpdateFormField,
 } from "@/lib/api/form-fields";
+import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import type { FieldType, FormField } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,12 +61,15 @@ function optionsToText(options: unknown): string {
 
 export function FieldEditorDialog({
   eventId,
+  slug,
   field,
   open,
   onOpenChange,
   nextOrder,
 }: {
   eventId: string;
+  /** slug do evento — usado para revalidar a página pública */
+  slug?: string;
   /** null = criar novo */
   field: FormField | null;
   open: boolean;
@@ -111,6 +115,7 @@ export function FieldEditorDialog({
 
     const onDone = {
       onSuccess: () => {
+        if (slug) revalidatePublicEvent(slug);
         toast.success(field ? "Campo atualizado" : "Campo criado");
         onOpenChange(false);
       },

@@ -20,7 +20,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Plus, Share2, Trash2 } from "lucide-react";
+import { GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
   useDeleteFormField,
@@ -28,6 +28,7 @@ import {
   useReorderFormFields,
 } from "@/lib/api/form-fields";
 import { useEvent } from "@/lib/api/events";
+import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import type { FormField } from "@/lib/api/types";
 import { FieldEditorDialog } from "@/components/form-builder/field-editor-dialog";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
@@ -146,8 +147,6 @@ function SortableFieldRow({
 function FormPreview({ fields }: { fields: FormField[] }) {
   // form local apenas para o estado controlado do renderer; sem resolver/submit
   const previewForm = useForm<Record<string, unknown>>();
-  // página pública oculta campos image — espelha o comportamento
-  const visible = fields.filter((f) => f.type !== "image");
 
   return (
     <Card>
@@ -158,7 +157,7 @@ function FormPreview({ fields }: { fields: FormField[] }) {
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
-        <FormFieldsRenderer fields={visible} form={previewForm} disabled />
+        <FormFieldsRenderer fields={fields} form={previewForm} disabled />
         <Button className="w-full" size="lg" disabled>
           Enviar inscrição
         </Button>
@@ -175,15 +174,6 @@ export default function FormBuilderPage() {
   const reorder = useReorderFormFields(eventId);
   const deleteField = useDeleteFormField(eventId);
 
-  function handleShare() {
-    if (!event) return;
-    const url = `${window.location.origin}/e/${event.slug}`;
-    void navigator.clipboard.writeText(url).then(
-      () => toast.success("Link público copiado!"),
-      () => toast.error("Falha ao copiar link"),
-    );
-  }
-
   const [localFields, setLocalFields] = useState<FormField[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FormField | null>(null);
@@ -197,8 +187,8 @@ export default function FormBuilderPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
+  function handleDragEnd(dragEvent: DragEndEvent) {
+    const { active, over } = dragEvent;
     if (!over || active.id === over.id) return;
 
     const oldIndex = localFields.findIndex((f) => f.id === active.id);
@@ -216,6 +206,9 @@ export default function FormBuilderPage() {
 
     if (changes.length) {
       reorder.mutate(changes, {
+        onSuccess: () => {
+          if (event) revalidatePublicEvent(event.slug);
+        },
         onError: (e) => {
           toast.error(`Falha ao reordenar: ${e.message}`);
         },
@@ -235,21 +228,15 @@ export default function FormBuilderPage() {
             Arraste para reordenar. Adicione os campos que quiser.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleShare} disabled={!event}>
-            <Share2 className="mr-2 h-4 w-4" />
-            Compartilhar
-          </Button>
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setEditorOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo campo
-          </Button>
-        </div>
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setEditorOpen(true);
+          }}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Novo campo
+        </Button>
       </div>
 
       <DndContext
@@ -273,7 +260,10 @@ export default function FormBuilderPage() {
                 }}
                 onDelete={() =>
                   deleteField.mutate(field.id, {
-                    onSuccess: () => toast.success("Campo excluído"),
+                    onSuccess: () => {
+                      if (event) revalidatePublicEvent(event.slug);
+                      toast.success("Campo excluído");
+                    },
                     onError: (e) => toast.error(e.message),
                   })
                 }
@@ -285,6 +275,7 @@ export default function FormBuilderPage() {
 
       <FieldEditorDialog
         eventId={eventId}
+        slug={event?.slug}
         field={editing}
         open={editorOpen}
         onOpenChange={setEditorOpen}

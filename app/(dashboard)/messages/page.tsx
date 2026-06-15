@@ -32,6 +32,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -105,9 +112,18 @@ function SendTab() {
 
 function TemplatesTab() {
   const [page, setPage] = useState(1);
+  const [channelFilter, setChannelFilter] = useState<MessageChannel | "all">("all");
   const limit = 10;
-  const { data: response, isLoading } = useAllTemplates(page, limit);
-  const templates = response?.data;
+  const { data: response, isLoading } = useAllTemplates(
+    page,
+    limit,
+    channelFilter === "all" ? undefined : channelFilter,
+  );
+  // filtro client-side de reforço (caso o backend ignore ?channel=)
+  const templates =
+    channelFilter === "all"
+      ? response?.data
+      : response?.data?.filter((t) => t.channel === channelFilter);
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -118,7 +134,29 @@ function TemplatesTab() {
   return (
     <div className="space-y-4">
       <TabToolbar
-        left={response ? `${response.total} template(s)` : null}
+        left={
+          <div className="flex items-center gap-2">
+            <Select
+              value={channelFilter}
+              onValueChange={(v) => {
+                setChannelFilter(v as MessageChannel | "all");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os canais</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="email">E-mail</SelectItem>
+              </SelectContent>
+            </Select>
+            {response ? (
+              <span>{response.total} template(s)</span>
+            ) : null}
+          </div>
+        }
         right={
           <Button
             onClick={() => {

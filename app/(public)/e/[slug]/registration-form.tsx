@@ -87,9 +87,8 @@ export function RegistrationForm({
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // campo image: sem endpoint público de upload no contrato — não renderiza
   const visibleFields = useMemo(
-    () => [...fields].filter((f) => f.type !== "image").sort((a, b) => a.order - b.order),
+    () => [...fields].sort((a, b) => a.order - b.order),
     [fields],
   );
   const schema = useMemo(() => buildSchema(visibleFields), [visibleFields]);
@@ -127,19 +126,16 @@ export function RegistrationForm({
   }
 
   return (
-    <form
-      onSubmit={form.handleSubmit(onSubmit)}
-      className="space-y-5 rounded-xl border p-6"
-    >
-      <FormFieldsRenderer fields={visibleFields} form={form} />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      {visibleFields.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Este evento ainda não possui campos de inscrição.
+        </p>
+      ) : (
+        <FormFieldsRenderer fields={visibleFields} form={form} />
+      )}
 
-      <Button
-        type="submit"
-        className="w-full"
-        size="lg"
-        disabled={submitting}
-        style={{ backgroundColor: "var(--landing-primary)" }}
-      >
+      <Button type="submit" className="w-full" size="lg" disabled={submitting}>
         {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Enviar inscrição
       </Button>

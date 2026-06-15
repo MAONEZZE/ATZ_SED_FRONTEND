@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { TEMPLATE_VARIABLES } from "@/lib/api/templates";
 import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
-import { useEvents } from "@/lib/api/events";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,14 +23,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const NO_EVENT = "__none_event__";
 
 export function GlobalTemplateDialog({
   template,
@@ -43,13 +45,10 @@ export function GlobalTemplateDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { data: eventsResponse } = useEvents();
-  const events = eventsResponse?.data;
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const [eventId, setEventId] = useState("");
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [subject, setSubject] = useState("");
@@ -57,7 +56,6 @@ export function GlobalTemplateDialog({
 
   useEffect(() => {
     if (open) {
-      setEventId(template?.eventId ?? "");
       setName(template?.name ?? "");
       setChannel(template?.channel ?? "whatsapp");
       setSubject(template?.subject ?? "");
@@ -103,7 +101,7 @@ export function GlobalTemplateDialog({
       onError: (e: Error) => toast.error(e.message),
     };
     if (template) update.mutate({ eventId: template.eventId, id: template.id, input }, onDone);
-    else create.mutate({ eventId: eventId || null, input }, onDone);
+    else create.mutate({ input }, onDone);
   }
 
   return (
@@ -114,27 +112,6 @@ export function GlobalTemplateDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Evento (opcional)</Label>
-            <Select
-              value={eventId || NO_EVENT}
-              onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
-              disabled={isEdit}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sem evento (global)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_EVENT}>Sem evento (global)</SelectItem>
-                {events?.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="gtpl-name">Nome *</Label>
             <Input id="gtpl-name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -165,7 +142,25 @@ export function GlobalTemplateDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="gtpl-body">Mensagem *</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="gtpl-body">Mensagem *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto gap-1.5 px-2 py-1 text-xs text-muted-foreground"
+                  >
+                    <Info className="h-3.5 w-3.5" />
+                    Variáveis disponíveis
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 overflow-hidden p-0">
+                  <TemplateVariablesInfo />
+                </PopoverContent>
+              </Popover>
+            </div>
             <VariableTextarea
               id="gtpl-body"
               ref={bodyRef}
@@ -187,7 +182,6 @@ export function GlobalTemplateDialog({
                 </button>
               ))}
             </div>
-            <TemplateVariablesInfo />
           </div>
         </div>
 

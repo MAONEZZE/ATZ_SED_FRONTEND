@@ -5,6 +5,7 @@ import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   AutomationWithEvent,
+  MessageChannel,
   MessageLogWithEvent,
   PaginatedResponse,
   TemplateWithEvent,
@@ -14,13 +15,16 @@ import type { AutomationInput } from "@/lib/api/automations";
 
 /* ---------- Queries agregadas (todos os eventos do usuário) ---------- */
 
-export function useAllTemplates(page = 1, limit = 20) {
+export function useAllTemplates(page = 1, limit = 20, channel?: MessageChannel) {
   return useQuery({
-    queryKey: queryKeys.allTemplates({ page, limit }),
-    queryFn: () =>
-      api.get<PaginatedResponse<TemplateWithEvent>>(
-        `/templates?page=${page}&limit=${limit}`,
-      ),
+    queryKey: queryKeys.allTemplates({ page, limit, channel }),
+    queryFn: () => {
+      const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (channel) qs.set("channel", channel);
+      return api.get<PaginatedResponse<TemplateWithEvent>>(
+        `/templates?${qs.toString()}`,
+      );
+    },
   });
 }
 
@@ -57,17 +61,9 @@ function useInvalidateGlobal() {
 export function useCreateTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    // eventId null/"" → template global (rota /messaging/templates aceita eventId null)
-    mutationFn: ({
-      eventId,
-      input,
-    }: {
-      eventId: string | null;
-      input: TemplateInput;
-    }) =>
-      eventId
-        ? api.post(`/events/${eventId}/templates`, input)
-        : api.post(`/messaging/templates`, { ...input, eventId: null }),
+    // Template sempre global — sem eventId no body nem na rota
+    mutationFn: ({ input }: { input: TemplateInput }) =>
+      api.post(`/messaging/templates`, input),
     onSuccess: invalidate,
   });
 }
@@ -86,7 +82,7 @@ export function useUpdateTemplateGlobal() {
     }) =>
       eventId
         ? api.patch(`/events/${eventId}/templates/${id}`, input)
-        : api.patch(`/messaging/templates/${id}`, input),
+        : api.patch(`/templates/${id}`, input),
     onSuccess: invalidate,
   });
 }
@@ -97,7 +93,7 @@ export function useDeleteTemplateGlobal() {
     mutationFn: ({ eventId, id }: { eventId: string | null; id: string }) =>
       eventId
         ? api.delete(`/events/${eventId}/templates/${id}`)
-        : api.delete(`/messaging/templates/${id}`),
+        : api.delete(`/templates/${id}`),
     onSuccess: invalidate,
   });
 }

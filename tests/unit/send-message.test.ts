@@ -38,7 +38,8 @@ describe("validateSendMessage", () => {
     ).toMatch(/mensagem|template/);
   });
 
-  it("aceita template sem body", () => {
+  it("exige body mesmo com template selecionado", () => {
+    // Template agora só preenche os campos; o envio sempre usa o body.
     expect(
       validateSendMessage({
         ...base,
@@ -46,7 +47,7 @@ describe("validateSendMessage", () => {
         body: "",
         templateId: "t1",
       }),
-    ).toBeNull();
+    ).toMatch(/mensagem|template/);
   });
 
   it("aceita body livre com destinatário", () => {
@@ -72,16 +73,18 @@ describe("validateManualRecipient", () => {
 });
 
 describe("toSendMessageInput", () => {
-  it("com template omite subject/body", () => {
+  it("nunca envia templateId; envia o body preenchido", () => {
     const input = toSendMessageInput({
       ...base,
+      channel: "email",
       templateId: "t1",
       subject: "Assunto",
+      body: "<p>Olá</p>",
       registrationIds: ["a"],
     }, { hasEventId: true });
-    expect(input.templateId).toBe("t1");
-    expect(input.subject).toBeUndefined();
-    expect(input.body).toBeUndefined();
+    expect(input.templateId).toBeUndefined();
+    expect(input.subject).toBe("Assunto");
+    expect(input.body).toBe("<p>Olá</p>");
   });
 
   it("livre por email inclui subject e body", () => {

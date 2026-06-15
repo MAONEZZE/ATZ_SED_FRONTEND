@@ -22,6 +22,17 @@ describe("buildEmail — documento", () => {
     const html = build({ title: "Linha A\nLinha B" });
     expect(html).toMatch(/Linha A<br\s*\/?>Linha B/);
   });
+
+  it("converte quebras de linha do parágrafo 1 em <br>", () => {
+    const html = build({ paragraph1: "Linha 1\nLinha 2" });
+    expect(html).toMatch(/Linha 1<br\s*\/?>Linha 2/);
+  });
+
+  it("preserva HTML do parágrafo 1 (não escapa tags)", () => {
+    const html = build({ paragraph1: "Olá <strong>mundo</strong>\nfim" });
+    expect(html).toContain("<strong>mundo</strong>");
+    expect(html).toMatch(/<strong>mundo<\/strong><br\s*\/?>fim/);
+  });
 });
 
 describe("buildEmail — estrutura (defaults)", () => {

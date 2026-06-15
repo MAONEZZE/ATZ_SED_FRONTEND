@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import {
   ClipboardList,
   ExternalLink,
   Pencil,
+  Share2,
   Users,
 } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
@@ -25,6 +27,15 @@ export default function EventLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { data: event } = useEvent(params.id);
 
+  function handleShare() {
+    if (!event) return;
+    const url = `${window.location.origin}/e/${event.slug}`;
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Link público copiado!"),
+      () => toast.error("Falha ao copiar link"),
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -32,18 +43,26 @@ export default function EventLayout({ children }: { children: ReactNode }) {
           {event?.title ?? ""}
         </h1>
         {event && <EventStatusBadge status={event.status} />}
-        {event?.status === "published" && (
-          <Button asChild variant="outline" size="sm" className="ml-auto">
-            <a
-              href={`/e/${event.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Página pública
-            </a>
-          </Button>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {event && (
+            <Button variant="outline" size="sm" onClick={handleShare}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Compartilhar
+            </Button>
+          )}
+          {event?.status === "published" && (
+            <Button asChild variant="outline" size="sm">
+              <a
+                href={`/e/${event.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Página pública
+              </a>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Abas horizontais com scroll em mobile */}

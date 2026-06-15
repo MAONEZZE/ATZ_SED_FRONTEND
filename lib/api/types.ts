@@ -216,6 +216,14 @@ export interface ManualRecipient {
   phone?: string;
 }
 
+/** Anexo enviado em base64 no corpo JSON de POST /messaging/send (e-mail e WhatsApp) */
+export interface MessageAttachment {
+  filename: string;
+  mimeType: string;
+  /** conteúdo do arquivo em base64 (sem o prefixo data:...;base64,) */
+  contentBase64: string;
+}
+
 export interface SendMessageInput {
   eventId?: string;
   channel: MessageChannel;
@@ -224,6 +232,7 @@ export interface SendMessageInput {
   body?: string;
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
+  attachments?: MessageAttachment[];
 }
 
 /** Resposta 202 de POST /messaging/send */

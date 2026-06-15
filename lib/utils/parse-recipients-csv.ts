@@ -1,0 +1,93 @@
+import type { ManualRecipient } from "@/lib/api/types";
+
+export interface ParseCsvResult {
+  recipients: ManualRecipient[];
+  /** linhas ignoradas por não terem nome */
+  skipped: number;
+}
+
+/** normaliza cabeçalho: minúsculo, sem acento, sem espaços */
+function normalizeHeader(h: string): string {
+  return h
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Divide uma linha CSV respeitando aspas. Aceita , ou ; como delimitador. */
+function splitLine(line: string, delimiter: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === delimiter && !inQuotes) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map((c) => c.trim());
+}
+
+/**
+ * Faz parse de um CSV com colunas Nome, Email e Telefone (em qualquer ordem,
+ * cabeçalho com ou sem acento). Retorna destinatários avulsos.
+ */
+export function parseRecipientsCsv(text: string): ParseCsvResult {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return { recipients: [], skipped: 0 };
+
+  const delimiter = lines[0].includes(";") ? ";" : ",";
+  const header = splitLine(lines[0], delimiter).map(normalizeHeader);
+
+  const nameIdx = header.findIndex((h) => h === "nome" || h === "name");
+  const emailIdx = header.findIndex((h) => h === "email" || h === "e-mail");
+  const phoneIdx = header.findIndex(
+    (h) => h === "telefone" || h === "phone" || h === "celular",
+  );
+
+  // sem cabeçalho reconhecível: assume ordem Nome, Email, Telefone
+  const hasHeader = nameIdx !== -1 || emailIdx !== -1 || phoneIdx !== -1;
+  const cols = hasHeader
+    ? { name: nameIdx, email: emailIdx, phone: phoneIdx }
+    : { name: 0, email: 1, phone: 2 };
+
+  const rows = hasHeader ? lines.slice(1) : lines;
+
+  const recipients: ManualRecipient[] = [];
+  let skipped = 0;
+
+  for (const line of rows) {
+    const cells = splitLine(line, delimiter);
+    const name = cols.name >= 0 ? (cells[cols.name] ?? "").trim() : "";
+    const email = cols.email >= 0 ? (cells[cols.email] ?? "").trim() : "";
+    const phone = cols.phone >= 0 ? (cells[cols.phone] ?? "").trim() : "";
+
+    if (!name) {
+      skipped++;
+      continue;
+    }
+    recipients.push({
+      name,
+      email: email || undefined,
+      phone: phone || undefined,
+    });
+  }
+
+  return { recipients, skipped };
+}
