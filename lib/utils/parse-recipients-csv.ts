@@ -2,11 +2,10 @@ import type { ManualRecipient } from "@/lib/api/types";
 
 export interface ParseCsvResult {
   recipients: ManualRecipient[];
-  /** linhas ignoradas por não terem nome */
+
   skipped: number;
 }
 
-/** normaliza cabeçalho: minúsculo, sem acento, sem espaços */
 function normalizeHeader(h: string): string {
   return h
     .trim()
@@ -15,7 +14,6 @@ function normalizeHeader(h: string): string {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/** Divide uma linha CSV respeitando aspas. Aceita , ou ; como delimitador. */
 function splitLine(line: string, delimiter: string): string[] {
   const out: string[] = [];
   let cur = "";
@@ -40,10 +38,6 @@ function splitLine(line: string, delimiter: string): string[] {
   return out.map((c) => c.trim());
 }
 
-/**
- * Faz parse de um CSV com colunas Nome, Email e Telefone (em qualquer ordem,
- * cabeçalho com ou sem acento). Retorna destinatários avulsos.
- */
 export function parseRecipientsCsv(text: string): ParseCsvResult {
   const lines = text
     .split(/\r?\n/)
@@ -61,7 +55,6 @@ export function parseRecipientsCsv(text: string): ParseCsvResult {
     (h) => h === "telefone" || h === "phone" || h === "celular",
   );
 
-  // sem cabeçalho reconhecível: assume ordem Nome, Email, Telefone
   const hasHeader = nameIdx !== -1 || emailIdx !== -1 || phoneIdx !== -1;
   const cols = hasHeader
     ? { name: nameIdx, email: emailIdx, phone: phoneIdx }

@@ -5,7 +5,6 @@ import type {
   SendMessageInput,
 } from "@/lib/api/types";
 
-/** Rascunho do envio manual (estado do formulário) */
 export interface SendMessageDraft {
   channel: MessageChannel;
   templateId: string | null;
@@ -13,33 +12,30 @@ export interface SendMessageDraft {
   body: string;
   registrationIds: string[];
   manualRecipients: ManualRecipient[];
-  /** Anexa convite de agenda (.ics) — só e-mail com evento vinculado. */
+
   inviteIcs?: boolean;
-  /** Anexa convite de agenda recorrente (.ics). */
+
   inviteRecurrent?: boolean;
-  /** Documentos anexados (e-mail e WhatsApp). */
+
   attachments?: MessageAttachment[];
 }
 
-export function recipientCount(draft: Pick<SendMessageDraft, "registrationIds" | "manualRecipients">): number {
+export function recipientCount(
+  draft: Pick<SendMessageDraft, "registrationIds" | "manualRecipients">,
+): number {
   return draft.registrationIds.length + draft.manualRecipients.length;
 }
 
 export const WHATSAPP_RECIPIENT_LIMIT = 30;
 
-/** Retorna mensagem de erro ou null se o rascunho é enviável */
-export function validateSendMessage(
-  draft: SendMessageDraft,
-): string | null {
+export function validateSendMessage(draft: SendMessageDraft): string | null {
   if (recipientCount(draft) === 0) return "Selecione ao menos um destinatário";
   if (draft.channel === "whatsapp" && recipientCount(draft) > WHATSAPP_RECIPIENT_LIMIT)
     return `WhatsApp: máximo ${WHATSAPP_RECIPIENT_LIMIT} destinatários por disparo`;
-  if (!draft.body.trim())
-    return "Escreva a mensagem ou selecione um template";
+  if (!draft.body.trim()) return "Escreva a mensagem ou selecione um template";
   return null;
 }
 
-/** Valida destinatário avulso antes de adicionar à lista */
 export function validateManualRecipient(
   recipient: ManualRecipient,
   channel: MessageChannel,
@@ -52,11 +48,6 @@ export function validateManualRecipient(
   return null;
 }
 
-/**
- * Insere um token de convite no corpo. Em HTML (body completo), coloca o token
- * ANTES de </body> — fora disso o token cairia depois de </html> e seria
- * descartado por clientes/parsers de e-mail, impedindo o backend de detectá-lo.
- */
 function injectInviteToken(body: string, token: string): string {
   if (body.includes(token)) return body;
   const closeIdx = body.toLowerCase().lastIndexOf("</body>");
@@ -70,12 +61,8 @@ export function toSendMessageInput(
   draft: SendMessageDraft,
   opts: { hasEventId: boolean },
 ): SendMessageInput {
-  // O template apenas preenche os campos; o conteúdo enviado é sempre o que está
-  // em subject/body (HTML do layout incluso). templateId NÃO é enviado — evita
-  // que o backend renderize o body salvo do template e deduplique por template.
   let body = draft.body.trim();
 
-  // Tokens de convite (.ics) só em e-mail — backend resolve a data pelo evento.
   if (body && draft.channel === "email") {
     if (draft.inviteIcs) body = injectInviteToken(body, "{{invite}}");
     if (draft.inviteRecurrent) {
@@ -93,8 +80,6 @@ export function toSendMessageInput(
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
     attachments:
-      draft.attachments && draft.attachments.length > 0
-        ? draft.attachments
-        : undefined,
+      draft.attachments && draft.attachments.length > 0 ? draft.attachments : undefined,
   };
 }

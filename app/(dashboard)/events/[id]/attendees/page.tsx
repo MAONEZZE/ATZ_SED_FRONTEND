@@ -109,11 +109,7 @@ export default function AttendeesPage() {
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant="outline"
-          onClick={handleExport}
-          disabled={exporting}
-        >
+        <Button variant="outline" onClick={handleExport} disabled={exporting}>
           {exporting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
@@ -137,7 +133,6 @@ export default function AttendeesPage() {
         </div>
       )}
 
-      {/* Tabela em desktop */}
       {registrations.length > 0 && (
         <div className="hidden rounded-xl border md:block">
           <Table>
@@ -180,7 +175,6 @@ export default function AttendeesPage() {
         </div>
       )}
 
-      {/* Cards em mobile */}
       {registrations.length > 0 && (
         <div className="space-y-3 md:hidden">
           {registrations.map((registration) => (
@@ -198,9 +192,7 @@ export default function AttendeesPage() {
                   <p className="mt-1 truncate text-sm text-muted-foreground">
                     {registration.email}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {registration.phone}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{registration.phone}</p>
                 </button>
                 <StatusSelect eventId={eventId} registration={registration} />
               </CardContent>

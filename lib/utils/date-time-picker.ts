@@ -2,8 +2,6 @@ import { CalendarDate, parseDate } from "@internationalized/date";
 
 export type DateTimeMode = "datetime" | "date";
 
-/** Parse a form string ("YYYY-MM-DD" or "YYYY-MM-DDTHH:mm") into the
- *  calendar date + a "HH:mm" time string. Bad/empty input → nulls. */
 export function parseValue(
   value: string | undefined,
   mode: DateTimeMode,
@@ -20,8 +18,6 @@ export function parseValue(
   return { date, time };
 }
 
-/** Combine calendar date + "HH:mm" time into the form string for the mode.
- *  Null date → "". datetime mode with empty time → defaults to 00:00. */
 export function formatValue(
   date: CalendarDate | null,
   time: string,

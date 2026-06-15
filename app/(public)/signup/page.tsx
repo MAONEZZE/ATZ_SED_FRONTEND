@@ -43,9 +43,7 @@ export default function SignupPage() {
       await signUp(values.name, values.email, values.password);
       setDone(true);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Falha ao criar conta.",
-      );
+      toast.error(error instanceof Error ? error.message : "Falha ao criar conta.");
     } finally {
       setSubmitting(false);
     }
@@ -59,8 +57,8 @@ export default function SignupPage() {
             <MailCheck className="mx-auto h-12 w-12 text-primary" />
             <CardTitle>Confirme seu e-mail</CardTitle>
             <CardDescription>
-              Enviamos um link de confirmação para o seu e-mail. Confirme para
-              acessar sua conta.
+              Enviamos um link de confirmação para o seu e-mail. Confirme para acessar sua
+              conta.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -126,7 +124,10 @@ export default function SignupPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Já tem conta?{" "}
-            <Link href="/login" className="text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/login"
+              className="text-primary underline-offset-4 hover:underline"
+            >
               Entrar
             </Link>
           </p>

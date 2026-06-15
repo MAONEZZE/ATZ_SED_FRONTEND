@@ -62,7 +62,7 @@ function ColorField({
   onChange: (v: string) => void;
 }) {
   const id = useId();
-  // Buffer de texto local para permitir digitação parcial sem corromper o estado.
+
   const [text, setText] = useState(value);
 
   useEffect(() => {
@@ -207,13 +207,7 @@ export function FieldRenderer({
 }) {
   switch (field.type) {
     case "text":
-      return (
-        <TextField
-          label={field.label}
-          value={String(value)}
-          onChange={onChange}
-        />
-      );
+      return <TextField label={field.label} value={String(value)} onChange={onChange} />;
     case "textarea":
       return (
         <TextField
@@ -224,13 +218,7 @@ export function FieldRenderer({
         />
       );
     case "color":
-      return (
-        <ColorField
-          label={field.label}
-          value={String(value)}
-          onChange={onChange}
-        />
-      );
+      return <ColorField label={field.label} value={String(value)} onChange={onChange} />;
     case "range":
       return (
         <RangeField
@@ -245,11 +233,7 @@ export function FieldRenderer({
       );
     case "toggle":
       return (
-        <ToggleField
-          label={field.label}
-          value={Boolean(value)}
-          onChange={onChange}
-        />
+        <ToggleField label={field.label} value={Boolean(value)} onChange={onChange} />
       );
     case "select":
       return (

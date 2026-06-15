@@ -67,17 +67,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const NO_TEMPLATE = "__none__";
 const NO_EVENT = "__none_event__";
-const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024; // 10MB por arquivo
+const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
 
-/** Lê um File e devolve mimeType + conteúdo base64 (sem prefixo data:). */
 function readAsAttachment(file: File): Promise<MessageAttachment> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -107,11 +102,12 @@ export function SendMessageForm({
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
 
-  // status selecionados para exibir na tabela (vazio = todos). Filtro client-side.
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
-  const { data: registrationsResponse, isLoading: loadingRegs } =
-    useRegistrations(effectiveEventId ?? "", { limit: 100 });
+  const { data: registrationsResponse, isLoading: loadingRegs } = useRegistrations(
+    effectiveEventId ?? "",
+    { limit: 100 },
+  );
   const registrations = useMemo(
     () => registrationsResponse?.data ?? [],
     [registrationsResponse?.data],
@@ -132,7 +128,7 @@ export function SendMessageForm({
       return next;
     });
   }
-  // Templates são globais (sem evento) — lista igual à aba Templates.
+
   const { data: templatesResponse } = useAllTemplates(1, 100);
   const templates = templatesResponse?.data;
   const sendMessage = useSendMessage(effectiveEventId || undefined);
@@ -182,14 +178,10 @@ export function SendMessageForm({
     const iframe = iframeRef.current;
     if (!iframe?.contentDocument?.documentElement) return;
     const doc = iframe.contentDocument;
-    const h = Math.max(
-      doc.documentElement.scrollHeight,
-      doc.body?.scrollHeight ?? 0,
-    );
+    const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
     if (h > 0) iframe.style.height = `${h + 4}px`;
   }, []);
 
-  // pré-seleção vinda do atalho da tabela de inscritos (?to=)
   const appliedInitial = useRef(false);
   useEffect(() => {
     if (appliedInitial.current || !initialRegistrationId || registrations.length === 0)
@@ -200,7 +192,6 @@ export function SendMessageForm({
     appliedInitial.current = true;
   }, [initialRegistrationId, registrations]);
 
-
   const channelTemplates = useMemo(
     () => (templates ?? []).filter((t) => t.channel === channel),
     [templates, channel],
@@ -209,7 +200,7 @@ export function SendMessageForm({
 
   function applyEmailTemplate(key: EmailTemplateKey) {
     const preset = EMAIL_LAYOUT_PRESETS[key];
-    // Estilo HTML: se há template selecionado, sua mensagem vira o Parágrafo 1.
+
     const cfg = selectedTemplate
       ? { ...preset, paragraph1: selectedTemplate.body }
       : preset;
@@ -218,8 +209,6 @@ export function SendMessageForm({
     setActiveStyle(key);
   }
 
-  // Seleciona template: preenche assunto/mensagem. Se houver layout HTML ativo,
-  // injeta a mensagem no Parágrafo 1 (vale antes ou depois de aplicar o estilo).
   function selectTemplate(value: string) {
     const id = value === NO_TEMPLATE ? null : value;
     setTemplateId(id);
@@ -308,7 +297,7 @@ export function SendMessageForm({
     const reader = new FileReader();
     reader.onload = () => {
       const { recipients, skipped } = parseRecipientsCsv(reader.result as string);
-      // adiciona todos os que têm nome — a validação por canal acontece no envio
+
       if (recipients.length === 0) {
         toast.error(
           "Nenhum destinatário válido no CSV (verifique colunas Nome, Email, Telefone).",
@@ -326,8 +315,6 @@ export function SendMessageForm({
   }
 
   async function addAttachments(files: FileList | null) {
-    // captura os arquivos ANTES de limpar o input — FileList é referência viva
-    // e zerar input.value esvaziaria a lista recém-selecionada
     const list = files ? Array.from(files) : [];
     if (attachInputRef.current) attachInputRef.current.value = "";
     if (list.length === 0) return;
@@ -423,17 +410,12 @@ export function SendMessageForm({
 
           <div className="space-y-2">
             <Label>Template de mensagem</Label>
-            <Select
-              value={templateId ?? NO_TEMPLATE}
-              onValueChange={selectTemplate}
-            >
+            <Select value={templateId ?? NO_TEMPLATE} onValueChange={selectTemplate}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione um template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_TEMPLATE}>
-                  Sem template (mensagem livre)
-                </SelectItem>
+                <SelectItem value={NO_TEMPLATE}>Sem template (mensagem livre)</SelectItem>
                 {channelTemplates.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name}
@@ -444,108 +426,105 @@ export function SendMessageForm({
           </div>
 
           <>
-              {channel === "email" && (
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="send-subject">Assunto</Label>
-                  <Input
-                    id="send-subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                  />
-                </div>
-              )}
+            {channel === "email" && (
               <div className="space-y-2 sm:col-span-2">
-                <div className={channel === "email" ? "flex gap-3 items-stretch" : ""}>
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="send-body">Mensagem *</Label>
-                      <div className="flex items-center gap-2">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              className="h-7 gap-1.5 text-xs"
-                            >
-                              <Info className="h-3.5 w-3.5" />
-                              Variáveis
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent
-                            align="end"
-                            className="max-h-[60vh] w-80 overflow-y-auto p-0"
-                          >
-                            <TemplateVariablesInfo />
-                          </PopoverContent>
-                        </Popover>
-                        {channel === "email" && (
+                <Label htmlFor="send-subject">Assunto</Label>
+                <Input
+                  id="send-subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+              </div>
+            )}
+            <div className="space-y-2 sm:col-span-2">
+              <div className={channel === "email" ? "flex items-stretch gap-3" : ""}>
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="send-body">Mensagem *</Label>
+                    <div className="flex items-center gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
                             className="h-7 gap-1.5 text-xs"
-                            disabled={!activeStyle}
-                            title={
-                              activeStyle
-                                ? undefined
-                                : "Escolha um estilo para habilitar"
-                            }
-                            onClick={() => setLayoutEditorOpen(true)}
                           >
-                            <Paintbrush className="h-3.5 w-3.5" />
-                            Editar layout
+                            <Info className="h-3.5 w-3.5" />
+                            Variáveis
                           </Button>
-                        )}
-                      </div>
+                        </PopoverTrigger>
+                        <PopoverContent
+                          align="end"
+                          className="max-h-[60vh] w-80 overflow-y-auto p-0"
+                        >
+                          <TemplateVariablesInfo />
+                        </PopoverContent>
+                      </Popover>
+                      {channel === "email" && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1.5 text-xs"
+                          disabled={!activeStyle}
+                          title={
+                            activeStyle ? undefined : "Escolha um estilo para habilitar"
+                          }
+                          onClick={() => setLayoutEditorOpen(true)}
+                        >
+                          <Paintbrush className="h-3.5 w-3.5" />
+                          Editar layout
+                        </Button>
+                      )}
                     </div>
-
-                    {bodyIsHtml ? (
-                      <iframe
-                        ref={iframeRef}
-                        srcDoc={body}
-                        title="preview do e-mail"
-                        scrolling="no"
-                        className="block w-full overflow-hidden rounded-md border"
-                        style={{ minHeight: "300px" }}
-                        sandbox="allow-same-origin"
-                        onLoad={handleIframeLoad}
-                      />
-                    ) : (
-                      <VariableTextarea
-                        id="send-body"
-                        ref={bodyTextareaRef}
-                        rows={15}
-                        placeholder="Escreva a mensagem..."
-                        value={body}
-                        onChange={(e) => setBody(e.target.value)}
-                      />
-                    )}
-
-                    {!bodyIsHtml && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {VARIABLE_DESCRIPTIONS.map(({ variable }) => (
-                          <Button
-                            key={variable}
-                            type="button"
-                            variant="secondary"
-                            size="sm"
-                            className="h-7 px-2 font-mono text-xs"
-                            onClick={() => insertVariable(variable)}
-                          >
-                            {`{{${variable}}}`}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-
                   </div>
 
-                  {channel === "email" && (
-                    <div className="flex shrink-0 flex-col gap-1.5">
-                      {/* espaçador para alinhar o 1º botão com o topo do campo Mensagem */}
-                      <div className="h-[30px]" aria-hidden />
-                      {(Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map((key) => (
+                  {bodyIsHtml ? (
+                    <iframe
+                      ref={iframeRef}
+                      srcDoc={body}
+                      title="preview do e-mail"
+                      scrolling="no"
+                      className="block w-full overflow-hidden rounded-md border"
+                      style={{ minHeight: "300px" }}
+                      sandbox="allow-same-origin"
+                      onLoad={handleIframeLoad}
+                    />
+                  ) : (
+                    <VariableTextarea
+                      id="send-body"
+                      ref={bodyTextareaRef}
+                      rows={15}
+                      placeholder="Escreva a mensagem..."
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                    />
+                  )}
+
+                  {!bodyIsHtml && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {VARIABLE_DESCRIPTIONS.map(({ variable }) => (
+                        <Button
+                          key={variable}
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-7 px-2 font-mono text-xs"
+                          onClick={() => insertVariable(variable)}
+                        >
+                          {`{{${variable}}}`}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {channel === "email" && (
+                  <div className="flex shrink-0 flex-col gap-1.5">
+                    <div className="h-[30px]" aria-hidden />
+                    {(Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map(
+                      (key) => (
                         <Button
                           key={key}
                           type="button"
@@ -556,53 +535,49 @@ export function SendMessageForm({
                         >
                           {EMAIL_TEMPLATE_LABELS[key]}
                         </Button>
-                      ))}
+                      ),
+                    )}
 
-                      {/* toggles de convite (.ics) — alinhados ao fundo do campo Mensagem */}
-                      <div className="mt-auto flex flex-col gap-1.5 pt-4">
-                        <Button
-                          type="button"
-                          variant={inviteIcs ? "default" : "outline"}
-                          size="sm"
-                          className="w-28 text-xs"
-                          aria-pressed={inviteIcs}
-                          disabled={!inviteEnabled}
-                          title={
-                            inviteEnabled
-                              ? undefined
-                              : "Vincule um evento para habilitar"
-                          }
-                          onClick={() => {
-                            setInviteIcs((v) => !v);
-                            setInviteRecurrent(false);
-                          }}
-                        >
-                          Invite
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={inviteRecurrent ? "default" : "outline"}
-                          size="sm"
-                          className="w-28 text-xs"
-                          aria-pressed={inviteRecurrent}
-                          disabled={!inviteEnabled}
-                          title={
-                            inviteEnabled
-                              ? undefined
-                              : "Vincule um evento para habilitar"
-                          }
-                          onClick={() => {
-                            setInviteRecurrent((v) => !v);
-                            setInviteIcs(false);
-                          }}
-                        >
-                          Invite Recorrente
-                        </Button>
-                      </div>
+                    <div className="mt-auto flex flex-col gap-1.5 pt-4">
+                      <Button
+                        type="button"
+                        variant={inviteIcs ? "default" : "outline"}
+                        size="sm"
+                        className="w-28 text-xs"
+                        aria-pressed={inviteIcs}
+                        disabled={!inviteEnabled}
+                        title={
+                          inviteEnabled ? undefined : "Vincule um evento para habilitar"
+                        }
+                        onClick={() => {
+                          setInviteIcs((v) => !v);
+                          setInviteRecurrent(false);
+                        }}
+                      >
+                        Invite
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={inviteRecurrent ? "default" : "outline"}
+                        size="sm"
+                        className="w-28 text-xs"
+                        aria-pressed={inviteRecurrent}
+                        disabled={!inviteEnabled}
+                        title={
+                          inviteEnabled ? undefined : "Vincule um evento para habilitar"
+                        }
+                        onClick={() => {
+                          setInviteRecurrent((v) => !v);
+                          setInviteIcs(false);
+                        }}
+                      >
+                        Invite Recorrente
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+            </div>
           </>
 
           <div className="space-y-2 sm:col-span-2">
@@ -610,8 +585,8 @@ export function SendMessageForm({
               <div className="flex min-w-0 items-baseline gap-2">
                 <Label className="shrink-0">Anexo</Label>
                 <span className="truncate text-[11px] text-muted-foreground">
-                  Documentos enviados junto à mensagem (e-mail e WhatsApp). Máx.
-                  10MB por arquivo.
+                  Documentos enviados junto à mensagem (e-mail e WhatsApp). Máx. 10MB por
+                  arquivo.
                 </span>
               </div>
               <Button
@@ -650,9 +625,7 @@ export function SendMessageForm({
                       className="h-7 w-7"
                       aria-label={`Remover ${a.filename}`}
                       onClick={() =>
-                        setAttachments((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
+                        setAttachments((prev) => prev.filter((_, i) => i !== index))
                       }
                     >
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -672,7 +645,9 @@ export function SendMessageForm({
         </CardHeader>
         <CardContent className="space-y-4">
           {channel === "whatsapp" && (
-            <p className={`text-sm ${count > WHATSAPP_RECIPIENT_LIMIT ? "text-destructive" : "text-muted-foreground"}`}>
+            <p
+              className={`text-sm ${count > WHATSAPP_RECIPIENT_LIMIT ? "text-destructive" : "text-muted-foreground"}`}
+            >
               WhatsApp: {count}/{WHATSAPP_RECIPIENT_LIMIT} destinatários
             </p>
           )}
@@ -707,20 +682,18 @@ export function SendMessageForm({
                         <p className="px-1 pb-1 text-xs text-muted-foreground">
                           Mostrar status
                         </p>
-                        {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map(
-                          (s) => (
-                            <label
-                              key={s}
-                              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted"
-                            >
-                              <Checkbox
-                                checked={statusFilter.has(s)}
-                                onCheckedChange={() => toggleStatusFilter(s)}
-                              />
-                              {funnelStatusConfig[s].label}
-                            </label>
-                          ),
-                        )}
+                        {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((s) => (
+                          <label
+                            key={s}
+                            className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted"
+                          >
+                            <Checkbox
+                              checked={statusFilter.has(s)}
+                              onCheckedChange={() => toggleStatusFilter(s)}
+                            />
+                            {funnelStatusConfig[s].label}
+                          </label>
+                        ))}
                         {statusFilter.size > 0 && (
                           <button
                             type="button"
@@ -764,12 +737,8 @@ export function SendMessageForm({
                         />
                       </TableCell>
                       <TableCell className="font-medium">{r.name}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {r.email}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {r.phone}
-                      </TableCell>
+                      <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{r.phone}</TableCell>
                       <TableCell>
                         <FunnelStatusBadge status={r.status} />
                       </TableCell>
@@ -806,25 +775,19 @@ export function SendMessageForm({
                 placeholder="Nome"
                 className="min-w-32 flex-1"
                 value={manualDraft.name}
-                onChange={(e) =>
-                  setManualDraft((d) => ({ ...d, name: e.target.value }))
-                }
+                onChange={(e) => setManualDraft((d) => ({ ...d, name: e.target.value }))}
               />
               <Input
                 placeholder="nome@email.com"
                 type="email"
                 className="min-w-40 flex-1"
                 value={manualDraft.email}
-                onChange={(e) =>
-                  setManualDraft((d) => ({ ...d, email: e.target.value }))
-                }
+                onChange={(e) => setManualDraft((d) => ({ ...d, email: e.target.value }))}
               />
               <PhoneField
                 className="min-w-40 flex-1"
                 value={manualDraft.phone ?? ""}
-                onChange={(phone) =>
-                  setManualDraft((d) => ({ ...d, phone }))
-                }
+                onChange={(phone) => setManualDraft((d) => ({ ...d, phone }))}
               />
               <Button
                 type="button"
@@ -858,9 +821,7 @@ export function SendMessageForm({
                       className="h-7 w-7"
                       aria-label={`Remover ${r.name}`}
                       onClick={() =>
-                        setManualRecipients((prev) =>
-                          prev.filter((_, i) => i !== index),
-                        )
+                        setManualRecipients((prev) => prev.filter((_, i) => i !== index))
                       }
                     >
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -874,10 +835,7 @@ export function SendMessageForm({
       </Card>
 
       <div className="flex justify-end">
-        <Button
-          onClick={onSend}
-          disabled={count === 0 || sendMessage.isPending}
-        >
+        <Button onClick={onSend} disabled={count === 0 || sendMessage.isPending}>
           {sendMessage.isPending ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (

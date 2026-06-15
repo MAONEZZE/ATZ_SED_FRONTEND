@@ -6,11 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Rocket, Square } from "lucide-react";
-import {
-  useEvent,
-  useUpdateEvent,
-  useUpdateEventStatus,
-} from "@/lib/api/events";
+import { useEvent, useUpdateEvent, useUpdateEventStatus } from "@/lib/api/events";
 import {
   eventSchema,
   toEventInput,
@@ -37,9 +33,7 @@ function toFormValues(event: EventObject): EventFormValues {
     eventDate: event.eventDate
       ? new Date(event.eventDate).toISOString().slice(0, 16)
       : "",
-    endDate: event.endDate
-      ? new Date(event.endDate).toISOString().slice(0, 16)
-      : "",
+    endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
     postRegistrationMessage: event.postRegistrationMessage ?? "",
   };
 }
@@ -55,7 +49,6 @@ export default function EditEventPage() {
     defaultValues: { title: "" },
   });
 
-  // sincroniza form quando o evento carrega (reset = base do dirty check)
   useEffect(() => {
     if (event) form.reset(toFormValues(event));
   }, [event, form]);
@@ -84,9 +77,7 @@ export default function EditEventPage() {
     updateStatus.mutate(status, {
       onSuccess: () => {
         revalidatePublicEvent(event!.slug);
-        toast.success(
-          status === "published" ? "Evento publicado!" : "Evento encerrado.",
-        );
+        toast.success(status === "published" ? "Evento publicado!" : "Evento encerrado.");
       },
       onError: (e) => toast.error(e.message),
     });
@@ -97,8 +88,8 @@ export default function EditEventPage() {
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-6">
         {readonly && (
           <p className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-200">
-            Evento {event.status === "cancelled" ? "cancelado" : "encerrado"} —
-            somente leitura.
+            Evento {event.status === "cancelled" ? "cancelado" : "encerrado"} — somente
+            leitura.
           </p>
         )}
 
@@ -141,9 +132,7 @@ export default function EditEventPage() {
               className="ml-auto"
               disabled={!isDirty || updateEvent.isPending}
             >
-              {updateEvent.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+              {updateEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Salvar
             </Button>
           </div>

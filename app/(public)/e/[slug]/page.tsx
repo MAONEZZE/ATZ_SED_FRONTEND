@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { CalendarDays, Heart, MapPin, Shirt, Users } from "lucide-react";
+import { CalendarDays, MapPin, Shirt, Users } from "lucide-react";
 import { getPublicEvent, getPublicFormFields } from "@/lib/api/public";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -68,9 +68,7 @@ function InfoCard({
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className="mt-0.5 break-words text-sm font-medium text-foreground">
-          {value}
-        </p>
+        <p className="mt-0.5 break-words text-sm font-medium text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -86,16 +84,12 @@ export default async function PublicEventPage({ params }: PageProps) {
 
   const date = formatDate(event.eventDate);
 
-  // Backend reaproveita a mesma URL ao trocar a capa → o cache do navegador/Next
-  // serviria a imagem antiga. Carimbo da geração ISR (estável até a próxima
-  // revalidação, que dispara no upload da capa) fura o cache sem quebrar o ISR.
   const coverSrc = event.coverUrl
     ? `${event.coverUrl}${event.coverUrl.includes("?") ? "&" : "?"}v=${Date.now()}`
     : null;
 
   return (
     <main className="force-light min-h-screen bg-background text-foreground">
-      {/* Capa — transição esfumaçada e suave para o fundo */}
       {coverSrc && (
         <div className="relative h-64 w-full sm:h-80 md:h-96">
           <Image
@@ -106,7 +100,6 @@ export default async function PublicEventPage({ params }: PageProps) {
             priority
             sizes="100vw"
           />
-          {/* fade gradual de baixo pra cima, dissolvendo a imagem no background */}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
       )}
@@ -116,7 +109,6 @@ export default async function PublicEventPage({ params }: PageProps) {
           event.coverUrl ? "relative -mt-20 pt-0" : "pt-10"
         }`}
       >
-        {/* Card 1 — informações do evento */}
         <Card className="shadow-sm">
           <CardContent className="space-y-6 p-6 sm:p-8">
             <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
@@ -155,7 +147,6 @@ export default async function PublicEventPage({ params }: PageProps) {
           </CardContent>
         </Card>
 
-        {/* Card 2 — formulário de inscrição */}
         <Card className="shadow-sm">
           <CardContent className="space-y-6 p-6 sm:p-8">
             <h2 className="text-xl font-semibold tracking-tight">Inscrição</h2>

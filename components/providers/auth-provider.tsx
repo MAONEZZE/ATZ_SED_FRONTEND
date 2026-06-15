@@ -50,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // POST /profile/ensure após login (idempotente)
   useEffect(() => {
     if (session && !profileEnsured.current) {
       profileEnsured.current = true;

@@ -10,7 +10,6 @@ import { api, apiFetchBlob } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { FunnelStatus, PaginatedResponse, Registration } from "@/lib/api/types";
 
-/** Baixa o CSV de inscrições (mesmos filtros da listagem) */
 export function exportRegistrationsCsv(
   eventId: string,
   filters: { status?: FunnelStatus; search?: string } = {},
@@ -42,8 +41,7 @@ export function useRegistrations(
         `/events/${eventId}/registrations?${qs.toString()}`,
       ),
     enabled: Boolean(eventId),
-    // mantém os dados anteriores enquanto refaz o fetch (troca de filtro/status)
-    // → evita o spinner de tela cheia e a sensação de "recarregar a página"
+
     placeholderData: keepPreviousData,
   });
 }

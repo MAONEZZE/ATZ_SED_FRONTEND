@@ -8,10 +8,7 @@ import { isValidPhoneNumber } from "react-phone-number-input/core";
 import { phoneMetadata } from "@/lib/phone/metadata";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import {
-  answerKeyForField,
-  createPublicRegistration,
-} from "@/lib/api/public";
+import { answerKeyForField, createPublicRegistration } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
@@ -52,9 +49,7 @@ function buildSchema(fields: PublicFormField[]) {
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
         break;
       default:
-        schema = field.required
-          ? z.string().min(1, "Campo obrigatório")
-          : z.string();
+        schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
     }
     if (!field.required && field.type !== "checkbox" && field.type !== "multiselect") {
       schema = schema.optional().or(z.literal(""));
@@ -104,9 +99,7 @@ export function RegistrationForm({
       await createPublicRegistration(slug, values);
       setSuccess(true);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Falha ao enviar inscrição",
-      );
+      toast.error(error instanceof Error ? error.message : "Falha ao enviar inscrição");
     } finally {
       setSubmitting(false);
     }
@@ -118,8 +111,7 @@ export function RegistrationForm({
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h3 className="mt-4 text-xl font-bold">Inscrição enviada!</h3>
         <p className="mt-2 opacity-80">
-          {successMessage ??
-            "Recebemos sua inscrição. Você receberá novidades em breve."}
+          {successMessage ?? "Recebemos sua inscrição. Você receberá novidades em breve."}
         </p>
       </div>
     );

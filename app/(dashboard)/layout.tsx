@@ -6,8 +6,6 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { AppShell } from "@/components/layout/app-shell";
 import { FullPageSpinner } from "@/components/common/loading-spinner";
 
-// O middleware já protege essas rotas no edge; este guard cobre a
-// transição client-side (sessão expirando com app aberto).
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { session, isLoading } = useAuth();
   const router = useRouter();

@@ -13,7 +13,6 @@ export interface FormFieldInput {
   order?: number;
 }
 
-/** type não pode ser alterado após criação (contrato) */
 export type FormFieldUpdateInput = Omit<Partial<FormFieldInput>, "type">;
 
 export function useFormFields(eventId: string) {
@@ -58,7 +57,6 @@ export function useDeleteFormField(eventId: string) {
   });
 }
 
-/** Reordenação: contrato não tem batch — PATCH `order` por campo alterado */
 export function useReorderFormFields(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({

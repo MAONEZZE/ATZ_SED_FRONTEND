@@ -71,7 +71,6 @@ function ChannelBadge({ channel }: { channel: MessageChannel }) {
   );
 }
 
-/** Barra superior de altura fixa — mantém as tabelas alinhadas entre abas. */
 function TabToolbar({ left, right }: { left?: ReactNode; right?: ReactNode }) {
   return (
     <div className="flex h-9 items-center justify-between">
@@ -91,14 +90,11 @@ function EmptyRow({ cols, text }: { cols: number; text: string }) {
   );
 }
 
-// Classes compartilhadas para a coluna de ações (alinhamento consistente)
 const ACTIONS_HEAD = "w-[96px] text-right";
 
 function RowActions({ children }: { children: ReactNode }) {
   return <div className="flex justify-end">{children}</div>;
 }
-
-/* ---------------- Enviar ---------------- */
 
 function SendTab() {
   return (
@@ -107,8 +103,6 @@ function SendTab() {
     </div>
   );
 }
-
-/* ---------------- Templates ---------------- */
 
 function TemplatesTab() {
   const [page, setPage] = useState(1);
@@ -119,7 +113,7 @@ function TemplatesTab() {
     limit,
     channelFilter === "all" ? undefined : channelFilter,
   );
-  // filtro client-side de reforço (caso o backend ignore ?channel=)
+
   const templates =
     channelFilter === "all"
       ? response?.data
@@ -152,9 +146,7 @@ function TemplatesTab() {
                 <SelectItem value="email">E-mail</SelectItem>
               </SelectContent>
             </Select>
-            {response ? (
-              <span>{response.total} template(s)</span>
-            ) : null}
+            {response ? <span>{response.total} template(s)</span> : null}
           </div>
         }
         right={
@@ -190,7 +182,9 @@ function TemplatesTab() {
                 <TableCell>
                   <ChannelBadge channel={t.channel} />
                 </TableCell>
-                <TableCell className="text-muted-foreground">{t.event?.title ?? "Global"}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {t.event?.title ?? "Global"}
+                </TableCell>
                 <TableCell>
                   <RowActions>
                     <Button
@@ -206,7 +200,11 @@ function TemplatesTab() {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label={`Excluir ${t.name}`}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Excluir ${t.name}`}
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
@@ -221,7 +219,7 @@ function TemplatesTab() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                             onClick={() =>
                               deleteTemplate.mutate(
                                 { eventId: t.eventId, id: t.id },
@@ -356,7 +354,11 @@ function AutomationsTab() {
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Excluir automação">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Excluir automação"
+                        >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </AlertDialogTrigger>
@@ -370,7 +372,7 @@ function AutomationsTab() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                             onClick={() =>
                               deleteAutomation.mutate(
                                 { eventId: a.eventId, id: a.id },
@@ -426,8 +428,6 @@ function AutomationsTab() {
     </div>
   );
 }
-
-/* ---------------- Logs ---------------- */
 
 function LogsTab() {
   const [page, setPage] = useState(1);

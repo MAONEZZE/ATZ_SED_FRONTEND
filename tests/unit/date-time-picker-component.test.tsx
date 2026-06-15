@@ -16,9 +16,7 @@ describe("DateTimePicker", () => {
   });
 
   it("shows placeholder when empty", () => {
-    render(
-      <DateTimePicker value="" onChange={() => {}} placeholder="Selecionar" />,
-    );
+    render(<DateTimePicker value="" onChange={() => {}} placeholder="Selecionar" />);
     expect(screen.getByRole("button").textContent).toContain("Selecionar");
   });
 

@@ -8,8 +8,7 @@ export default function Home() {
         SED — Save Event Date
       </h1>
       <p className="max-w-md text-center text-muted-foreground">
-        Gestão de eventos curados: landing pages, inscrições, mensagens e
-        automações.
+        Gestão de eventos curados: landing pages, inscrições, mensagens e automações.
       </p>
       <div className="flex gap-3">
         <Button asChild>

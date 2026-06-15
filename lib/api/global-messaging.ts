@@ -13,17 +13,13 @@ import type {
 import type { TemplateInput } from "@/lib/api/templates";
 import type { AutomationInput } from "@/lib/api/automations";
 
-/* ---------- Queries agregadas (todos os eventos do usuário) ---------- */
-
 export function useAllTemplates(page = 1, limit = 20, channel?: MessageChannel) {
   return useQuery({
     queryKey: queryKeys.allTemplates({ page, limit, channel }),
     queryFn: () => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (channel) qs.set("channel", channel);
-      return api.get<PaginatedResponse<TemplateWithEvent>>(
-        `/templates?${qs.toString()}`,
-      );
+      return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
   });
 }
@@ -48,8 +44,6 @@ export function useAllMessageLogs(page = 1, limit = 30) {
   });
 }
 
-/* ---------- Mutations (CRUD escolhendo o evento no payload) ---------- */
-
 function useInvalidateGlobal() {
   const queryClient = useQueryClient();
   return () => {
@@ -61,7 +55,6 @@ function useInvalidateGlobal() {
 export function useCreateTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    // Template sempre global — sem eventId no body nem na rota
     mutationFn: ({ input }: { input: TemplateInput }) =>
       api.post(`/messaging/templates`, input),
     onSuccess: invalidate,

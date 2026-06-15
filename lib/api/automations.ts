@@ -1,9 +1,4 @@
-"use client";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api/client";
-import { queryKeys } from "@/lib/api/query-keys";
-import type { Automation, AutomationTrigger, PaginatedResponse } from "@/lib/api/types";
+import type { AutomationTrigger } from "@/lib/api/types";
 
 export interface AutomationInput {
   templateId: string;
@@ -12,11 +7,7 @@ export interface AutomationInput {
   active?: boolean;
 }
 
-/** Triggers com delayMinutes (contrato) */
-export const DELAYED_TRIGGERS: AutomationTrigger[] = [
-  "before_event",
-  "after_event",
-];
+export const DELAYED_TRIGGERS: AutomationTrigger[] = ["before_event", "after_event"];
 
 export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
   on_registration: "Ao se inscrever",
@@ -25,45 +16,3 @@ export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
   before_event: "Antes do evento",
   after_event: "Depois do evento",
 };
-
-export function useAutomations(eventId: string) {
-  return useQuery({
-    queryKey: queryKeys.automations(eventId),
-    queryFn: async () => {
-      const res = await api.get<PaginatedResponse<Automation>>(
-        `/events/${eventId}/automations?limit=100`,
-      );
-      return res.data;
-    },
-    enabled: Boolean(eventId),
-  });
-}
-
-export function useCreateAutomation(eventId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (input: AutomationInput) =>
-      api.post<Automation>(`/events/${eventId}/automations`, input),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.automations(eventId) }),
-  });
-}
-
-export function useUpdateAutomation(eventId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<AutomationInput> }) =>
-      api.patch<Automation>(`/events/${eventId}/automations/${id}`, input),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.automations(eventId) }),
-  });
-}
-
-export function useDeleteAutomation(eventId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.delete(`/events/${eventId}/automations/${id}`),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: queryKeys.automations(eventId) }),
-  });
-}

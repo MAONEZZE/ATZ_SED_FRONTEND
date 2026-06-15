@@ -22,11 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -40,7 +36,6 @@ export function GlobalTemplateDialog({
   open,
   onOpenChange,
 }: {
-  /** null = criar novo */
   template: TemplateWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -100,7 +95,8 @@ export function GlobalTemplateDialog({
       },
       onError: (e: Error) => toast.error(e.message),
     };
-    if (template) update.mutate({ eventId: template.eventId, id: template.id, input }, onDone);
+    if (template)
+      update.mutate({ eventId: template.eventId, id: template.id, input }, onDone);
     else create.mutate({ input }, onDone);
   }
 
@@ -114,12 +110,19 @@ export function GlobalTemplateDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="gtpl-name">Nome *</Label>
-            <Input id="gtpl-name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Input
+              id="gtpl-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
             <Label>Canal</Label>
-            <Select value={channel} onValueChange={(v) => setChannel(v as MessageChannel)}>
+            <Select
+              value={channel}
+              onValueChange={(v) => setChannel(v as MessageChannel)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -1,15 +1,5 @@
 import { env } from "@/lib/env";
 
-/**
- * Leitor SSE via fetch + ReadableStream.
- * Necessário porque:
- * - POST /ai/landing-chat é SSE com body (EventSource não faz POST)
- * - GET /events/:id/messaging/logs/stream exige Authorization header
- *   (EventSource não envia headers)
- *
- * Frames: `data: <json>\n\n`. Terminador do chat IA: `data: [DONE]`.
- */
-
 export interface SseOptions {
   method?: "GET" | "POST";
   body?: unknown;
@@ -51,7 +41,6 @@ export async function consumeSse(path: string, options: SseOptions): Promise<voi
 
       buffer += decoder.decode(value, { stream: true });
 
-      // frames separados por linha em branco
       const frames = buffer.split("\n\n");
       buffer = frames.pop() ?? "";
 

@@ -1,10 +1,5 @@
 import type { EventStatus, FunnelStatus } from "@/lib/api/types";
 
-/**
- * Transições legais — espelham o contrato do backend.
- * UI só oferece transições válidas; backend continua autoritativo.
- */
-
 export const eventStatusTransitions: Record<EventStatus, EventStatus[]> = {
   draft: ["published", "cancelled"],
   published: ["cancelled", "ended"],

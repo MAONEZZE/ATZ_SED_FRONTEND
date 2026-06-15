@@ -1,13 +1,6 @@
 import { env } from "@/lib/env";
 import type { PublicEvent, PublicFormField, Registration } from "@/lib/api/types";
 
-/**
- * Fetchers públicos (sem auth).
- * - getPublicEvent/getPublicFormFields: usados em SERVER components com ISR
- *   (next.tags permite revalidação on-demand via /api/revalidate).
- * - createPublicRegistration: usado no client island do formulário.
- */
-
 const REVALIDATE_SECONDS = 300;
 
 export async function getPublicEvent(slug: string): Promise<PublicEvent | null> {
@@ -47,20 +40,15 @@ export async function createPublicRegistration(
       if (body.message) {
         message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
       }
-    } catch {
-      // corpo não-JSON
-    }
+    } catch {}
     throw new Error(message);
   }
   return (await res.json()) as Registration;
 }
 
-/**
- * Mapeia label do campo → chave esperada pelo backend nas answers.
- * Backend extrai: nome|name, email, telefone|phone (campos fixos:
- * "Nome", "Telefone", "E-mail", "Endereço"). Demais campos: a própria label.
- */
-export function answerKeyForField(field: Pick<PublicFormField, "label" | "type">): string {
+export function answerKeyForField(
+  field: Pick<PublicFormField, "label" | "type">,
+): string {
   const normalized = field.label.trim().toLowerCase();
   if (field.type === "email" || normalized === "e-mail" || normalized === "email") {
     return "email";

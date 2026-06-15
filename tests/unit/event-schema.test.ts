@@ -27,8 +27,12 @@ describe("eventSchema — endDate", () => {
   });
 
   it("não valida quando só um dos campos está preenchido", () => {
-    expect(eventSchema.safeParse({ ...base, endDate: "2026-07-01T18:00" }).success).toBe(true);
-    expect(eventSchema.safeParse({ ...base, eventDate: "2026-07-01T19:00" }).success).toBe(true);
+    expect(eventSchema.safeParse({ ...base, endDate: "2026-07-01T18:00" }).success).toBe(
+      true,
+    );
+    expect(
+      eventSchema.safeParse({ ...base, eventDate: "2026-07-01T19:00" }).success,
+    ).toBe(true);
   });
 });
 

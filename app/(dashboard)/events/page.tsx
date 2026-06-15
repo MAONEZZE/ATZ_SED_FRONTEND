@@ -77,7 +77,6 @@ function EventCard({ event }: { event: EventObject }) {
 
   return (
     <Card className="overflow-hidden transition-shadow hover:shadow-md">
-      {/* Capa 16:9 */}
       <div className="relative aspect-video bg-muted">
         {event.coverUrl ? (
           <Image
@@ -92,7 +91,6 @@ function EventCard({ event }: { event: EventObject }) {
             <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
           </div>
         )}
-        {/* Menu flutuante sobre a imagem */}
         <div className="absolute right-2 top-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -137,14 +135,14 @@ function EventCard({ event }: { event: EventObject }) {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir evento?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Isso apaga o evento, formulário, inscrições, templates,
-                      automações e landing. Ação irreversível.
+                      Isso apaga o evento, formulário, inscrições, templates, automações e
+                      landing. Ação irreversível.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
                       onClick={() =>
                         deleteEvent.mutate(event.id, {
                           onSuccess: () => toast.success("Evento excluído"),
@@ -162,7 +160,6 @@ function EventCard({ event }: { event: EventObject }) {
         </div>
       </div>
 
-      {/* Info do evento */}
       <CardContent className="p-4">
         <Link href={`/events/${event.id}/edit`} className="block">
           <div className="flex flex-wrap items-center gap-2">
@@ -198,7 +195,13 @@ function EventCard({ event }: { event: EventObject }) {
 export default function EventsPage() {
   const [page, setPage] = useState(1);
   const limit = 20;
-  const { data: response, isLoading, isError, refetch, isRefetching } = useEvents(page, limit);
+  const {
+    data: response,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useEvents(page, limit);
   const events = response?.data;
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
 
@@ -251,7 +254,9 @@ export default function EventsPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {events?.map((event) => <EventCard key={event.id} event={event} />)}
+        {events?.map((event) => (
+          <EventCard key={event.id} event={event} />
+        ))}
       </div>
 
       {totalPages > 0 && (

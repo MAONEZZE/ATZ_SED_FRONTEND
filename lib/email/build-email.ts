@@ -1,20 +1,8 @@
-/**
- * Gerador puro do HTML do e-mail de convite.
- *
- * Retorna o documento completo (<!DOCTYPE html> … </html>), 100% baseado em
- * <table> com todos os estilos inline (sem classes CSS), compatível com clientes
- * de e-mail e pronto para envio via Resend. Estrutura fiel aos templates de
- * referência (header, corpo, card de informações com coluna de ícone + divisória,
- * footer com despedida acima da assinatura/ícones). Função isolada, sem React,
- * reutilizável por backend/worker no futuro.
- */
-
 import {
   EMAIL_FONT_STACKS,
   type EmailLayoutConfig,
 } from "@/lib/email/email-layout-config";
 
-/** Escapa &, <, >, " para uso em texto simples. */
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -23,12 +11,10 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Converte quebras de linha em <br> (após escape). */
 function nl2br(value: string): string {
   return escapeHtml(value).replace(/\r?\n/g, "<br>");
 }
 
-/** Campos que aceitam HTML: mantém as tags, só converte quebras de linha. */
 function htmlNl2br(value: string): string {
   return value.replace(/\r?\n/g, "<br>");
 }
@@ -37,10 +23,6 @@ function fontStack(key: string): string {
   return EMAIL_FONT_STACKS[key] ?? EMAIL_FONT_STACKS["Helvetica/Arial"];
 }
 
-/**
- * Ícone social como <img> PNG (icons8 CDN) — compatível com clientes de e-mail
- * (Gmail/Outlook removem SVG inline). A cor segue `footerTextColor`.
- */
 function socialIcon(name: string, color: string, alt: string): string {
   const hex = color.replace(/^#/, "") || "cccccc";
   return `<img src="https://img.icons8.com/ios-filled/100/${hex}/${name}.png" width="20" height="20" alt="${escapeHtml(
@@ -57,7 +39,6 @@ export function buildEmail(config: EmailLayoutConfig): string {
     ? "box-shadow:0 4px 20px rgba(0,0,0,0.12);"
     : "";
 
-  // ── Header background ──
   const headerBg = c.headerGradient
     ? `background:${c.headerColor1};background:linear-gradient(${c.gradientAngle}deg, ${c.headerColor1} 0%, ${c.headerColor2} 60%, ${c.headerColor3} 100%);`
     : `background-color:${c.headerColor1};`;
@@ -81,12 +62,10 @@ export function buildEmail(config: EmailLayoutConfig): string {
       )}</p>`
     : "";
 
-  // ── Saudação ──
   const greetingStyle = `margin:0 0 14px 0;font-size:${c.greetingSize}px;font-weight:600;color:${c.greetingColor};${
     c.greetingUppercase ? "text-transform:uppercase;" : ""
   }${c.greetingSpacing > 0 ? `letter-spacing:${c.greetingSpacing}px;` : ""}`;
 
-  // ── Borda destacada do card ──
   let cardBorder = "";
   if (c.cardBorderWidth > 0 && c.cardBorderSide !== "none") {
     if (c.cardBorderSide === "all") {
@@ -96,7 +75,6 @@ export function buildEmail(config: EmailLayoutConfig): string {
     }
   }
 
-  // ── Ícones sociais (renderizados condicionalmente como <td>) ──
   const socialCells: string[] = [];
   if (c.showInstagram) {
     socialCells.push(

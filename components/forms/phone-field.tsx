@@ -8,7 +8,6 @@ import { phoneMetadata } from "@/lib/phone/metadata";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-// Input do projeto usado dentro do PhoneInput (campo do número, sem o seletor)
 const PhoneTextInput = forwardRef<
   HTMLInputElement,
   React.InputHTMLAttributes<HTMLInputElement>
@@ -16,10 +15,6 @@ const PhoneTextInput = forwardRef<
   return <Input ref={ref} {...props} />;
 });
 
-/**
- * Campo de telefone com seletor de país (bandeira + código) e máscara por país.
- * Valor controlado em formato E.164 (ex.: +5511999999999) ou "" quando vazio.
- */
 export function PhoneField({
   id,
   value,

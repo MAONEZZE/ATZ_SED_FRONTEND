@@ -18,9 +18,7 @@ test.describe("login", () => {
     await page.getByRole("button", { name: "Entrar" }).click();
 
     await expect(page).toHaveURL(/\/events/);
-    await expect(
-      page.getByRole("heading", { name: "Eventos" }),
-    ).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Eventos" })).toBeVisible();
   });
 
   test("credenciais inválidas mostram erro", async ({ page }) => {
@@ -29,7 +27,6 @@ test.describe("login", () => {
     await page.getByLabel("Senha").fill("senha-errada");
     await page.getByRole("button", { name: "Entrar" }).click();
 
-    // toast de erro do Sonner
     await expect(page.locator("[data-sonner-toast]")).toBeVisible();
     await expect(page).toHaveURL(/\/login/);
   });

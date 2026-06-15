@@ -35,7 +35,6 @@ export function GlobalAutomationDialog({
   open,
   onOpenChange,
 }: {
-  /** null = criar nova */
   automation: AutomationWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,7 +50,6 @@ export function GlobalAutomationDialog({
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
 
-  // templates do evento escolhido (para o select de template)
   const { data: templates } = useTemplates(eventId);
 
   useEffect(() => {
@@ -140,7 +138,10 @@ export function GlobalAutomationDialog({
 
           <div className="space-y-2">
             <Label>Gatilho</Label>
-            <Select value={trigger} onValueChange={(v) => setTrigger(v as AutomationTrigger)}>
+            <Select
+              value={trigger}
+              onValueChange={(v) => setTrigger(v as AutomationTrigger)}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

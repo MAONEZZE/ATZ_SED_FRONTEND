@@ -8,10 +8,7 @@ export const eventSchema = z
     capacity: z
       .string()
       .optional()
-      .refine(
-        (v) => !v || (/^\d+$/.test(v) && Number(v) >= 1),
-        "Capacidade mínima: 1",
-      ),
+      .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 1), "Capacidade mínima: 1"),
     dressCode: z.string().optional(),
     groupLink: z.union([z.string().url("URL inválida"), z.literal("")]).optional(),
     eventDate: z.string().optional(),
@@ -19,14 +16,12 @@ export const eventSchema = z
     postRegistrationMessage: z.string().optional(),
   })
   .refine(
-    (v) =>
-      !v.eventDate || !v.endDate || new Date(v.endDate) > new Date(v.eventDate),
+    (v) => !v.eventDate || !v.endDate || new Date(v.endDate) > new Date(v.eventDate),
     { message: "Término deve ser após o início", path: ["endDate"] },
   );
 
 export type EventFormValues = z.infer<typeof eventSchema>;
 
-/** Converte valores do form para o payload da API (remove vazios, ISO date) */
 export function toEventInput(values: EventFormValues) {
   return {
     title: values.title,

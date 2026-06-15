@@ -1,4 +1,3 @@
-/** Dispara download de um Blob no browser via objectURL temporário. */
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
