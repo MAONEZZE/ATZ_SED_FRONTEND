@@ -1,10 +1,11 @@
 "use client";
 
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 
 export function EventFormFields({
   form,
@@ -38,21 +39,35 @@ export function EventFormFields({
 
       <div className="space-y-2">
         <Label htmlFor="eventDate">Início</Label>
-        <Input
-          id="eventDate"
-          type="datetime-local"
-          disabled={disabled}
-          {...register("eventDate")}
+        <Controller
+          control={form.control}
+          name="eventDate"
+          render={({ field }) => (
+            <DateTimePicker
+              id="eventDate"
+              mode="datetime"
+              disabled={disabled}
+              value={(field.value as string) ?? ""}
+              onChange={field.onChange}
+            />
+          )}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="endDate">Término</Label>
-        <Input
-          id="endDate"
-          type="datetime-local"
-          disabled={disabled}
-          {...register("endDate")}
+        <Controller
+          control={form.control}
+          name="endDate"
+          render={({ field }) => (
+            <DateTimePicker
+              id="endDate"
+              mode="datetime"
+              disabled={disabled}
+              value={(field.value as string) ?? ""}
+              onChange={field.onChange}
+            />
+          )}
         />
         {errors.endDate && (
           <p className="text-sm text-destructive">{errors.endDate.message}</p>
