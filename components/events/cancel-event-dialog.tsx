@@ -18,15 +18,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function CancelEventDialog({
-  eventId,
-  slug,
-}: {
-  eventId: string;
-  slug: string;
-}) {
+export function CancelEventDialog({ eventId, slug }: { eventId: string; slug: string }) {
   const [open, setOpen] = useState(false);
-  // padrão LIGADO (spec)
+
   const [notify, setNotify] = useState(true);
   const cancelEvent = useCancelEvent(eventId);
 
@@ -75,9 +69,7 @@ export function CancelEventDialog({
             onClick={handleCancel}
             disabled={cancelEvent.isPending}
           >
-            {cancelEvent.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {cancelEvent.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Confirmar cancelamento
           </Button>
         </DialogFooter>

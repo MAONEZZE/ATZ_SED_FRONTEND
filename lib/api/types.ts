@@ -1,12 +1,6 @@
-// Tipos espelhando o contrato da API do backend (NestJS).
-// Fonte: docs/PROMPT_FRONTEND.md + contrato de API do SED Backend.
-
 export type EventStatus = "draft" | "published" | "cancelled" | "ended";
 
-export type FunnelStatus =
-  | "pending"
-  | "approved"
-  | "rejected";
+export type FunnelStatus = "pending" | "approved" | "rejected";
 
 export type FieldType =
   | "text"
@@ -88,7 +82,7 @@ export interface Registration {
 
 export interface MessageTemplate {
   id: string;
-  /** null = template global (não vinculado a um evento). */
+
   eventId: string | null;
   name: string;
   channel: MessageChannel;
@@ -98,7 +92,6 @@ export interface MessageTemplate {
   updatedAt: string;
 }
 
-/** Referência mínima ao evento, anexada nos endpoints globais de mensageria */
 export interface EventRef {
   id: string;
   title: string;
@@ -108,7 +101,6 @@ export type TemplateWithEvent = MessageTemplate & { event: EventRef | null };
 export type AutomationWithEvent = Automation & { event: EventRef };
 export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
 
-/** Resumo de automação anexado via GET /templates?include=automation */
 export interface TemplateAutomationSummary {
   id: string;
   trigger: AutomationTrigger;
@@ -179,7 +171,6 @@ export interface Profile {
   updatedAt: string;
 }
 
-/** Resposta de GET /public/events/:slug */
 export interface PublicEvent {
   id: string;
   title: string;
@@ -199,7 +190,6 @@ export interface PublicEvent {
   };
 }
 
-/** Campo público (GET /public/events/:slug/form-fields) */
 export interface PublicFormField {
   id: string;
   label: string;
@@ -209,18 +199,16 @@ export interface PublicFormField {
   order: number;
 }
 
-/** Destinatário avulso do envio manual (POST /messaging/send) */
 export interface ManualRecipient {
   name: string;
   email?: string;
   phone?: string;
 }
 
-/** Anexo enviado em base64 no corpo JSON de POST /messaging/send (e-mail e WhatsApp) */
 export interface MessageAttachment {
   filename: string;
   mimeType: string;
-  /** conteúdo do arquivo em base64 (sem o prefixo data:...;base64,) */
+
   contentBase64: string;
 }
 
@@ -235,7 +223,6 @@ export interface SendMessageInput {
   attachments?: MessageAttachment[];
 }
 
-/** Resposta 202 de POST /messaging/send */
 export interface SendMessageResult {
   queued: number;
   skipped: number;
@@ -249,7 +236,6 @@ export interface EmailStyleResponse {
   warm: string;
 }
 
-/** Shape de erro normalizado do backend */
 export interface ApiErrorBody {
   statusCode: number;
   message: string | string[];
@@ -257,7 +243,6 @@ export interface ApiErrorBody {
   timestamp?: string;
 }
 
-/** Envelope paginado retornado por todos os endpoints de listagem */
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

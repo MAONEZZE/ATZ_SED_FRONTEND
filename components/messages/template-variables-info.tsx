@@ -9,7 +9,10 @@ export const VARIABLE_DESCRIPTIONS: { variable: string; description: string }[] 
   { variable: "local", description: "Local / endereço do evento" },
   { variable: "capacidade", description: "Capacidade total de vagas do evento" },
   { variable: "dress_code", description: "Dress code do evento" },
-  { variable: "link_grupo", description: "Link do grupo de comunicação (WhatsApp/Telegram)" },
+  {
+    variable: "link_grupo",
+    description: "Link do grupo de comunicação (WhatsApp/Telegram)",
+  },
 ];
 
 export function TemplateVariablesInfo() {

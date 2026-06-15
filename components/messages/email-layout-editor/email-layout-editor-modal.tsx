@@ -17,10 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { buildEmail } from "@/lib/email/build-email";
-import {
-  DEFAULTS,
-  type EmailLayoutConfig,
-} from "@/lib/email/email-layout-config";
+import { DEFAULTS, type EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import { EDITOR_SCHEMA, type EditorField } from "./editor-schema";
 import { FieldRenderer } from "./editor-fields";
 
@@ -28,9 +25,9 @@ type FieldValue = string | number | boolean;
 
 export interface EmailLayoutEditorModalProps {
   open: boolean;
-  /** Config salva (null = template original). */
+
   initialConfig: EmailLayoutConfig | null;
-  /** Chave para o rascunho em localStorage (ex.: id do evento/template). */
+
   draftKey?: string;
   onSave: (config: EmailLayoutConfig, html: string) => void | Promise<void>;
   onClose: () => void;
@@ -39,7 +36,6 @@ export interface EmailLayoutEditorModalProps {
 const eq = (a: EmailLayoutConfig, b: EmailLayoutConfig) =>
   JSON.stringify(a) === JSON.stringify(b);
 
-/** Agrupa campos consecutivos marcados como `half` em pares (linha de 2 colunas). */
 function toRows(fields: EditorField[]): EditorField[][] {
   const rows: EditorField[][] = [];
   for (let i = 0; i < fields.length; i++) {
@@ -79,7 +75,6 @@ export function EmailLayoutEditorModal({
   const storageKey = draftKey ? `email-layout-draft:${draftKey}` : null;
   const ready = useRef(false);
 
-  // (Re)inicializa ao abrir; oferece restaurar rascunho se diferir da config salva.
   useEffect(() => {
     if (!open) {
       ready.current = false;
@@ -97,25 +92,20 @@ export function EmailLayoutEditorModal({
           const draft = { ...DEFAULTS, ...JSON.parse(raw) } as EmailLayoutConfig;
           if (!eq(draft, baseline)) setDraftPrompt(draft);
         }
-      } catch {
-        /* ignora rascunho corrompido */
-      }
+      } catch {}
     }
-    // libera escrita de rascunho após o ciclo de init
+
     const t = setTimeout(() => {
       ready.current = true;
     }, 0);
     return () => clearTimeout(t);
   }, [open, baseline, storageKey]);
 
-  // Persiste rascunho a cada mudança.
   useEffect(() => {
     if (!open || !ready.current || !storageKey) return;
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(config));
-    } catch {
-      /* quota cheia — ignora */
-    }
+    } catch {}
   }, [config, open, storageKey]);
 
   const dirty = !eq(config, baseline);
@@ -141,9 +131,7 @@ export function EmailLayoutEditorModal({
     if (storageKey && typeof window !== "undefined") {
       try {
         window.localStorage.removeItem(storageKey);
-      } catch {
-        /* noop */
-      }
+      } catch {}
     }
   }
 
@@ -192,7 +180,6 @@ export function EmailLayoutEditorModal({
             "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           )}
         >
-          {/* Header */}
           <div className="flex shrink-0 items-center justify-between border-b px-5 py-3">
             <DialogPrimitive.Title className="text-base font-semibold">
               Editar layout do email
@@ -220,9 +207,7 @@ export function EmailLayoutEditorModal({
             </div>
           </div>
 
-          {/* Body */}
           <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-            {/* Sidebar */}
             <aside className="max-h-[45%] w-full shrink-0 overflow-y-auto border-b p-4 lg:max-h-none lg:w-[330px] lg:border-b-0 lg:border-r">
               <div className="space-y-2">
                 {EDITOR_SCHEMA.map((section) => {
@@ -284,7 +269,6 @@ export function EmailLayoutEditorModal({
               </div>
             </aside>
 
-            {/* Preview */}
             <div className="flex min-h-0 flex-1 justify-center overflow-y-auto bg-neutral-200/60 p-6 dark:bg-neutral-900">
               <iframe
                 title="Pré-visualização do email"
@@ -295,7 +279,6 @@ export function EmailLayoutEditorModal({
             </div>
           </div>
 
-          {/* Footer */}
           <div className="flex shrink-0 justify-end gap-2 border-t px-5 py-3">
             <Button variant="outline" onClick={attemptClose} disabled={saving}>
               Cancelar
@@ -308,7 +291,6 @@ export function EmailLayoutEditorModal({
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
 
-      {/* Confirmação de descarte */}
       <AlertDialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -331,14 +313,13 @@ export function EmailLayoutEditorModal({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Confirmação de restauração */}
       <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Restaurar valores originais?</AlertDialogTitle>
             <AlertDialogDescription>
-              Todos os campos voltam ao template original. Você ainda precisa
-              salvar para aplicar.
+              Todos os campos voltam ao template original. Você ainda precisa salvar para
+              aplicar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -348,7 +329,6 @@ export function EmailLayoutEditorModal({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Restaurar rascunho */}
       <AlertDialog
         open={draftPrompt !== null}
         onOpenChange={(o) => !o && setDraftPrompt(null)}

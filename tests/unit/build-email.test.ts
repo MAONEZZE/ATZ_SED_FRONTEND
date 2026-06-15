@@ -74,7 +74,7 @@ describe("buildEmail — toggles sociais", () => {
   it("remove o td do Instagram quando desligado", () => {
     const html = build({ showInstagram: false });
     expect(html).not.toContain(DEFAULTS.instagramUrl);
-    // YouTube permanece
+
     expect(html).toContain(DEFAULTS.youtubeUrl);
   });
 
@@ -122,12 +122,20 @@ describe("buildEmail — header sólido vs gradiente", () => {
 
 describe("buildEmail — lado da borda do card", () => {
   it("top → border-top", () => {
-    const html = build({ cardBorderSide: "top", cardBorderWidth: 2, cardBorderColor: "#c9a84c" });
+    const html = build({
+      cardBorderSide: "top",
+      cardBorderWidth: 2,
+      cardBorderColor: "#c9a84c",
+    });
     expect(html).toContain("border-top:2px solid #c9a84c");
   });
 
   it("all → border completa", () => {
-    const html = build({ cardBorderSide: "all", cardBorderWidth: 1, cardBorderColor: "#e8e8e8" });
+    const html = build({
+      cardBorderSide: "all",
+      cardBorderWidth: 1,
+      cardBorderColor: "#e8e8e8",
+    });
     expect(html).toContain("border:1px solid #e8e8e8");
   });
 });

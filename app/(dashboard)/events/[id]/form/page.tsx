@@ -124,14 +124,13 @@ function SortableFieldRow({
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir campo?</AlertDialogTitle>
             <AlertDialogDescription>
-              O campo &quot;{field.label}&quot; será removido do formulário de
-              inscrição.
+              O campo &quot;{field.label}&quot; será removido do formulário de inscrição.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
               onClick={onDelete}
             >
               Excluir
@@ -143,9 +142,7 @@ function SortableFieldRow({
   );
 }
 
-/** Preview ao vivo — renderiza os campos como o inscrito verá (somente visual) */
 function FormPreview({ fields }: { fields: FormField[] }) {
-  // form local apenas para o estado controlado do renderer; sem resolver/submit
   const previewForm = useForm<Record<string, unknown>>();
 
   return (
@@ -196,7 +193,6 @@ export default function FormBuilderPage() {
     const next = arrayMove(localFields, oldIndex, newIndex);
     setLocalFields(next);
 
-    // persiste apenas os campos cuja ordem mudou
     const changes = next
       .map((field, index) => ({ id: field.id, order: index }))
       .filter(({ id, order }) => {
@@ -221,66 +217,66 @@ export default function FormBuilderPage() {
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
       <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-semibold">Formulário de inscrição</h2>
-          <p className="text-sm text-muted-foreground">
-            Arraste para reordenar. Adicione os campos que quiser.
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-semibold">Formulário de inscrição</h2>
+            <p className="text-sm text-muted-foreground">
+              Arraste para reordenar. Adicione os campos que quiser.
+            </p>
+          </div>
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setEditorOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo campo
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setEditorOpen(true);
-          }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo campo
-        </Button>
-      </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={localFields.map((f) => f.id)}
-          strategy={verticalListSortingStrategy}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <ul className="space-y-2">
-            {localFields.map((field) => (
-              <SortableFieldRow
-                key={field.id}
-                field={field}
-                deleting={deleteField.isPending}
-                onEdit={() => {
-                  setEditing(field);
-                  setEditorOpen(true);
-                }}
-                onDelete={() =>
-                  deleteField.mutate(field.id, {
-                    onSuccess: () => {
-                      if (event) revalidatePublicEvent(event.slug);
-                      toast.success("Campo excluído");
-                    },
-                    onError: (e) => toast.error(e.message),
-                  })
-                }
-              />
-            ))}
-          </ul>
-        </SortableContext>
-      </DndContext>
+          <SortableContext
+            items={localFields.map((f) => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="space-y-2">
+              {localFields.map((field) => (
+                <SortableFieldRow
+                  key={field.id}
+                  field={field}
+                  deleting={deleteField.isPending}
+                  onEdit={() => {
+                    setEditing(field);
+                    setEditorOpen(true);
+                  }}
+                  onDelete={() =>
+                    deleteField.mutate(field.id, {
+                      onSuccess: () => {
+                        if (event) revalidatePublicEvent(event.slug);
+                        toast.success("Campo excluído");
+                      },
+                      onError: (e) => toast.error(e.message),
+                    })
+                  }
+                />
+              ))}
+            </ul>
+          </SortableContext>
+        </DndContext>
 
-      <FieldEditorDialog
-        eventId={eventId}
-        slug={event?.slug}
-        field={editing}
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        nextOrder={localFields.length}
-      />
+        <FieldEditorDialog
+          eventId={eventId}
+          slug={event?.slug}
+          field={editing}
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          nextOrder={localFields.length}
+        />
       </div>
 
       <FormPreview fields={localFields} />

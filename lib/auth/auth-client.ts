@@ -1,7 +1,5 @@
 "use client";
 
-// ÚNICO arquivo client-side que importa @supabase/* (princípio do wrapper trocável).
-// Trocar o provedor de auth = reescrever este arquivo, nada mais.
 import { createBrowserClient } from "@supabase/ssr";
 import type { Session, Subscription } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
@@ -85,10 +83,11 @@ export const authClient = {
   onAuthStateChange(callback: AuthChangeCallback): () => void {
     const {
       data: { subscription },
-    }: { data: { subscription: Subscription } } =
-      getSupabase().auth.onAuthStateChange((_event, session) => {
+    }: { data: { subscription: Subscription } } = getSupabase().auth.onAuthStateChange(
+      (_event, session) => {
         callback(mapSession(session));
-      });
+      },
+    );
     return () => subscription.unsubscribe();
   },
 };

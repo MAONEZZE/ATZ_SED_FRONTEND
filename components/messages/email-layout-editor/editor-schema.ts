@@ -1,9 +1,3 @@
-/**
- * Schema declarativo e tipado da sidebar de controles do editor de e-mail.
- * Cada `key` é restrito a `keyof EmailLayoutConfig`, garantindo em tempo de
- * compilação que todo controle corresponde a uma chave real da config.
- */
-
 import {
   EMAIL_FONT_STACKS,
   type EmailLayoutConfig,
@@ -15,14 +9,14 @@ export interface EditorField {
   key: keyof EmailLayoutConfig;
   label: string;
   type: FieldType;
-  /** Dois campos lado a lado quando true (par). */
+
   half?: boolean;
-  // range
+
   min?: number;
   max?: number;
   step?: number;
   unit?: string;
-  // select
+
   options?: { label: string; value: string }[];
 }
 
@@ -145,7 +139,12 @@ export const EDITOR_SCHEMA: EditorSection[] = [
       {
         label: "Identidade",
         fields: [
-          { key: "accentColor", label: "Cor de destaque / accent", type: "color", half: true },
+          {
+            key: "accentColor",
+            label: "Cor de destaque / accent",
+            type: "color",
+            half: true,
+          },
           { key: "titleColor", label: "Título do header", type: "color", half: true },
           { key: "subtitleColor", label: "Subtítulo", type: "color" },
         ],
@@ -168,8 +167,18 @@ export const EDITOR_SCHEMA: EditorSection[] = [
           { key: "normalTextColor", label: "Texto normal", type: "color", half: true },
           { key: "greetingColor", label: "Saudação", type: "color", half: true },
           { key: "footerTextColor", label: "Texto do footer", type: "color", half: true },
-          { key: "footerNoticeColor", label: "Aviso do footer", type: "color", half: true },
-          { key: "cardDividerColor", label: "Linha divisória do card", type: "color", half: true },
+          {
+            key: "footerNoticeColor",
+            label: "Aviso do footer",
+            type: "color",
+            half: true,
+          },
+          {
+            key: "cardDividerColor",
+            label: "Linha divisória do card",
+            type: "color",
+            half: true,
+          },
           { key: "cardBorderColor", label: "Borda do card", type: "color" },
         ],
       },

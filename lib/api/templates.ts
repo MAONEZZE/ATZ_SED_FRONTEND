@@ -3,11 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type {
-  MessageChannel,
-  MessageTemplate,
-  PaginatedResponse,
-} from "@/lib/api/types";
+import type { MessageChannel, MessageTemplate, PaginatedResponse } from "@/lib/api/types";
 
 export interface TemplateInput {
   name: string;

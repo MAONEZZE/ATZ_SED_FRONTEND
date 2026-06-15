@@ -28,13 +28,8 @@ function fieldOptions(field: PublicFormField): string[] {
   return [];
 }
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
-/**
- * Campo de imagem: retângulo clicável com ícone + mensagem; abre o seletor de
- * arquivo. A imagem escolhida é guardada como data URL (base64) no valor do
- * campo — mantém o contrato JSON de inscrição (sem endpoint de upload).
- */
 function ImageField({
   value,
   onChange,
@@ -82,9 +77,7 @@ function ImageField({
         ) : (
           <>
             <ImagePlus className="h-8 w-8" />
-            <span className="text-sm font-medium">
-              Clique para enviar uma imagem
-            </span>
+            <span className="text-sm font-medium">Clique para enviar uma imagem</span>
           </>
         )}
       </button>
@@ -100,11 +93,6 @@ function ImageField({
   );
 }
 
-/**
- * Renderização pura dos campos do formulário de inscrição.
- * Usada na página pública (submissão real) e no preview do form builder
- * (disabled) — mesma aparência nos dois lugares.
- */
 export function FormFieldsRenderer({
   fields,
   form,
@@ -278,9 +266,7 @@ export function FormFieldsRenderer({
                     />
                     <Label htmlFor={key} className="font-normal">
                       {field.label}
-                      {field.required && (
-                        <span className="text-destructive"> *</span>
-                      )}
+                      {field.required && <span className="text-destructive"> *</span>}
                     </Label>
                   </div>
                 )}

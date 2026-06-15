@@ -7,16 +7,8 @@ import type { DateValue } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar-rac";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  parseValue,
-  formatValue,
-  type DateTimeMode,
-} from "@/lib/utils/date-time-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { parseValue, formatValue, type DateTimeMode } from "@/lib/utils/date-time-picker";
 
 export function DateTimePicker({
   value,
@@ -38,9 +30,7 @@ export function DateTimePicker({
 
   function handleDateSelect(next: DateValue | readonly DateValue[] | null) {
     const single = Array.isArray(next) ? next[0] : next;
-    onChange(
-      formatValue((single as CalendarDate | null) ?? null, time, mode),
-    );
+    onChange(formatValue((single as CalendarDate | null) ?? null, time, mode));
     setOpen(false);
   }
 
@@ -82,7 +72,7 @@ export function DateTimePicker({
           value={time}
           disabled={disabled}
           onChange={handleTimeChange}
-          className="w-32 bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+          className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
         />
       )}
     </div>

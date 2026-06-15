@@ -23,7 +23,6 @@ test.describe("mudança de status de inscrito", () => {
     await expect(statusSelect).toBeVisible();
     await statusSelect.click();
 
-    // escolhe a primeira transição legal disponível
     const option = page.getByRole("option").nth(1);
     const label = await option.textContent();
     await option.click();

@@ -19,7 +19,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB (limite do backend)
+const MAX_SIZE = 5 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 export function CoverUploader({
@@ -32,7 +32,7 @@ export function CoverUploader({
   eventId: string;
   slug: string;
   coverUrl: string | null;
-  /** muda a cada save no backend — usado para furar o cache do navegador */
+
   updatedAt: string;
   disabled?: boolean;
 }) {
@@ -56,7 +56,6 @@ export function CoverUploader({
   }
 
   function handleFile(file: File | undefined) {
-    // limpa o input para permitir reescolher o mesmo arquivo
     if (inputRef.current) inputRef.current.value = "";
     if (!file) return;
     if (!ACCEPTED.includes(file.type)) {
@@ -76,9 +75,6 @@ export function CoverUploader({
     });
   }
 
-  // backend reaproveita a mesma URL ao trocar a capa; o navegador serviria a
-  // imagem antiga do cache. updatedAt muda a cada upload → fura o cache e
-  // persiste entre recarregamentos (diferente de um contador que zera).
   const imgSrc = coverUrl
     ? `${coverUrl}${coverUrl.includes("?") ? "&" : "?"}v=${encodeURIComponent(updatedAt)}`
     : null;
@@ -98,7 +94,7 @@ export function CoverUploader({
                 type="button"
                 onClick={openPicker}
                 disabled={upload.isPending}
-                className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-black/0 text-sm font-medium text-transparent opacity-0 transition-all group-hover:cursor-pointer group-hover:bg-black/55 group-hover:text-white group-hover:opacity-100 focus-visible:bg-black/55 focus-visible:text-white focus-visible:opacity-100"
+                className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-xl bg-black/0 text-sm font-medium text-transparent opacity-0 transition-all focus-visible:bg-black/55 focus-visible:text-white focus-visible:opacity-100 group-hover:cursor-pointer group-hover:bg-black/55 group-hover:text-white group-hover:opacity-100"
                 aria-label="Clique para alterar a imagem"
               >
                 {upload.isPending ? (
@@ -134,9 +130,7 @@ export function CoverUploader({
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleRemove}>
-                      Remover
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={handleRemove}>Remover</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>

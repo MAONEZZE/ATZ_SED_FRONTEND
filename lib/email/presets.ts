@@ -1,18 +1,9 @@
-/**
- * Presets de layout por estilo, fiéis aos templates de referência
- * (components/templates/tp_old). Cada botão "Estilo" seleciona um destes; o
- * editor visual ("Editar layout") abre seedado com o preset escolhido.
- * Todos derivam de DEFAULTS sobrescrevendo cores/tipografia/layout.
- */
-
 import { DEFAULTS, type EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import type { EmailTemplateKey } from "@/lib/email-templates";
 
 export const EMAIL_LAYOUT_PRESETS: Record<EmailTemplateKey, EmailLayoutConfig> = {
-  // ── Profissional (gala — base) ──
   profissional: { ...DEFAULTS },
 
-  // ── Elegante (preto + dourado, título itálico) ──
   elegante: {
     ...DEFAULTS,
     eyebrow: "✦ Convite Exclusivo ✦",
@@ -50,7 +41,6 @@ export const EMAIL_LAYOUT_PRESETS: Record<EmailTemplateKey, EmailLayoutConfig> =
     footerNoticeColor: "#444444",
   },
 
-  // ── Minimalista (branco, traços, sem ícone de local) ──
   minimalista: {
     ...DEFAULTS,
     eyebrow: "Convite — 2026",
@@ -91,7 +81,6 @@ export const EMAIL_LAYOUT_PRESETS: Record<EmailTemplateKey, EmailLayoutConfig> =
     footerNoticeColor: "#555555",
   },
 
-  // ── Acolhedor (laranja quente, emoji) ──
   acolhedor: {
     ...DEFAULTS,
     eyebrow: "— com carinho —",

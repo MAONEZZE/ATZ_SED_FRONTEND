@@ -4,13 +4,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import {
-  ClipboardList,
-  ExternalLink,
-  Pencil,
-  Share2,
-  Users,
-} from "lucide-react";
+import { ClipboardList, ExternalLink, Pencil, Share2, Users } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
@@ -39,9 +33,7 @@ export default function EventLayout({ children }: { children: ReactNode }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {event?.title ?? ""}
-        </h1>
+        <h1 className="text-2xl font-bold tracking-tight">{event?.title ?? ""}</h1>
         {event && <EventStatusBadge status={event.status} />}
         <div className="ml-auto flex items-center gap-2">
           {event && (
@@ -52,11 +44,7 @@ export default function EventLayout({ children }: { children: ReactNode }) {
           )}
           {event?.status === "published" && (
             <Button asChild variant="outline" size="sm">
-              <a
-                href={`/e/${event.slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={`/e/${event.slug}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Página pública
               </a>
@@ -65,7 +53,6 @@ export default function EventLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
 
-      {/* Abas horizontais com scroll em mobile */}
       <nav className="-mx-4 overflow-x-auto px-4">
         <div className="flex w-max min-w-full gap-1 border-b">
           {tabs.map(({ segment, label, icon: Icon }) => {

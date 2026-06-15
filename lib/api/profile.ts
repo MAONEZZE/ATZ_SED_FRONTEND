@@ -20,8 +20,7 @@ export function useProfile() {
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: ProfileUpdateInput) =>
-      api.patch<Profile>("/profile/me", input),
+    mutationFn: (input: ProfileUpdateInput) => api.patch<Profile>("/profile/me", input),
     onSuccess: (profile) => queryClient.setQueryData(queryKeys.profile, profile),
   });
 }

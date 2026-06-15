@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
-// Configurações vive apenas no dropdown do perfil (não na navbar)
 const navItems = [
   { href: "/events", label: "Eventos", icon: CalendarDays },
   { href: "/messages", label: "Mensagens", icon: MessageSquare },

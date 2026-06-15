@@ -81,9 +81,7 @@ export default function NewEventPage() {
             disabled={isPending}
             onClick={form.handleSubmit((v) => submit(v, true))}
           >
-            {isPending && publishing && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {isPending && publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Criar e publicar
           </Button>
         </div>

@@ -94,7 +94,11 @@ describe("apiFetch", () => {
   it("apiFetchBlob normaliza erro em ApiError", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(404, { statusCode: 404, message: "Event not found" })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(404, { statusCode: 404, message: "Event not found" }),
+        ),
     );
 
     await expect(apiFetchBlob("/events/x/registrations/export")).rejects.toMatchObject({

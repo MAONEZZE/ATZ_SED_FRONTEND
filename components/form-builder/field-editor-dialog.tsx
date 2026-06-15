@@ -3,10 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import {
-  useCreateFormField,
-  useUpdateFormField,
-} from "@/lib/api/form-fields";
+import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import type { FieldType, FormField } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
@@ -68,9 +65,9 @@ export function FieldEditorDialog({
   nextOrder,
 }: {
   eventId: string;
-  /** slug do evento — usado para revalidar a página pública */
+
   slug?: string;
-  /** null = criar novo */
+
   field: FormField | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -152,7 +149,6 @@ export function FieldEditorDialog({
             />
           </div>
 
-          {/* type imutável após criação (contrato) */}
           {!field && (
             <div className="space-y-2">
               <Label>Tipo</Label>

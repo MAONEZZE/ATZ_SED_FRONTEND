@@ -85,9 +85,7 @@ function AnswerEditor({
               <Checkbox
                 checked={arrVal.includes(opt)}
                 onCheckedChange={(checked) =>
-                  onChange(
-                    checked ? [...arrVal, opt] : arrVal.filter((v) => v !== opt),
-                  )
+                  onChange(checked ? [...arrVal, opt] : arrVal.filter((v) => v !== opt))
                 }
               />
               {opt}
@@ -174,9 +172,7 @@ export function AttendeeDetailSheet({
               <SheetTitle>{currentReg.name}</SheetTitle>
               <SheetDescription className="flex items-center gap-2">
                 <FunnelStatusBadge status={currentReg.status} />
-                <span>
-                  {new Date(currentReg.createdAt).toLocaleDateString("pt-BR")}
-                </span>
+                <span>{new Date(currentReg.createdAt).toLocaleDateString("pt-BR")}</span>
               </SheetDescription>
             </SheetHeader>
 
@@ -223,7 +219,11 @@ export function AttendeeDetailSheet({
                   ))}
 
                   <div className="flex gap-2 pt-2">
-                    <Button size="sm" onClick={save} disabled={updateRegistration.isPending}>
+                    <Button
+                      size="sm"
+                      onClick={save}
+                      disabled={updateRegistration.isPending}
+                    >
                       {updateRegistration.isPending ? (
                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                       ) : (

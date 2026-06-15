@@ -28,7 +28,7 @@ interface SettingsForm {
   evolutionInstance: string;
 }
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB (limite do backend)
+const MAX_SIZE = 5 * 1024 * 1024;
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
 
 function ProfilePhoto({
@@ -54,7 +54,6 @@ function ProfilePhoto({
     email?.[0]?.toUpperCase() ||
     "?";
 
-  // cache-bust: mesmo path entre uploads → força refresh da imagem
   const src = photoUrl
     ? `${photoUrl}${photoUrl.includes("?") ? "&" : "?"}t=${
         upload.isSuccess ? upload.submittedAt : ""
@@ -214,9 +213,7 @@ export default function SettingsPage() {
             type="submit"
             disabled={!form.formState.isDirty || updateProfile.isPending}
           >
-            {updateProfile.isPending && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar
           </Button>
         </div>

@@ -97,7 +97,10 @@ function LoginPageInner() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
-            <Link href="/signup" className="text-primary underline-offset-4 hover:underline">
+            <Link
+              href="/signup"
+              className="text-primary underline-offset-4 hover:underline"
+            >
               Criar conta
             </Link>
           </p>

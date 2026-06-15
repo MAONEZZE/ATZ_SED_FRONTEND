@@ -2,14 +2,6 @@ import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasValidSession } from "@/lib/auth/supabase-server";
 
-/**
- * Revalidação on-demand das páginas públicas de evento.
- * Autorização: secret (webhook externo/backend) OU sessão Supabase
- * válida em cookie (dashboard no browser, sem expor o secret).
- *
- * POST /api/revalidate  { slug: string }
- * Header opcional: x-revalidate-secret: <REVALIDATE_SECRET>
- */
 export async function POST(request: NextRequest) {
   const secret = process.env.REVALIDATE_SECRET;
   const headerSecret = request.headers.get("x-revalidate-secret");

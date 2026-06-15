@@ -5,12 +5,7 @@ import { useUpdateRegistrationStatus } from "@/lib/api/registrations";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import type { FunnelStatus, Registration } from "@/lib/api/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 
 const ALL_STATUSES = Object.keys(funnelStatusConfig) as FunnelStatus[];
 
@@ -33,15 +28,16 @@ export function StatusSelect({
           { id: registration.id, status: value as FunnelStatus },
           {
             onSuccess: () =>
-              toast.success(
-                `Status: ${funnelStatusConfig[value as FunnelStatus].label}`,
-              ),
+              toast.success(`Status: ${funnelStatusConfig[value as FunnelStatus].label}`),
             onError: (e) => toast.error(e.message),
           },
         );
       }}
     >
-      <SelectTrigger className="h-8 w-[160px]" aria-label={`Status de ${registration.name}`}>
+      <SelectTrigger
+        className="h-8 w-[160px]"
+        aria-label={`Status de ${registration.name}`}
+      >
         <FunnelStatusBadge status={registration.status} />
       </SelectTrigger>
       <SelectContent>

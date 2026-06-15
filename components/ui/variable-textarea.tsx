@@ -10,8 +10,7 @@ type VariableTextareaProps = Omit<React.ComponentProps<"textarea">, "onChange"> 
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
 };
 
-const SHARED =
-  "min-h-[60px] w-full rounded-md px-3 py-2 text-base md:text-sm";
+const SHARED = "min-h-[60px] w-full rounded-md px-3 py-2 text-base md:text-sm";
 
 export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextareaProps>(
   function VariableTextarea({ value, onChange, className, ...props }, forwardedRef) {
@@ -23,7 +22,8 @@ export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextarea
         innerRef.current = node;
         if (typeof forwardedRef === "function") forwardedRef(node);
         else if (forwardedRef)
-          (forwardedRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = node;
+          (forwardedRef as React.MutableRefObject<HTMLTextAreaElement | null>).current =
+            node;
       },
       [forwardedRef],
     );
@@ -38,7 +38,6 @@ export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextarea
 
     return (
       <div className="relative">
-        {/* backdrop mirrors textarea text, highlights {{variables}} */}
         <div
           ref={backdropRef}
           aria-hidden="true"
@@ -50,7 +49,7 @@ export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextarea
         >
           {parts.map((part, i) =>
             part.startsWith("{{") && part.endsWith("}}") ? (
-              <mark key={i} className="rounded bg-primary/20 text-primary not-italic">
+              <mark key={i} className="rounded bg-primary/20 not-italic text-primary">
                 {part}
               </mark>
             ) : (
@@ -71,7 +70,7 @@ export const VariableTextarea = forwardRef<HTMLTextAreaElement, VariableTextarea
             "placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "relative z-10 resize-none",
-            "[color:transparent] [caret-color:hsl(var(--foreground))]",
+            "[caret-color:hsl(var(--foreground))] [color:transparent]",
             className,
           )}
           {...props}

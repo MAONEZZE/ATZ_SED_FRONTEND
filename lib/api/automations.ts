@@ -7,10 +7,7 @@ export interface AutomationInput {
   active?: boolean;
 }
 
-export const DELAYED_TRIGGERS: AutomationTrigger[] = [
-  "before_event",
-  "after_event",
-];
+export const DELAYED_TRIGGERS: AutomationTrigger[] = ["before_event", "after_event"];
 
 export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
   on_registration: "Ao se inscrever",
