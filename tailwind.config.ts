@@ -10,7 +10,17 @@ const config: Config = {
   theme: {
   	extend: {
   		fontFamily: {
-  			sans: ['var(--font-inter)', 'system-ui', 'sans-serif']
+  			sans: [
+  				'-apple-system',
+  				'BlinkMacSystemFont',
+  				'"SF Pro Text"',
+  				'"Segoe UI"',
+  				'Inter',
+  				'Roboto',
+  				'Helvetica',
+  				'Arial',
+  				'sans-serif'
+  			]
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -40,6 +50,26 @@ const config: Config = {
   				foreground: 'hsl(var(--accent-foreground))'
   			},
   			destructive: 'hsl(var(--destructive))',
+  			danger: 'hsl(var(--danger))',
+  			warn: {
+  				DEFAULT: 'hsl(var(--warn))',
+  				strong: 'hsl(var(--warn-strong))',
+  				soft: 'hsl(var(--warn-soft))',
+  				text: 'hsl(var(--warn-text))'
+  			},
+  			brown: {
+  				'900': 'hsl(var(--brown-900))',
+  				'700': 'hsl(var(--brown-700))',
+  				'600': 'hsl(var(--brown-600))',
+  				'500': 'hsl(var(--brown-500))',
+  				'300': 'hsl(var(--brown-300))',
+  				'200': 'hsl(var(--brown-200))',
+  				'100': 'hsl(var(--brown-100))'
+  			},
+  			cream: {
+  				DEFAULT: 'hsl(var(--cream))',
+  				deep: 'hsl(var(--cream-deep))'
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
@@ -62,9 +92,16 @@ const config: Config = {
   			}
   		},
   		borderRadius: {
+  			xl: 'calc(var(--radius) + 5px)',
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		boxShadow: {
+  			sm: 'var(--shadow-sm)',
+  			DEFAULT: 'var(--shadow)',
+  			md: 'var(--shadow)',
+  			pop: 'var(--shadow-pop)'
   		}
   	}
   },

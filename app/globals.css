@@ -4,99 +4,67 @@
 
 @layer base {
   :root {
-    /* Brand SED light: #756D45 → hsl(50 26% 36%) */
-    --background: 50 20% 98%;
-    --foreground: 50 10% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 50 10% 12%;
+    /* Design system "Marrom macOS" — claro-only.
+       Tokens shadcn em HSL; paleta marrom/creme + acento âmbar. */
+    --background: 36 50% 96%; /* cream  #FBF7F1 */
+    --foreground: 24 31% 14%; /* brown-900 */
+    --card: 0 0% 100%; /* white */
+    --card-foreground: 24 31% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 50 10% 12%;
-    --primary: 50 26% 36%;
-    --primary-foreground: 50 30% 97%;
-    --secondary: 50 18% 92%;
-    --secondary-foreground: 50 26% 24%;
-    --muted: 50 14% 93%;
-    --muted-foreground: 50 8% 42%;
-    --accent: 50 22% 88%;
-    --accent-foreground: 50 26% 22%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 50 12% 86%;
-    --input: 50 12% 84%;
-    --ring: 50 26% 36%;
-    --chart-1: 50 26% 36%;
-    --chart-2: 41 19% 52%;
-    --chart-3: 50 14% 65%;
-    --chart-4: 30 25% 45%;
-    --chart-5: 50 8% 30%;
-    --radius: 0.625rem;
-    --sidebar: 50 20% 96%;
-    --sidebar-foreground: 50 10% 12%;
-    --sidebar-primary: 50 26% 36%;
-    --sidebar-primary-foreground: 50 30% 97%;
-    --sidebar-accent: 50 22% 88%;
-    --sidebar-accent-foreground: 50 26% 22%;
-    --sidebar-border: 50 12% 86%;
-    --sidebar-ring: 50 26% 36%;
-  }
+    --popover-foreground: 24 31% 14%;
+    --primary: 26 34% 33%; /* brown-600 */
+    --primary-foreground: 36 50% 97%;
+    --secondary: 34 40% 89%; /* brown-100 */
+    --secondary-foreground: 25 31% 23%; /* brown-700 */
+    --muted: 34 39% 92%; /* cream-deep */
+    --muted-foreground: 24 28% 40%; /* brown-500 */
+    --accent: 34 40% 89%; /* brown-100 */
+    --accent-foreground: 25 31% 23%;
+    --destructive: 2 64% 58%; /* danger */
+    --destructive-foreground: 0 0% 100%;
+    --border: 33 37% 80%; /* brown-200 */
+    --input: 33 37% 80%;
+    --ring: 36 76% 48%; /* warn (âmbar) — foco */
 
-  .dark {
-    /* Brand SED dark: #9D8E6E → hsl(41 19% 52%) */
-    --background: 45 8% 8%;
-    --foreground: 45 15% 92%;
-    --card: 45 8% 11%;
-    --card-foreground: 45 15% 92%;
-    --popover: 45 8% 11%;
-    --popover-foreground: 45 15% 92%;
-    --primary: 41 19% 52%;
-    --primary-foreground: 45 10% 10%;
-    --secondary: 45 8% 16%;
-    --secondary-foreground: 45 15% 88%;
-    --muted: 45 8% 16%;
-    --muted-foreground: 45 10% 62%;
-    --accent: 41 14% 22%;
-    --accent-foreground: 45 15% 90%;
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 45 8% 20%;
-    --input: 45 8% 22%;
-    --ring: 41 19% 52%;
-    --chart-1: 41 19% 52%;
-    --chart-2: 50 26% 36%;
-    --chart-3: 41 14% 70%;
-    --chart-4: 30 25% 55%;
-    --chart-5: 45 10% 40%;
-    --sidebar: 45 8% 10%;
-    --sidebar-foreground: 45 15% 92%;
-    --sidebar-primary: 41 19% 52%;
-    --sidebar-primary-foreground: 45 10% 10%;
-    --sidebar-accent: 41 14% 22%;
-    --sidebar-accent-foreground: 45 15% 90%;
-    --sidebar-border: 45 8% 20%;
-    --sidebar-ring: 41 19% 52%;
-  }
+    /* Âmbar (warn) — destaque/aviso/estados ativos */
+    --warn: 36 76% 48%;
+    --warn-strong: 36 85% 39%;
+    --warn-soft: 39 85% 89%;
+    --warn-text: 37 86% 23%;
+    --danger: 2 64% 58%;
 
-  /* Página pública: tema claro sempre, independente do .dark herdado do html */
-  .force-light {
-    --background: 50 20% 98%;
-    --foreground: 50 10% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 50 10% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 50 10% 12%;
-    --primary: 50 26% 36%;
-    --primary-foreground: 50 30% 97%;
-    --secondary: 50 18% 92%;
-    --secondary-foreground: 50 26% 24%;
-    --muted: 50 14% 93%;
-    --muted-foreground: 50 8% 42%;
-    --accent: 50 22% 88%;
-    --accent-foreground: 50 26% 22%;
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 50 12% 86%;
-    --input: 50 12% 84%;
-    --ring: 50 26% 36%;
+    /* Escala marrom auxiliar */
+    --brown-900: 24 31% 14%;
+    --brown-700: 25 31% 23%;
+    --brown-600: 26 34% 33%;
+    --brown-500: 24 28% 40%;
+    --brown-300: 31 31% 66%;
+    --brown-200: 33 37% 80%;
+    --brown-100: 34 40% 89%;
+    --cream: 36 50% 96%;
+    --cream-deep: 34 39% 92%;
+
+    --chart-1: 26 34% 33%;
+    --chart-2: 36 76% 48%;
+    --chart-3: 31 31% 66%;
+    --chart-4: 25 31% 23%;
+    --chart-5: 24 28% 40%;
+
+    --radius: 0.6875rem; /* 11px */
+
+    /* Sombras macOS — marrom translúcido, difusas */
+    --shadow-sm: 0 1px 2px rgba(46, 32, 24, 0.08);
+    --shadow: 0 8px 28px rgba(46, 32, 24, 0.12), 0 2px 6px rgba(46, 32, 24, 0.06);
+    --shadow-pop: 0 18px 50px rgba(46, 32, 24, 0.22);
+
+    --sidebar: 34 39% 92%; /* cream-deep */
+    --sidebar-foreground: 24 31% 14%;
+    --sidebar-primary: 26 34% 33%;
+    --sidebar-primary-foreground: 36 50% 97%;
+    --sidebar-accent: 34 40% 89%;
+    --sidebar-accent-foreground: 25 31% 23%;
+    --sidebar-border: 33 37% 80%;
+    --sidebar-ring: 36 76% 48%;
   }
 }
 
@@ -106,6 +74,8 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
@@ -114,12 +84,30 @@
     text-wrap: balance;
   }
 
-  /* Glassmorphism */
   .glass {
-    @apply border border-white/20 bg-white/60 backdrop-blur-xl dark:border-white/10 dark:bg-black/40;
+    @apply border border-border/60 bg-card/70 backdrop-blur-xl;
   }
   .glass-card {
-    @apply glass rounded-xl shadow-lg shadow-black/5 dark:shadow-black/20;
+    @apply glass rounded-xl shadow-sm;
+  }
+
+  /* "eyebrow" de seção */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: hsl(var(--warn-strong));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
@@ -130,8 +118,8 @@
   gap: 0.35rem;
   padding: 0 0.5rem;
   border: 1px solid hsl(var(--input));
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
+  border-radius: var(--radius-sm, calc(var(--radius) - 4px));
+  background: hsl(var(--card));
 }
 .phone-field .PhoneInputCountrySelect {
   color: inherit;

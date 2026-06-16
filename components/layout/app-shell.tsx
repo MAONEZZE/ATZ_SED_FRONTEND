@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { CalendarDays, LogOut, MessageSquare, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useProfile } from "@/lib/api/profile";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,10 +46,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="glass sticky top-0 z-40 border-b">
+      <header className="sticky top-0 z-40 border-b border-border bg-cream-deep">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
-          <Link href="/events" className="font-bold text-primary">
-            SED
+          <Link href="/events" className="flex items-center" aria-label="Atlaz — início">
+            <Image
+              src="/Atlaz.png"
+              alt="Atlaz"
+              width={96}
+              height={96}
+              priority
+              className="h-8 w-8 rounded-md object-contain"
+            />
           </Link>
           <nav className="flex items-center gap-1 overflow-x-auto">
             {navItems.map(({ href, label, icon: Icon }) => (
@@ -57,10 +64,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent",
+                  "flex items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-brown-100",
                   pathname.startsWith(href)
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground",
+                    ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary"
+                    : "text-brown-500",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -71,10 +78,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 href="/admin"
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent",
+                  "flex items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-brown-100",
                   pathname.startsWith("/admin")
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground",
+                    ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary"
+                    : "text-brown-500",
                 )}
               >
                 <Shield className="h-4 w-4" />
@@ -83,7 +90,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-10 gap-2 rounded-full px-1 sm:pr-3">

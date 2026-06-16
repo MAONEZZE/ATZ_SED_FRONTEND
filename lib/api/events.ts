@@ -30,10 +30,28 @@ export function useEvents(page = 1, limit = 20) {
 }
 
 export function useEvent(id: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: queryKeys.event(id),
     queryFn: () => api.get<EventObject>(`/events/${id}`),
     enabled: Boolean(id),
+    // Abre instantâneo: usa o evento já presente em qualquer lista cacheada como
+    // dado inicial; refaz em background (updatedAt 0 = stale) para garantir dados
+    // completos/atualizados.
+    initialData: () => {
+      const lists = queryClient.getQueriesData<PaginatedResponse<EventObject>>({
+        queryKey: ["events"],
+      });
+      for (const [, data] of lists) {
+        const list = data?.data;
+        if (Array.isArray(list)) {
+          const found = list.find((e) => e.id === id);
+          if (found) return found;
+        }
+      }
+      return undefined;
+    },
+    initialDataUpdatedAt: 0,
   });
 }
 

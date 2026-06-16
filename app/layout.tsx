@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   },
   description:
     "SED — plataforma de gestão de eventos curados: landing pages, inscrições, mensagens e automações.",
+  icons: {
+    icon: "/Atlaz.png",
+    shortcut: "/Atlaz.png",
+    apple: "/Atlaz.png",
+  },
 };
 
 export default function RootLayout({
