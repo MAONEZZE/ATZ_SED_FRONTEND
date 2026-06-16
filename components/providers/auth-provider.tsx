@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authClient, type AuthSession } from "@/lib/auth/auth-client";
 import { setTokenProvider, api } from "@/lib/api/client";
 
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<AuthSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const profileEnsured = useRef(false);
@@ -34,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshAccessToken: () => authClient.refreshAccessToken(),
       onUnauthorized: () => {
         void authClient.signOut();
+        queryClient.clear();
         router.push("/login");
       },
     });
@@ -64,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     isLoading,
     signIn: async (email, password) => {
+      queryClient.clear();
       const s = await authClient.signIn(email, password);
       setSession(s);
       return s;
@@ -71,6 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp: (name, email, password) => authClient.signUp(name, email, password),
     signOut: async () => {
       await authClient.signOut();
+      queryClient.clear();
       setSession(null);
       router.push("/login");
     },
