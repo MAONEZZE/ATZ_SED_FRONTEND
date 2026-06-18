@@ -76,9 +76,11 @@ export default function SignupPage() {
   return (
     <main className="relative flex min-h-screen items-center justify-center p-4">
       {url && (
-        <img src={url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+        <>
+          <img src={url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-black/40" aria-hidden />
+        </>
       )}
-      <div className="absolute inset-0 bg-black/40" aria-hidden />
       <div className="relative z-10 w-full max-w-sm">
         <Card className="glass-card w-full max-w-sm">
           <CardHeader>
