@@ -346,8 +346,6 @@ export function SendMessageForm({
             (result.skipped > 0 ? `, ${result.skipped} ignorada(s)` : ""),
         );
         result.skippedReason?.forEach((reason) => toast.warning(reason));
-        setSelected(new Set());
-        setManualRecipients([]);
         setAttachments([]);
         setBody("");
         setSubject("");
@@ -641,6 +639,17 @@ export function SendMessageForm({
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Destinatários</CardTitle>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 text-xs"
+            onClick={() => setManualRecipients([])}
+            disabled={manualRecipients.length === 0}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Limpar destinatários
+          </Button>
           <Badge variant="secondary">{count} selecionado(s)</Badge>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -66,6 +66,58 @@
     --sidebar-border: 33 37% 80%;
     --sidebar-ring: 36 76% 48%;
   }
+
+  .dark {
+    --background: 24 20% 10%;
+    --foreground: 36 40% 92%;
+    --card: 24 18% 14%;
+    --card-foreground: 36 40% 92%;
+    --popover: 24 18% 14%;
+    --popover-foreground: 36 40% 92%;
+    --primary: 36 76% 55%;
+    --primary-foreground: 24 31% 10%;
+    --secondary: 24 20% 18%;
+    --secondary-foreground: 36 40% 85%;
+    --muted: 24 18% 16%;
+    --muted-foreground: 33 25% 60%;
+    --accent: 24 20% 20%;
+    --accent-foreground: 36 40% 85%;
+    --destructive: 2 64% 55%;
+    --border: 24 18% 22%;
+    --input: 24 18% 22%;
+    --ring: 36 76% 48%;
+    --cream: 24 20% 12%;
+    --cream-deep: 24 18% 16%;
+    --brown-900: 36 40% 90%;
+    --brown-700: 36 35% 80%;
+    --brown-600: 36 30% 70%;
+    --brown-500: 33 25% 60%;
+    --brown-300: 24 18% 35%;
+    --brown-200: 24 18% 25%;
+    --brown-100: 24 18% 20%;
+    --warn: 36 76% 48%;
+    --warn-strong: 36 76% 60%;
+    --warn-soft: 36 60% 20%;
+    --warn-text: 36 76% 70%;
+    --danger: 2 64% 55%;
+    --chart-1: 36 76% 55%;
+    --chart-2: 33 50% 65%;
+    --chart-3: 36 40% 75%;
+    --chart-4: 36 60% 45%;
+    --chart-5: 33 35% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+    --shadow-pop: 0 18px 50px rgba(0, 0, 0, 0.6);
+    --sidebar: 24 18% 14%;
+    --sidebar-foreground: 36 40% 92%;
+    --sidebar-primary: 36 76% 55%;
+    --sidebar-primary-foreground: 24 31% 10%;
+    --sidebar-accent: 24 20% 20%;
+    --sidebar-accent-foreground: 36 40% 85%;
+    --sidebar-border: 24 18% 22%;
+    --sidebar-ring: 36 76% 48%;
+  }
 }
 
 @layer base {

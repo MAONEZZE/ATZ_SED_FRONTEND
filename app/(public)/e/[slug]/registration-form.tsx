@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -93,11 +93,35 @@ export function RegistrationForm({
     defaultValues: defaultValues(visibleFields),
   });
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`reg_draft_${slug}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        form.reset(parsed);
+      }
+    } catch {}
+  }, []);
+
+  const hasMounted = useRef(false);
+  const watchedValues = form.watch();
+
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(`reg_draft_${slug}`, JSON.stringify(watchedValues));
+    } catch {}
+  }, [watchedValues, slug]);
+
   async function onSubmit(values: Record<string, unknown>) {
     setSubmitting(true);
     try {
       await createPublicRegistration(slug, values);
       setSuccess(true);
+      try { localStorage.removeItem(`reg_draft_${slug}`); } catch {}
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha ao enviar inscrição");
     } finally {

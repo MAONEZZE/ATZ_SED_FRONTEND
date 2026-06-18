@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LogOut, MessageSquare, Settings, Shield } from "lucide-react";
+import { CalendarDays, LogOut, MessageSquare, Moon, Settings, Shield, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useProfile } from "@/lib/api/profile";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { session, signOut } = useAuth();
   const { data: profile } = useProfile();
+  const { resolvedTheme, setTheme } = useTheme();
   const isAdmin = session?.user.role === "admin";
 
   const displayName = profile?.name || session?.user.name || "";
@@ -90,6 +92,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </nav>
           <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={resolvedTheme === "dark" ? "Mudar para tema claro" : "Mudar para tema escuro"}
+              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            >
+              {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-10 gap-2 rounded-full px-1 sm:pr-3">
