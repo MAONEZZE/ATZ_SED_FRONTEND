@@ -134,7 +134,7 @@ export default function AttendeesPage() {
       )}
 
       {registrations.length > 0 && (
-        <div className="hidden rounded-xl border md:block">
+        <div className="hidden overflow-hidden rounded-xl border md:block">
           <Table>
             <TableHeader>
               <TableRow>

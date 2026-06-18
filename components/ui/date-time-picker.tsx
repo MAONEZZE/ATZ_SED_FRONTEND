@@ -1,14 +1,28 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { ChevronDownIcon } from "lucide-react";
 import type { CalendarDate } from "@internationalized/date";
 import type { DateValue } from "react-aria-components";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar-rac";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { parseValue, formatValue, type DateTimeMode } from "@/lib/utils/date-time-picker";
+
+// react-aria-components é pesado; carrega só quando o calendário abre, mantendo
+// o bundle das rotas (ex.: edição de evento) leve e a navegação rápida.
+const Calendar = dynamic(
+  () => import("@/components/ui/calendar-rac").then((m) => m.Calendar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[300px] w-[252px] items-center justify-center text-sm text-muted-foreground">
+        Carregando…
+      </div>
+    ),
+  },
+);
 
 export function DateTimePicker({
   value,

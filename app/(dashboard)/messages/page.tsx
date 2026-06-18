@@ -162,7 +162,7 @@ function TemplatesTab() {
         }
       />
 
-      <div className="rounded-xl border">
+      <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -305,7 +305,7 @@ function AutomationsTab() {
         }
       />
 
-      <div className="rounded-xl border">
+      <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -442,7 +442,7 @@ function LogsTab() {
     <div className="space-y-4">
       <TabToolbar left={response ? `${response.total} mensagem(ns)` : null} />
 
-      <div className="rounded-xl border">
+      <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
