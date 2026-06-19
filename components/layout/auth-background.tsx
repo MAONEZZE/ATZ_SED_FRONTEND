@@ -11,7 +11,7 @@ export function AuthBackground() {
         alt=""
         aria-hidden
         className="absolute inset-0 h-full w-full object-cover"
-        style={{ transform: "scale(0.85)", transformOrigin: "center" }}
+        style={{ transform: "scale(0.95)", transformOrigin: "center" }}
       />
       <div className="absolute inset-0 bg-black/65" aria-hidden />
     </>
