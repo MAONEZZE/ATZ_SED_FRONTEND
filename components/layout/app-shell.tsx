@@ -47,8 +47,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     "?";
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-border bg-cream-deep">
+    <div className="flex h-screen flex-col overflow-hidden">
+      <header className="shrink-0 border-b border-border bg-cream-deep">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
           <Link href="/events" className="flex items-center" aria-label="Atlaz — início">
             <Image
@@ -138,7 +138,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">{children}</main>
+      <div className="flex-1 overflow-y-auto">
+        <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
+      </div>
     </div>
   );
 }
