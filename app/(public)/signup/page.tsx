@@ -44,7 +44,12 @@ export default function SignupPage() {
       await signUp(values.name, values.email, values.password);
       setDone(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao criar conta.");
+      const msg = error instanceof Error ? error.message : "";
+      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
+        toast.error("Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.");
+      } else {
+        toast.error(msg || "Falha ao criar conta.");
+      }
     } finally {
       setSubmitting(false);
     }

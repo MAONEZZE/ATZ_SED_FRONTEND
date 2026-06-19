@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   ChevronDown,
+  Copy,
   Info,
   Loader2,
   Paintbrush,
@@ -12,6 +13,7 @@ import {
   Send,
   Trash2,
   Upload,
+  Users,
 } from "lucide-react";
 import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
@@ -20,6 +22,7 @@ import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
+import { useProfile, useWhatsAppGroups } from "@/lib/api/profile";
 import {
   WHATSAPP_RECIPIENT_LIMIT,
   recipientCount,
@@ -132,6 +135,14 @@ export function SendMessageForm({
   const { data: templatesResponse } = useAllTemplates(1, 100);
   const templates = templatesResponse?.data;
   const sendMessage = useSendMessage(effectiveEventId || undefined);
+
+  const { data: profile } = useProfile();
+  const {
+    data: groups,
+    isLoading: loadingGroups,
+    isError: groupsError,
+  } = useWhatsAppGroups();
+  const [groupsOpen, setGroupsOpen] = useState(false);
 
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [templateId, setTemplateId] = useState<string | null>(null);
@@ -761,16 +772,86 @@ export function SendMessageForm({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Adicionar destinatários manualmente</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 text-xs"
-                onClick={() => csvInputRef.current?.click()}
-              >
-                <Upload className="h-3.5 w-3.5" />
-                Importar CSV
-              </Button>
+              <div className="flex items-center gap-2">
+                {channel === "whatsapp" && (
+                  <Popover open={groupsOpen} onOpenChange={setGroupsOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 gap-1.5 text-xs"
+                      >
+                        <Users className="h-3.5 w-3.5" />
+                        Verificar Grupos
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 p-0">
+                      <div className="border-b px-3 py-2">
+                        <p className="text-sm font-medium">Grupos WhatsApp</p>
+                        {profile?.evolutionInstance && (
+                          <p className="text-xs text-muted-foreground">
+                            Instância: {profile.evolutionInstance}
+                          </p>
+                        )}
+                      </div>
+                      {!profile?.evolutionInstance ? (
+                        <p className="px-3 py-4 text-sm text-muted-foreground">
+                          Configure sua instância Evolution no perfil para ver os grupos.
+                        </p>
+                      ) : loadingGroups ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : groupsError ? (
+                        <p className="px-3 py-4 text-sm text-destructive">
+                          Erro ao carregar grupos. Verifique a instância Evolution.
+                        </p>
+                      ) : !groups || groups.length === 0 ? (
+                        <p className="px-3 py-4 text-sm text-muted-foreground">
+                          Nenhum grupo encontrado.
+                        </p>
+                      ) : (
+                        <div className="max-h-64 overflow-y-auto">
+                          {groups.map((g) => (
+                            <div
+                              key={g.id}
+                              className="flex items-center justify-between gap-2 border-b px-3 py-2 last:border-b-0"
+                            >
+                              <span className="min-w-0 flex-1 truncate text-sm">
+                                {g.subject}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 shrink-0"
+                                aria-label={`Copiar ID do grupo ${g.subject}`}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(g.id);
+                                  toast.success("ID copiado para a área de transferência");
+                                }}
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={() => csvInputRef.current?.click()}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  Importar CSV
+                </Button>
+              </div>
               <input
                 ref={csvInputRef}
                 type="file"
@@ -793,11 +874,22 @@ export function SendMessageForm({
                 value={manualDraft.email}
                 onChange={(e) => setManualDraft((d) => ({ ...d, email: e.target.value }))}
               />
-              <PhoneField
-                className="min-w-40 flex-1"
-                value={manualDraft.phone ?? ""}
-                onChange={(phone) => setManualDraft((d) => ({ ...d, phone }))}
-              />
+              {channel === "whatsapp" ? (
+                <Input
+                  placeholder="+5511999999999 ou 120363@g.us"
+                  className="min-w-40 flex-1"
+                  value={manualDraft.phone ?? ""}
+                  onChange={(e) =>
+                    setManualDraft((d) => ({ ...d, phone: e.target.value }))
+                  }
+                />
+              ) : (
+                <PhoneField
+                  className="min-w-40 flex-1"
+                  value={manualDraft.phone ?? ""}
+                  onChange={(phone) => setManualDraft((d) => ({ ...d, phone }))}
+                />
+              )}
               <Button
                 type="button"
                 variant="outline"

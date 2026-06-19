@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { Profile } from "@/lib/api/types";
+import type { Profile, WhatsAppGroup } from "@/lib/api/types";
 
 export interface ProfileUpdateInput {
   name?: string;
@@ -34,6 +34,19 @@ export function useUploadProfilePhoto() {
       return api.post<Profile>("/profile/me/photo", formData);
     },
     onSuccess: (profile) => queryClient.setQueryData(queryKeys.profile, profile),
+  });
+}
+
+export function useWhatsAppGroups() {
+  const { data: profile } = useProfile();
+  const instance = profile?.evolutionInstance;
+  return useQuery({
+    queryKey: ["whatsapp-groups", instance ?? ""],
+    queryFn: () =>
+      api.get<WhatsAppGroup[]>(
+        `/whatsapp/groups?instancia=${encodeURIComponent(instance!)}`,
+      ),
+    enabled: Boolean(instance),
   });
 }
 

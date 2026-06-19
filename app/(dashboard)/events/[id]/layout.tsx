@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { ClipboardList, ExternalLink, Pencil, Share2, Users } from "lucide-react";
+import { ClipboardList, ExternalLink, Link2, Pencil, Users } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
+import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,8 +22,9 @@ export default function EventLayout({ children }: { children: ReactNode }) {
   const params = useParams<{ id: string }>();
   const pathname = usePathname();
   const { data: event } = useEvent(params.id);
+  const [collabOpen, setCollabOpen] = useState(false);
 
-  function handleShare() {
+  function handleCopyLink() {
     if (!event) return;
     const url = `${window.location.origin}/e/${event.slug}`;
     void navigator.clipboard.writeText(url).then(
@@ -37,10 +40,16 @@ export default function EventLayout({ children }: { children: ReactNode }) {
         {event && <EventStatusBadge status={event.status} />}
         <div className="ml-auto flex items-center gap-2">
           {event && (
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              <Share2 className="mr-2 h-4 w-4" />
-              Compartilhar
-            </Button>
+            <>
+              <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                <Link2 className="mr-2 h-4 w-4" />
+                Copiar link
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCollabOpen(true)}>
+                <Users className="mr-2 h-4 w-4" />
+                Compartilhar
+              </Button>
+            </>
           )}
           {event?.status === "published" && (
             <Button asChild variant="outline" size="sm">
@@ -78,6 +87,15 @@ export default function EventLayout({ children }: { children: ReactNode }) {
       </nav>
 
       {children}
+
+      {event && (
+        <CollaboratorsDialog
+          eventId={event.id}
+          ownerId={event.ownerId}
+          open={collabOpen}
+          onOpenChange={setCollabOpen}
+        />
+      )}
     </div>
   );
 }

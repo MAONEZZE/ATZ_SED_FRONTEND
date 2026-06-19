@@ -13,6 +13,8 @@ export type FieldType =
   | "image"
   | "date";
 
+export type FormFieldKind = "registration" | "post_event";
+
 export type MessageChannel = "whatsapp" | "email";
 
 export type AutomationTrigger =
@@ -61,11 +63,39 @@ export interface FormField {
   eventId: string;
   label: string;
   type: FieldType;
+  kind: FormFieldKind;
   required: boolean;
   options: unknown | null;
   order: number;
   isFixed: boolean;
   createdAt: string;
+}
+
+export interface Collaborator {
+  profileId: string;
+  eventId: string;
+  createdAt: string;
+  profile: {
+    id: string;
+    name: string;
+    email: string;
+    photoUrl: string | null;
+  };
+}
+
+export interface PostEventResponse {
+  id: string;
+  eventId: string;
+  registrationId: string;
+  answers: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  registration: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
 }
 
 export interface Registration {
@@ -248,4 +278,9 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface WhatsAppGroup {
+  id: string;
+  subject: string;
 }

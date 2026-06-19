@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { DELAYED_TRIGGERS, TRIGGER_LABELS } from "@/lib/api/automations";
-import { useTemplates } from "@/lib/api/templates";
 import {
+  useAllTemplates,
   useCreateAutomationGlobal,
   useUpdateAutomationGlobal,
 } from "@/lib/api/global-messaging";
@@ -50,7 +50,8 @@ export function GlobalAutomationDialog({
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
 
-  const { data: templates } = useTemplates(eventId);
+  const { data: templatesResponse } = useAllTemplates(1, 100);
+  const templates = templatesResponse?.data;
 
   useEffect(() => {
     if (open) {

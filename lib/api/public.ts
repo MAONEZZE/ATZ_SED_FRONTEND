@@ -46,6 +46,40 @@ export async function createPublicRegistration(
   return (await res.json()) as Registration;
 }
 
+export async function getPublicPostEventFields(slug: string): Promise<PublicFormField[]> {
+  const res = await fetch(
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event-fields`,
+    { cache: "no-store" },
+  );
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`Formulário indisponível (${res.status})`);
+  return (await res.json()) as PublicFormField[];
+}
+
+export async function submitPublicPostEvent(
+  slug: string,
+  payload: { identifier: string; answers: Record<string, unknown> },
+): Promise<void> {
+  const res = await fetch(
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!res.ok) {
+    let message = "Falha ao enviar respostas";
+    try {
+      const body = (await res.json()) as { message?: string | string[] };
+      if (body.message) {
+        message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
+      }
+    } catch {}
+    throw new Error(message);
+  }
+}
+
 export function answerKeyForField(
   field: Pick<PublicFormField, "label" | "type">,
 ): string {

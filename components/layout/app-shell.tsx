@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <header className="shrink-0 border-b border-border bg-cream-deep">
+      <header className="relative z-10 shrink-0 border-b border-border bg-cream-deep">
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
           <Link href="/events" className="flex items-center" aria-label="Atlaz — início">
             <Image
