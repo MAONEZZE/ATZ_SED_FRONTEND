@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
           <Link href="/events" className="flex items-center" aria-label="Atlaz — início">
             <Image
-              src="/Atlaz.png"
+              src="/logos/Atlaz.png"
               alt="Atlaz"
               width={96}
               height={96}
