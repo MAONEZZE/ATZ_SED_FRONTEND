@@ -8,7 +8,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2, MailCheck } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useLoginBackground } from "@/hooks/use-login-background";
+import { AuthBackground } from "@/components/layout/auth-background";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +30,6 @@ type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const { signUp } = useAuth();
-  const { url } = useLoginBackground();
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -75,8 +74,7 @@ export default function SignupPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center p-4">
-      <img src={url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-black/40" aria-hidden />
+      <AuthBackground />
       <div className="relative z-10 w-full max-w-sm">
         <Card className="glass-card w-full max-w-sm">
           <CardHeader>

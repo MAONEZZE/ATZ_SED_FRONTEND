@@ -9,7 +9,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
-import { useLoginBackground } from "@/hooks/use-login-background";
+import { AuthBackground } from "@/components/layout/auth-background";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,7 +33,6 @@ function LoginPageInner() {
   const searchParams = useSearchParams();
   const { signIn } = useAuth();
   const [submitting, setSubmitting] = useState(false);
-  const { url } = useLoginBackground();
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -57,8 +56,7 @@ function LoginPageInner() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center p-4">
-      <img src={url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-black/40" aria-hidden />
+      <AuthBackground />
       <div className="relative z-10 w-full max-w-sm">
         <Card className="glass-card w-full max-w-sm">
           <CardHeader>
