@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
+  Automation,
   AutomationWithEvent,
   MessageChannel,
   MessageLogWithEvent,
@@ -21,6 +22,15 @@ export function useAllTemplates(page = 1, limit = 20, channel?: MessageChannel) 
       if (channel) qs.set("channel", channel);
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
+  });
+}
+
+export function useEventAutomations(eventId: string) {
+  return useQuery({
+    queryKey: queryKeys.automations(eventId),
+    queryFn: () =>
+      api.get<PaginatedResponse<Automation>>(`/events/${eventId}/automations`),
+    enabled: Boolean(eventId),
   });
 }
 

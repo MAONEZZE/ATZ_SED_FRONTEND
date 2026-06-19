@@ -12,20 +12,12 @@ import {
   XCircle,
 } from "lucide-react";
 import {
-  useAllAutomations,
   useAllMessageLogs,
   useAllTemplates,
-  useDeleteAutomationGlobal,
   useDeleteTemplateGlobal,
 } from "@/lib/api/global-messaging";
-import { TRIGGER_LABELS } from "@/lib/api/automations";
-import type {
-  AutomationWithEvent,
-  MessageChannel,
-  TemplateWithEvent,
-} from "@/lib/api/types";
+import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
-import { GlobalAutomationDialog } from "@/components/messages/global-automation-dialog";
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
@@ -276,159 +268,6 @@ function TemplatesTab() {
   );
 }
 
-function AutomationsTab() {
-  const [page, setPage] = useState(1);
-  const limit = 10;
-  const { data: response, isLoading } = useAllAutomations(page, limit);
-  const automations = response?.data;
-  const totalPages = response ? Math.ceil(response.total / limit) : 0;
-  const deleteAutomation = useDeleteAutomationGlobal();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<AutomationWithEvent | null>(null);
-
-  if (isLoading) return <LoadingSpinner />;
-
-  return (
-    <div className="space-y-4">
-      <TabToolbar
-        left={response ? `${response.total} automação(ões)` : null}
-        right={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nova automação
-          </Button>
-        }
-      />
-
-      <div className="overflow-hidden rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Gatilho</TableHead>
-              <TableHead>Template</TableHead>
-              <TableHead>Evento</TableHead>
-              <TableHead>Atraso</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className={ACTIONS_HEAD} />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {automations?.length === 0 && (
-              <EmptyRow cols={6} text="Nenhuma automação ainda." />
-            )}
-            {automations?.map((a) => (
-              <TableRow key={a.id}>
-                <TableCell className="font-medium">{TRIGGER_LABELS[a.trigger]}</TableCell>
-                <TableCell>{a.template.name}</TableCell>
-                <TableCell className="text-muted-foreground">{a.event.title}</TableCell>
-                <TableCell>{a.delayMinutes ? `${a.delayMinutes} min` : "—"}</TableCell>
-                <TableCell>
-                  {a.active ? (
-                    <Badge
-                      variant="outline"
-                      className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
-                    >
-                      Ativa
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Inativa</Badge>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <RowActions>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Editar automação"
-                      onClick={() => {
-                        setEditing(a);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label="Excluir automação"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir automação?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            A automação deixará de disparar mensagens.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-                            onClick={() =>
-                              deleteAutomation.mutate(
-                                { eventId: a.eventId, id: a.id },
-                                {
-                                  onSuccess: () => toast.success("Automação excluída"),
-                                  onError: (e) => toast.error(e.message),
-                                },
-                              )
-                            }
-                          >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </RowActions>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {totalPages > 0 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
-
-      <GlobalAutomationDialog
-        automation={editing}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
-    </div>
-  );
-}
-
 function LogsTab() {
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -531,7 +370,6 @@ export default function MessagesPage() {
           <TabsTrigger value="send">Enviar</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="automations">Automações</TabsTrigger>
         </TabsList>
 
         <TabsContent value="send">
@@ -542,9 +380,6 @@ export default function MessagesPage() {
         </TabsContent>
         <TabsContent value="templates">
           <TemplatesTab />
-        </TabsContent>
-        <TabsContent value="automations">
-          <AutomationsTab />
         </TabsContent>
       </Tabs>
     </div>
