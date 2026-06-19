@@ -1,21 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLoginBackground } from "@/hooks/use-login-background";
 
 export function AuthBackground() {
   const { url } = useLoginBackground();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
-      <Image
-        src={url}
-        alt=""
-        fill
-        priority
-        quality={90}
-        className="object-cover"
-        aria-hidden
-      />
+      {mounted && (
+        <Image
+          src={url}
+          alt=""
+          fill
+          priority
+          quality={95}
+          sizes="100vw"
+          className="object-cover"
+          aria-hidden
+        />
+      )}
       <div
         className="absolute inset-0"
         aria-hidden
