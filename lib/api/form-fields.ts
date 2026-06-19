@@ -18,15 +18,15 @@ export type FormFieldUpdateInput = Omit<Partial<FormFieldInput>, "type">;
 
 export function useFormFields(eventId: string, kind?: FormFieldKind) {
   return useQuery({
-    queryKey: queryKeys.formFields(eventId, kind),
+    queryKey: queryKeys.formFields(eventId),
     queryFn: async () => {
-      const qs = kind ? `?kind=${kind}&limit=100` : `?limit=100`;
       const res = await api.get<PaginatedResponse<FormField>>(
-        `/events/${eventId}/form-fields${qs}`,
+        `/events/${eventId}/form-fields?limit=100`,
       );
       return res.data;
     },
     enabled: Boolean(eventId),
+    select: kind ? (data) => data.filter((f) => f.kind === kind) : undefined,
   });
 }
 
