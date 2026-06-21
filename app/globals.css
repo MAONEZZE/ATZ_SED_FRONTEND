@@ -163,6 +163,13 @@
   }
 }
 
+/* Bitdefender (and similar extension) notification bar — force below app UI */
+#bit-notification-bar,
+[id^="bit-"] {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+
 /* react-phone-number-input — alinhar seletor de país ao tema */
 .phone-field .PhoneInputCountry {
   display: flex;
