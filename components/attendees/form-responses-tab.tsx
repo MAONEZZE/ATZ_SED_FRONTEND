@@ -57,8 +57,8 @@ function AnswerValue({ value }: { value: unknown }) {
     return (
       <div className="flex flex-wrap gap-2">
         {images.map((src, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
           <a key={i} href={src} target="_blank" rel="noopener noreferrer">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={src}
               alt={`Imagem ${i + 1}`}

@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
-import { ClipboardList, ExternalLink, Link2, Pencil, Users, Zap } from "lucide-react";
+import { ClipboardList, ExternalLink, Pencil, Users, Zap } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import { EventStatusBadge } from "@/components/common/status-badge";
@@ -24,15 +23,6 @@ export default function EventLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { data: event } = useEvent(params.id);
   const [collabOpen, setCollabOpen] = useState(false);
-
-  function handleCopyLink() {
-    if (!event) return;
-    const url = `${window.location.origin}/e/${event.slug}`;
-    void navigator.clipboard.writeText(url).then(
-      () => toast.success("Link público copiado!"),
-      () => toast.error("Falha ao copiar link"),
-    );
-  }
 
   return (
     <div className="space-y-4">
