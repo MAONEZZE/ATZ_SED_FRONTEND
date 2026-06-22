@@ -42,10 +42,6 @@ export default function EventLayout({ children }: { children: ReactNode }) {
         <div className="ml-auto flex items-center gap-2">
           {event && (
             <>
-              <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                <Link2 className="mr-2 h-4 w-4" />
-                Copiar link
-              </Button>
               <Button variant="outline" size="sm" onClick={() => setCollabOpen(true)}>
                 <Users className="mr-2 h-4 w-4" />
                 Compartilhar

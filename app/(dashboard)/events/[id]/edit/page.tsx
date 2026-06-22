@@ -22,6 +22,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { EventObject } from "@/lib/api/types";
 
+function utcIsoToLocalInput(iso: string): string {
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 function toFormValues(event: EventObject): EventFormValues {
   return {
     title: event.title,
@@ -30,10 +35,8 @@ function toFormValues(event: EventObject): EventFormValues {
     capacity: event.capacity != null ? String(event.capacity) : "",
     dressCode: event.dressCode ?? "",
     groupLink: event.groupLink ?? "",
-    eventDate: event.eventDate
-      ? new Date(event.eventDate).toISOString().slice(0, 16)
-      : "",
-    endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
+    eventDate: event.eventDate ? utcIsoToLocalInput(event.eventDate) : "",
+    endDate: event.endDate ? utcIsoToLocalInput(event.endDate) : "",
     postRegistrationMessage: event.postRegistrationMessage ?? "",
   };
 }

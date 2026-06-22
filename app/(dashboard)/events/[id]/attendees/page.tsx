@@ -6,11 +6,13 @@ import { toast } from "sonner";
 import { Download, Eye, Loader2, Search, Users } from "lucide-react";
 import { exportRegistrationsCsv, useRegistrations } from "@/lib/api/registrations";
 import { downloadBlob } from "@/lib/utils/download-blob";
+import { formatDate } from "@/lib/utils/format-date";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import type { FunnelStatus, Registration } from "@/lib/api/types";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { StatusSelect } from "@/components/attendees/status-select";
 import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
+import { FormResponsesTab } from "@/components/attendees/form-responses-tab";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,10 +35,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const ALL = "all";
 
+type AttendeesTab = "registration" | "post_event" | "nps";
+
 export default function AttendeesPage() {
   const params = useParams<{ id: string }>();
   const eventId = params.id;
 
+  const [tab, setTab] = useState<AttendeesTab>("registration");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -86,6 +91,35 @@ export default function AttendeesPage() {
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button
+          variant={tab === "registration" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setTab("registration")}
+        >
+          Inscrição
+        </Button>
+        <Button
+          variant={tab === "post_event" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setTab("post_event")}
+        >
+          Pós-evento
+        </Button>
+        <Button
+          variant={tab === "nps" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setTab("nps")}
+        >
+          NPS
+        </Button>
+      </div>
+
+      {tab === "post_event" && <FormResponsesTab eventId={eventId} kind="post_event" />}
+      {tab === "nps" && <FormResponsesTab eventId={eventId} kind="nps" />}
+
+      {tab === "registration" && (
+        <>
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -153,7 +187,7 @@ export default function AttendeesPage() {
                   <TableCell>{registration.email}</TableCell>
                   <TableCell>{registration.phone}</TableCell>
                   <TableCell>
-                    {new Date(registration.createdAt).toLocaleDateString("pt-BR")}
+                    {formatDate(registration.createdAt)}
                   </TableCell>
                   <TableCell>
                     <StatusSelect eventId={eventId} registration={registration} />
@@ -231,6 +265,8 @@ export default function AttendeesPage() {
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
+        </>
+      )}
     </div>
   );
 }

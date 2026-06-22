@@ -20,6 +20,13 @@ export const queryKeys = {
       : (["events", eventId, "registrations"] as const),
   registration: (eventId: string, id: string) =>
     ["events", eventId, "registrations", id] as const,
+  userSubscriptions: (
+    eventId: string,
+    params?: { search?: string; page?: number; limit?: number },
+  ) =>
+    params
+      ? (["events", eventId, "user-subscriptions", params] as const)
+      : (["events", eventId, "user-subscriptions"] as const),
   templates: (eventId: string) => ["events", eventId, "templates"] as const,
   automations: (eventId: string) => ["events", eventId, "automations"] as const,
   landing: (eventId: string) => ["events", eventId, "landing"] as const,

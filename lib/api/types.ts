@@ -13,12 +13,14 @@ export type FieldType =
   | "image"
   | "date";
 
-export type FormFieldKind = "registration" | "post_event";
+export type FormFieldKind = "registration" | "post_event" | "nps";
 
 export type MessageChannel = "whatsapp" | "email";
 
 export type AutomationTrigger =
   | "on_registration"
+  | "on_post_event"
+  | "on_nps"
   | "on_approval"
   | "on_rejection"
   | "before_event"
@@ -54,6 +56,7 @@ export interface EventObject {
   endDate: string | null;
   postRegistrationMessage: string | null;
   evolutionInstance: string | null;
+  sendToPipedrive: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +99,23 @@ export interface PostEventResponse {
     email: string;
     phone: string;
   };
+}
+
+export type PipedriveStatus = "pending" | "sent" | "failed" | "skipped";
+
+export interface UserSubscription {
+  id: string;
+  eventId: string;
+  name: string;
+  email: string;
+  phone: string;
+  registrationAnswers: Record<string, unknown> | null;
+  postEventAnswers: Record<string, unknown> | null;
+  npsAnswers: Record<string, unknown> | null;
+  sendToPipedrive: boolean;
+  pipedriveStatus: PipedriveStatus | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Registration {

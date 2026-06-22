@@ -4,9 +4,12 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Check, Loader2, Pencil, X } from "lucide-react";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
+import { PipedriveBadge } from "@/components/attendees/pipedrive-badge";
 import { useFormFields } from "@/lib/api/form-fields";
 import { useUpdateRegistration } from "@/lib/api/registrations";
+import { useUserSubscriptions } from "@/lib/api/user-subscriptions";
 import type { FormField, Registration } from "@/lib/api/types";
+import { formatDate } from "@/lib/utils/format-date";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -133,6 +136,18 @@ export function AttendeeDetailSheet({
   const { data: fields = [] } = useFormFields(eventId);
   const updateRegistration = useUpdateRegistration(eventId);
 
+  // Status do Pipedrive vem da tabela consolidada; cruza por e-mail/telefone.
+  const { data: subs } = useUserSubscriptions(eventId, {
+    search: currentReg?.email || currentReg?.phone || undefined,
+    limit: 10,
+  });
+  const pipedriveStatus =
+    subs?.data.find(
+      (s) =>
+        (currentReg?.email && s.email === currentReg.email) ||
+        (currentReg?.phone && s.phone === currentReg.phone),
+    )?.pipedriveStatus ?? null;
+
   useEffect(() => {
     setCurrentReg(registration);
     setEditing(false);
@@ -170,9 +185,10 @@ export function AttendeeDetailSheet({
           <>
             <SheetHeader>
               <SheetTitle>{currentReg.name}</SheetTitle>
-              <SheetDescription className="flex items-center gap-2">
+              <SheetDescription className="flex flex-wrap items-center gap-2">
                 <FunnelStatusBadge status={currentReg.status} />
-                <span>{new Date(currentReg.createdAt).toLocaleDateString("pt-BR")}</span>
+                <PipedriveBadge status={pipedriveStatus} />
+                <span>{formatDate(currentReg.createdAt)}</span>
               </SheetDescription>
             </SheetHeader>
 

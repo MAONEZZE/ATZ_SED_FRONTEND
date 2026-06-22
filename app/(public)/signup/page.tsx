@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, MailCheck } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AuthBackground } from "@/components/layout/auth-background";
 import { Button } from "@/components/ui/button";
@@ -30,8 +31,8 @@ type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const { signUp } = useAuth();
+  const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   const form = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
@@ -42,39 +43,14 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await signUp(values.name, values.email, values.password);
-      setDone(true);
+      toast.success("Conta criada com sucesso! Faça login para continuar.");
+      router.push("/login");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "";
-      if (msg.includes("rate limit") || msg.includes("over_email_send_rate_limit")) {
-        toast.error("Limite de e-mails atingido. Aguarde alguns minutos e tente novamente.");
-      } else {
-        toast.error(msg || "Falha ao criar conta.");
-      }
+      toast.error(msg || "Falha ao criar conta.");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (done) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-4">
-        <Card className="glass-card w-full max-w-sm text-center">
-          <CardHeader>
-            <MailCheck className="mx-auto h-12 w-12 text-primary" />
-            <CardTitle>Confirme seu e-mail</CardTitle>
-            <CardDescription>
-              Enviamos um link de confirmação para o seu e-mail. Confirme para acessar sua
-              conta.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline" className="w-full">
-              <Link href="/login">Ir para o login</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
   }
 
   return (

@@ -17,6 +17,7 @@ import {
   useDeleteTemplateGlobal,
 } from "@/lib/api/global-messaging";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
+import { formatDateTime } from "@/lib/utils/format-date";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
@@ -325,7 +326,7 @@ function LogsTab() {
                   )}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
-                  {new Date(log.sentAt ?? log.createdAt).toLocaleString("pt-BR")}
+                  {formatDateTime(log.sentAt ?? log.createdAt)}
                 </TableCell>
               </TableRow>
             ))}

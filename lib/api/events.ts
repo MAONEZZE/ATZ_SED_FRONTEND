@@ -15,6 +15,7 @@ export interface EventInput {
   eventDate?: string;
   endDate?: string;
   postRegistrationMessage?: string;
+  sendToPipedrive?: boolean;
 }
 
 export interface EventUpdateInput extends Partial<EventInput> {

@@ -20,16 +20,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Download, GripVertical, Pencil, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
-  exportPostEventResponsesCsv,
   useDeleteFormField,
   useFormFields,
-  usePostEventResponses,
   useReorderFormFields,
 } from "@/lib/api/form-fields";
-import { useEvent } from "@/lib/api/events";
+import { useEvent, useUpdateEvent } from "@/lib/api/events";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import type { FormField, FormFieldKind } from "@/lib/api/types";
 import { FieldEditorDialog } from "@/components/form-builder/field-editor-dialog";
@@ -38,6 +36,8 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -165,86 +165,38 @@ function FormPreview({ fields, submitLabel = "Enviar inscrição" }: { fields: F
   );
 }
 
-function PostEventResponsesCard({ eventId }: { eventId: string }) {
-  const { data, isLoading } = usePostEventResponses(eventId, { page: 1, limit: 10 });
-  const [exporting, setExporting] = useState(false);
+function PipedriveToggle({ eventId }: { eventId: string }) {
+  const { data: event } = useEvent(eventId);
+  const update = useUpdateEvent(eventId);
+  const checked = event?.sendToPipedrive ?? false;
 
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const blob = await exportPostEventResponsesCsv(eventId);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `respostas-pos-evento.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao exportar");
-    } finally {
-      setExporting(false);
-    }
+  function handleChange(value: boolean) {
+    update.mutate(
+      { sendToPipedrive: value },
+      {
+        onSuccess: () =>
+          toast.success(value ? "Envio ao Pipedrive ativado" : "Envio ao Pipedrive desativado"),
+        onError: (e) => toast.error(e.message),
+      },
+    );
   }
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-base">Respostas</CardTitle>
-            {!isLoading && (
-              <p className="text-sm text-muted-foreground">
-                {data?.total ?? 0} resposta{(data?.total ?? 0) !== 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            disabled={exporting || !data?.total}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
-          </Button>
+      <CardContent className="flex items-center justify-between gap-4 py-4">
+        <div className="space-y-1">
+          <Label htmlFor="pipedrive-toggle">Enviar para o Pipedrive</Label>
+          <p className="text-sm text-muted-foreground">
+            Cada inscrição é enviada automaticamente ao Pipedrive.
+          </p>
         </div>
-      </CardHeader>
-      {isLoading && (
-        <CardContent>
-          <LoadingSpinner />
-        </CardContent>
-      )}
-      {!isLoading && data?.data && data.data.length > 0 && (
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-2 text-left font-medium">Nome</th>
-                  <th className="px-4 py-2 text-left font-medium">E-mail</th>
-                  <th className="px-4 py-2 text-left font-medium">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.data.map((r) => (
-                  <tr key={r.id} className="border-b last:border-0">
-                    <td className="px-4 py-2">{r.registration.name}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{r.registration.email}</td>
-                    <td className="px-4 py-2 text-muted-foreground">
-                      {new Date(r.createdAt).toLocaleDateString("pt-BR")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      )}
-      {!isLoading && (!data?.data || data.data.length === 0) && (
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Nenhuma resposta ainda.</p>
-        </CardContent>
-      )}
+        <Switch
+          id="pipedrive-toggle"
+          checked={checked}
+          onCheckedChange={handleChange}
+          disabled={!event || update.isPending}
+        />
+      </CardContent>
     </Card>
   );
 }
@@ -306,8 +258,18 @@ function FormBuilderSection({
   if (isLoading) return <LoadingSpinner />;
 
   const isRegistration = kind === "registration";
-  const title = isRegistration ? "Formulário de inscrição" : "Formulário pós-evento";
-  const submitLabel = isRegistration ? "Enviar inscrição" : "Enviar respostas";
+  const title =
+    kind === "registration"
+      ? "Formulário de inscrição"
+      : kind === "post_event"
+        ? "Formulário pós-evento"
+        : "Avaliação NPS";
+  const submitLabel =
+    kind === "registration"
+      ? "Enviar inscrição"
+      : kind === "post_event"
+        ? "Enviar respostas"
+        : "Enviar avaliação";
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
@@ -376,8 +338,8 @@ function FormBuilderSection({
       </div>
 
       <div className="space-y-4">
+        {isRegistration && <PipedriveToggle eventId={eventId} />}
         <FormPreview fields={localFields} submitLabel={submitLabel} />
-        {!isRegistration && <PostEventResponsesCard eventId={eventId} />}
       </div>
     </div>
   );
@@ -389,9 +351,24 @@ export default function FormBuilderPage() {
   const { data: event } = useEvent(eventId);
   const [kind, setKind] = useState<FormFieldKind>("registration");
 
+  const formPaths: Record<FormFieldKind, string> = {
+    registration: "",
+    post_event: "/pos-evento",
+    nps: "/nps",
+  };
+
+  function handleCopyLink() {
+    if (!event?.slug) return;
+    const url = `${window.location.origin}/e/${event.slug}${formPaths[kind]}`;
+    void navigator.clipboard.writeText(url).then(
+      () => toast.success("Link do formulário copiado!"),
+      () => toast.error("Falha ao copiar link"),
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant={kind === "registration" ? "default" : "outline"}
           size="sm"
@@ -405,6 +382,23 @@ export default function FormBuilderPage() {
           onClick={() => setKind("post_event")}
         >
           Pós-evento
+        </Button>
+        <Button
+          variant={kind === "nps" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setKind("nps")}
+        >
+          NPS
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto"
+          onClick={handleCopyLink}
+          disabled={!event?.slug}
+        >
+          <Link2 className="mr-2 h-4 w-4" />
+          Copiar link
         </Button>
       </div>
 
