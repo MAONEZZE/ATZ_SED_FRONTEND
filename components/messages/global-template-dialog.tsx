@@ -1,14 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Info } from "lucide-react";
+import { Loader2, Info, Paintbrush } from "lucide-react";
 import { TEMPLATE_VARIABLES } from "@/lib/api/templates";
 import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
+import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
+import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
+import { buildEmail } from "@/lib/email/build-email";
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,11 +49,15 @@ export function GlobalTemplateDialog({
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
+  const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
+  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -55,11 +65,15 @@ export function GlobalTemplateDialog({
       setChannel(template?.channel ?? "whatsapp");
       setSubject(template?.subject ?? "");
       setBody(template?.body ?? "");
+      setLayoutConfig(template?.layoutConfig ?? null);
+      setActiveStyle(template?.styleKey ?? null);
+      setLayoutEditorOpen(false);
     }
   }, [open, template]);
 
   const isPending = create.isPending || update.isPending;
   const isEdit = Boolean(template);
+  const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
 
   function insertVariable(variable: string) {
     const token = `{{${variable}}}`;
@@ -77,6 +91,30 @@ export function GlobalTemplateDialog({
     });
   }
 
+  function applyPreset(key: EmailTemplateKey) {
+    const cfg = EMAIL_LAYOUT_PRESETS[key];
+    setLayoutConfig(cfg);
+    setBody(buildEmail(cfg));
+    setActiveStyle(key);
+  }
+
+  function changeChannel(next: MessageChannel) {
+    setChannel(next);
+    if (next !== "email") {
+      setBody("");
+      setActiveStyle(null);
+      setLayoutConfig(null);
+    }
+  }
+
+  const handleIframeLoad = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe?.contentDocument?.documentElement) return;
+    const doc = iframe.contentDocument;
+    const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+    if (h > 0) iframe.style.height = `${h + 4}px`;
+  }, []);
+
   function handleSave() {
     if (!name.trim() || !body.trim()) {
       toast.error("Nome e corpo da mensagem são obrigatórios");
@@ -87,6 +125,8 @@ export function GlobalTemplateDialog({
       channel,
       subject: channel === "email" ? subject.trim() || undefined : undefined,
       body,
+      layoutConfig: channel === "email" ? layoutConfig : null,
+      styleKey: channel === "email" ? activeStyle : null,
     };
     const onDone = {
       onSuccess: () => {
@@ -121,7 +161,7 @@ export function GlobalTemplateDialog({
             <Label>Canal</Label>
             <Select
               value={channel}
-              onValueChange={(v) => setChannel(v as MessageChannel)}
+              onValueChange={(v) => changeChannel(v as MessageChannel)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -147,44 +187,94 @@ export function GlobalTemplateDialog({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="gtpl-body">Mensagem *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
+              <div className="flex items-center gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto gap-1.5 px-2 py-1 text-xs text-muted-foreground"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                      Variáveis disponíveis
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 overflow-hidden p-0">
+                    <TemplateVariablesInfo />
+                  </PopoverContent>
+                </Popover>
+                {channel === "email" && (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
-                    className="h-auto gap-1.5 px-2 py-1 text-xs text-muted-foreground"
+                    className="h-7 gap-1.5 text-xs"
+                    disabled={!activeStyle}
+                    title={activeStyle ? undefined : "Escolha um estilo para habilitar"}
+                    onClick={() => setLayoutEditorOpen(true)}
                   >
-                    <Info className="h-3.5 w-3.5" />
-                    Variáveis disponíveis
+                    <Paintbrush className="h-3.5 w-3.5" />
+                    Editar layout
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80 overflow-hidden p-0">
-                  <TemplateVariablesInfo />
-                </PopoverContent>
-              </Popover>
+                )}
+              </div>
             </div>
-            <VariableTextarea
-              id="gtpl-body"
-              ref={bodyRef}
-              rows={6}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-            />
-            <div className="flex flex-wrap gap-1.5">
-              {TEMPLATE_VARIABLES.map((variable) => (
-                <button
-                  key={variable}
-                  type="button"
-                  onClick={() => insertVariable(variable)}
-                  aria-label={`Inserir variável ${variable}`}
-                >
-                  <Badge variant="secondary" className="cursor-pointer hover:bg-accent">
-                    {`{{${variable}}}`}
-                  </Badge>
-                </button>
-              ))}
-            </div>
+
+            {channel === "email" && (
+              <div className="flex flex-wrap gap-1.5">
+                {(Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map((key) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={activeStyle === key ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => applyPreset(key)}
+                  >
+                    {EMAIL_TEMPLATE_LABELS[key]}
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {bodyIsHtml ? (
+              <iframe
+                ref={iframeRef}
+                srcDoc={body}
+                title="preview do e-mail"
+                scrolling="no"
+                className="block w-full overflow-hidden rounded-md border"
+                style={{ minHeight: "300px" }}
+                sandbox="allow-same-origin"
+                onLoad={handleIframeLoad}
+              />
+            ) : (
+              <VariableTextarea
+                id="gtpl-body"
+                ref={bodyRef}
+                rows={6}
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+              />
+            )}
+
+            {!bodyIsHtml && (
+              <div className="flex flex-wrap gap-1.5">
+                {TEMPLATE_VARIABLES.map((variable) => (
+                  <button
+                    key={variable}
+                    type="button"
+                    onClick={() => insertVariable(variable)}
+                    aria-label={`Inserir variável ${variable}`}
+                  >
+                    <Badge variant="secondary" className="cursor-pointer hover:bg-accent">
+                      {`{{${variable}}}`}
+                    </Badge>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -198,6 +288,20 @@ export function GlobalTemplateDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {layoutEditorOpen && (
+        <EmailLayoutEditorModal
+          open={layoutEditorOpen}
+          initialConfig={layoutConfig}
+        draftKey={`gtpl-${template?.id ?? "new"}`}
+        onSave={(cfg, html) => {
+          setLayoutConfig(cfg);
+          setBody(html);
+          setLayoutEditorOpen(false);
+        }}
+          onClose={() => setLayoutEditorOpen(false)}
+        />
+      )}
     </Dialog>
   );
 }
