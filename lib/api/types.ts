@@ -1,3 +1,6 @@
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import type { EmailTemplateKey } from "@/lib/email-templates";
+
 export type EventStatus = "draft" | "published" | "cancelled" | "ended";
 
 export type FunnelStatus = "pending" | "approved" | "rejected";
@@ -138,6 +141,8 @@ export interface MessageTemplate {
   channel: MessageChannel;
   subject: string | null;
   body: string;
+  layoutConfig: EmailLayoutConfig | null;
+  styleKey: EmailTemplateKey | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -4,12 +4,16 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { MessageChannel, MessageTemplate, PaginatedResponse } from "@/lib/api/types";
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import type { EmailTemplateKey } from "@/lib/email-templates";
 
 export interface TemplateInput {
   name: string;
   channel: MessageChannel;
   subject?: string;
   body: string;
+  layoutConfig?: EmailLayoutConfig | null;
+  styleKey?: EmailTemplateKey | null;
 }
 
 export const TEMPLATE_VARIABLES = [
