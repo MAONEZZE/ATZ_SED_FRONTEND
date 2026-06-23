@@ -40,6 +40,7 @@ import type {
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
+import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import { PhoneField } from "@/components/forms/phone-field";
 import {
@@ -223,18 +224,12 @@ export function SendMessageForm({
   function selectTemplate(value: string) {
     const id = value === NO_TEMPLATE ? null : value;
     setTemplateId(id);
-    const tpl = id ? channelTemplates.find((t) => t.id === id) : null;
-    if (channel === "email") setSubject(tpl?.subject ?? "");
-    if (channel === "email" && layoutConfig) {
-      const cfg = {
-        ...layoutConfig,
-        paragraph1: tpl?.body ?? layoutConfig.paragraph1,
-      };
-      setLayoutConfig(cfg);
-      setBody(buildEmail(cfg));
-    } else {
-      setBody(tpl?.body ?? "");
-    }
+    const tpl = id ? (channelTemplates.find((t) => t.id === id) ?? null) : null;
+    const sel = resolveTemplateSelection(tpl, channel);
+    if (channel === "email") setSubject(sel.subject);
+    setLayoutConfig(sel.layoutConfig);
+    setActiveStyle(sel.activeStyle);
+    setBody(sel.body);
   }
 
   function changeChannel(next: MessageChannel) {
