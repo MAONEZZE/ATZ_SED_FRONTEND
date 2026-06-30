@@ -13,6 +13,11 @@ export const VARIABLE_DESCRIPTIONS: { variable: string; description: string }[] 
     variable: "link_grupo",
     description: "Link do grupo de comunicação (WhatsApp/Telegram)",
   },
+  { variable: "invite", description: "Convite de calendário do evento (.ics)" },
+  {
+    variable: "invite_recorrente",
+    description: "Convite de calendário recorrente do evento",
+  },
 ];
 
 export function TemplateVariablesInfo() {

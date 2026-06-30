@@ -12,6 +12,7 @@ import { answerKeyForField, createPublicRegistration } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
+import { renderRichText } from "@/components/ui/rich-text";
 
 function buildSchema(fields: PublicFormField[]) {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -134,8 +135,10 @@ export function RegistrationForm({
       <div className="rounded-xl border p-8 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h3 className="mt-4 text-xl font-bold">Inscrição enviada!</h3>
-        <p className="mt-2 opacity-80">
-          {successMessage ?? "Recebemos sua inscrição. Você receberá novidades em breve."}
+        <p className="mt-2 whitespace-pre-line opacity-80">
+          {successMessage
+            ? renderRichText(successMessage)
+            : "Recebemos sua inscrição. Você receberá novidades em breve."}
         </p>
       </div>
     );

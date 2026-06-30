@@ -7,6 +7,7 @@ import { getPublicEvent, getPublicFormFields } from "@/lib/api/public";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RegistrationForm } from "./registration-form";
+import { renderRichText } from "@/components/ui/rich-text";
 import { FaInstagram, FaYoutube } from "react-icons/fa";
 
 export const revalidate = 300;
@@ -161,7 +162,7 @@ export default async function PublicEventPage({ params }: PageProps) {
               <>
                 <Separator />
                 <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">
-                  {event.description}
+                  {renderRichText(event.description)}
                 </p>
               </>
             )}

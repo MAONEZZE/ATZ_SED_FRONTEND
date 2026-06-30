@@ -6,6 +6,13 @@ import { toast } from "sonner";
 import { Loader2, Info, Paintbrush } from "lucide-react";
 import { TEMPLATE_VARIABLES } from "@/lib/api/templates";
 import {
+  INVITE_TOKEN,
+  INVITE_RECURRENT_TOKEN,
+  injectInviteToken,
+  removeInviteToken,
+  hasInviteToken,
+} from "@/lib/validation/send-message";
+import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
@@ -74,6 +81,20 @@ export function GlobalTemplateDialog({
   const isPending = create.isPending || update.isPending;
   const isEdit = Boolean(template);
   const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
+
+  const inviteIcs = hasInviteToken(body, INVITE_TOKEN);
+  const inviteRecurrent = hasInviteToken(body, INVITE_RECURRENT_TOKEN);
+
+  function toggleInvite(token: string) {
+    setBody((prev) => {
+      const other = token === INVITE_TOKEN ? INVITE_RECURRENT_TOKEN : INVITE_TOKEN;
+      let next = removeInviteToken(prev, other);
+      next = hasInviteToken(prev, token)
+        ? removeInviteToken(next, token)
+        : injectInviteToken(next, token);
+      return next;
+    });
+  }
 
   function insertVariable(variable: string) {
     const token = `{{${variable}}}`;
@@ -235,6 +256,32 @@ export function GlobalTemplateDialog({
                     {EMAIL_TEMPLATE_LABELS[key]}
                   </Button>
                 ))}
+              </div>
+            )}
+
+            {channel === "email" && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-muted-foreground">Vincular:</span>
+                <Button
+                  type="button"
+                  variant={inviteIcs ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs"
+                  aria-pressed={inviteIcs}
+                  onClick={() => toggleInvite(INVITE_TOKEN)}
+                >
+                  Invite
+                </Button>
+                <Button
+                  type="button"
+                  variant={inviteRecurrent ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs"
+                  aria-pressed={inviteRecurrent}
+                  onClick={() => toggleInvite(INVITE_RECURRENT_TOKEN)}
+                >
+                  Invite Recorrente
+                </Button>
               </div>
             )}
 

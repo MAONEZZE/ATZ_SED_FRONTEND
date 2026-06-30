@@ -10,9 +10,9 @@ export interface AutomationInput {
 export const DELAYED_TRIGGERS: AutomationTrigger[] = ["before_event", "after_event"];
 
 export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
-  on_registration: "Ao se inscrever",
-  on_post_event: "Ao enviar formulário pós-evento",
-  on_nps: "Ao enviar NPS",
+  on_registration: "Ao se inscrever - Formulário Principal",
+  on_post_event: "Ao se inscrever - Pós-evento",
+  on_nps: "Ao se inscrever - NPS",
   on_approval: "Ao ser aprovado",
   on_rejection: "Ao ser rejeitado",
   before_event: "Antes do evento",
