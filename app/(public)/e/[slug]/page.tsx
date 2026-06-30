@@ -85,12 +85,42 @@ export default async function PublicEventPage({ params }: PageProps) {
 
   const date = formatDate(event.eventDate);
 
+  const isMeaningful = (value: string | null | undefined): value is string => {
+    if (value == null) return false;
+    const normalized = value.trim().toLowerCase();
+    return normalized !== "" && normalized !== "a definir";
+  };
+
+  const infoCards = [
+    isMeaningful(date) && {
+      icon: <CalendarDays className="h-5 w-5" />,
+      label: "Data e horário",
+      value: date,
+    },
+    isMeaningful(event.location) && {
+      icon: <MapPin className="h-5 w-5" />,
+      label: "Local",
+      value: event.location,
+    },
+    isMeaningful(event.dressCode) && {
+      icon: <Shirt className="h-5 w-5" />,
+      label: "Dress code",
+      value: event.dressCode,
+    },
+    event.capacity != null && {
+      icon: <Users className="h-5 w-5" />,
+      label: "Vagas",
+      value: `${event.capacity}`,
+    },
+  ].filter(Boolean) as { icon: ReactNode; label: string; value: string }[];
+
   const coverSrc = event.coverUrl
     ? `${event.coverUrl}${event.coverUrl.includes("?") ? "&" : "?"}v=${Date.now()}`
     : null;
 
   return (
-    <main className="force-light min-h-screen bg-background text-foreground">
+    <main className="force-light flex min-h-screen flex-col bg-background text-foreground">
+      <div className="flex-1">
       {coverSrc && (
         <div className="relative h-64 w-full sm:h-80 md:h-96">
           <Image
@@ -114,28 +144,18 @@ export default async function PublicEventPage({ params }: PageProps) {
           <CardContent className="space-y-6 p-6 sm:p-8">
             <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <InfoCard
-                icon={<CalendarDays className="h-5 w-5" />}
-                label="Data e horário"
-                value={date ?? "A definir"}
-              />
-              <InfoCard
-                icon={<MapPin className="h-5 w-5" />}
-                label="Local"
-                value={event.location ?? "A definir"}
-              />
-              <InfoCard
-                icon={<Shirt className="h-5 w-5" />}
-                label="Dress code"
-                value={event.dressCode ?? "Livre"}
-              />
-              <InfoCard
-                icon={<Users className="h-5 w-5" />}
-                label="Vagas"
-                value={event.capacity != null ? `${event.capacity}` : "Ilimitadas"}
-              />
-            </div>
+            {infoCards.length > 0 && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {infoCards.map((card) => (
+                  <InfoCard
+                    key={card.label}
+                    icon={card.icon}
+                    label={card.label}
+                    value={card.value}
+                  />
+                ))}
+              </div>
+            )}
 
             {event.description && (
               <>
@@ -158,6 +178,7 @@ export default async function PublicEventPage({ params }: PageProps) {
             />
           </CardContent>
         </Card>
+      </div>
       </div>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
