@@ -183,4 +183,102 @@ describe("toSendMessageInput", () => {
     );
     expect(input.body).not.toContain("{{invite}}");
   });
+
+  it("email com inviteConfig recorrente envia objeto invite com recurrence", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        channel: "email",
+        body: "Corpo",
+        registrationIds: ["a"],
+        inviteConfig: {
+          date: "2026-07-01",
+          allDay: false,
+          startTime: "09:00",
+          endTime: "10:00",
+          timezone: "America/Sao_Paulo",
+          recurrence: "weekly",
+        },
+      },
+      { hasEventId: true },
+    );
+    expect(input.invite).toEqual({
+      date: "2026-07-01",
+      allDay: false,
+      startTime: "09:00",
+      endTime: "10:00",
+      timezone: "America/Sao_Paulo",
+      recurrence: { freq: "WEEKLY", interval: 1 },
+    });
+  });
+
+  it("inviteConfig único (none) envia recurrence null; allDay omite horários", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        channel: "email",
+        body: "Corpo",
+        registrationIds: ["a"],
+        inviteConfig: {
+          date: "2026-07-01",
+          allDay: true,
+          startTime: "09:00",
+          endTime: "10:00",
+          timezone: "America/Sao_Paulo",
+          recurrence: "none",
+        },
+      },
+      { hasEventId: true },
+    );
+    expect(input.invite?.recurrence).toBeNull();
+    expect(input.invite?.startTime).toBeUndefined();
+    expect(input.invite?.endTime).toBeUndefined();
+  });
+
+  it("inviteConfig custom envia freq/interval/until", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        channel: "email",
+        body: "Corpo",
+        registrationIds: ["a"],
+        inviteConfig: {
+          date: "2026-07-01",
+          allDay: false,
+          startTime: "09:00",
+          endTime: "10:00",
+          timezone: "America/Sao_Paulo",
+          recurrence: "custom",
+          customFreq: "MONTHLY",
+          interval: 3,
+          until: "2026-12-31",
+        },
+      },
+      { hasEventId: true },
+    );
+    expect(input.invite?.recurrence?.freq).toBe("MONTHLY");
+    expect(input.invite?.recurrence?.interval).toBe(3);
+    expect(input.invite?.recurrence?.until).toMatch(/^20\d{2}-\d{2}-\d{2}T.*Z$/);
+  });
+
+  it("whatsapp não envia objeto invite mesmo com inviteConfig", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        channel: "whatsapp",
+        body: "Corpo",
+        registrationIds: ["a"],
+        inviteConfig: {
+          date: "2026-07-01",
+          allDay: false,
+          startTime: "09:00",
+          endTime: "10:00",
+          timezone: "America/Sao_Paulo",
+          recurrence: "weekly",
+        },
+      },
+      { hasEventId: true },
+    );
+    expect(input.invite).toBeUndefined();
+  });
 });

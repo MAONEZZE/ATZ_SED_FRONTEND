@@ -37,6 +37,12 @@ function toFormValues(event: EventObject): EventFormValues {
     groupLink: event.groupLink ?? "",
     eventDate: event.eventDate ? utcIsoToLocalInput(event.eventDate) : "",
     endDate: event.endDate ? utcIsoToLocalInput(event.endDate) : "",
+    recurrenceFreq: event.recurrenceFreq ?? "",
+    recurrenceInterval:
+      event.recurrenceInterval != null ? String(event.recurrenceInterval) : "",
+    recurrenceUntil: event.recurrenceUntil
+      ? utcIsoToLocalInput(event.recurrenceUntil)
+      : "",
     postRegistrationMessage: event.postRegistrationMessage ?? "",
   };
 }

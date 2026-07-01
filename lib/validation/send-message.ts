@@ -4,6 +4,7 @@ import type {
   MessageChannel,
   SendMessageInput,
 } from "@/lib/api/types";
+import { toInvitePayload, type InviteConfig } from "@/lib/messages/invite-config";
 
 export interface SendMessageDraft {
   channel: MessageChannel;
@@ -16,6 +17,8 @@ export interface SendMessageDraft {
   inviteIcs?: boolean;
 
   inviteRecurrent?: boolean;
+
+  inviteConfig?: InviteConfig | null;
 
   attachments?: MessageAttachment[];
 }
@@ -92,5 +95,9 @@ export function toSendMessageInput(
     manualRecipients: draft.manualRecipients,
     attachments:
       draft.attachments && draft.attachments.length > 0 ? draft.attachments : undefined,
+    invite:
+      draft.channel === "email" && draft.inviteConfig
+        ? toInvitePayload(draft.inviteConfig)
+        : undefined,
   };
 }

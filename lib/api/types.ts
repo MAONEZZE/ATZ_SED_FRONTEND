@@ -43,6 +43,8 @@ export type LandingSectionType =
 
 export type UserRole = "admin" | "organizer";
 
+export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+
 export interface EventObject {
   id: string;
   ownerId: string;
@@ -57,6 +59,9 @@ export interface EventObject {
   groupLink: string | null;
   eventDate: string | null;
   endDate: string | null;
+  recurrenceFreq: RecurrenceFreq | null;
+  recurrenceInterval: number | null;
+  recurrenceUntil: string | null;
   postRegistrationMessage: string | null;
   evolutionInstance: string | null;
   sendToPipedrive: boolean;
@@ -267,6 +272,26 @@ export interface MessageAttachment {
   contentBase64: string;
 }
 
+export interface InviteRecurrencePayload {
+  freq: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+  interval: number;
+  until?: string;
+}
+
+export interface InvitePayload {
+  /** "YYYY-MM-DD" */
+  date: string;
+  allDay: boolean;
+  /** "HH:mm" — ausente quando allDay */
+  startTime?: string;
+  /** "HH:mm" — ausente quando allDay */
+  endTime?: string;
+  /** IANA timezone id */
+  timezone: string;
+  /** null = convite único */
+  recurrence?: InviteRecurrencePayload | null;
+}
+
 export interface SendMessageInput {
   eventId?: string;
   channel: MessageChannel;
@@ -276,6 +301,7 @@ export interface SendMessageInput {
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
   attachments?: MessageAttachment[];
+  invite?: InvitePayload;
 }
 
 export interface SendMessageResult {

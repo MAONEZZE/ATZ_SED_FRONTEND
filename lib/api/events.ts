@@ -3,7 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { EventObject, EventStatus, PaginatedResponse } from "@/lib/api/types";
+import type {
+  EventObject,
+  EventStatus,
+  PaginatedResponse,
+  RecurrenceFreq,
+} from "@/lib/api/types";
 
 export interface EventInput {
   title: string;
@@ -14,6 +19,9 @@ export interface EventInput {
   groupLink?: string;
   eventDate?: string;
   endDate?: string;
+  recurrenceFreq?: RecurrenceFreq | null;
+  recurrenceInterval?: number | null;
+  recurrenceUntil?: string | null;
   postRegistrationMessage?: string;
   sendToPipedrive?: boolean;
 }

@@ -3,8 +3,7 @@
 import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Info, Paintbrush } from "lucide-react";
-import { TEMPLATE_VARIABLES } from "@/lib/api/templates";
+import { Braces, ChevronDown, LayoutTemplate, Loader2, Ticket } from "lucide-react";
 import {
   INVITE_TOKEN,
   INVITE_RECURRENT_TOKEN,
@@ -22,12 +21,13 @@ import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
 import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
+import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
+import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
-import { Badge } from "@/components/ui/badge";
-import { TemplateVariablesInfo } from "@/components/messages/template-variables-info";
 import {
   Dialog,
   DialogContent,
@@ -35,7 +35,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -43,6 +42,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const TONE_OPTIONS = (Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map(
+  (key) => ({ value: key, label: EMAIL_TEMPLATE_LABELS[key] }),
+);
+
+const stepLabel = "text-xs font-medium text-muted-foreground";
 
 export function GlobalTemplateDialog({
   template,
@@ -84,6 +98,7 @@ export function GlobalTemplateDialog({
 
   const inviteIcs = hasInviteToken(body, INVITE_TOKEN);
   const inviteRecurrent = hasInviteToken(body, INVITE_RECURRENT_TOKEN);
+  const inviteActive = inviteIcs || inviteRecurrent;
 
   function toggleInvite(token: string) {
     setBody((prev) => {
@@ -163,166 +178,191 @@ export function GlobalTemplateDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar template" : "Novo template"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="gtpl-name">Nome *</Label>
-            <Input
-              id="gtpl-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
+          {/* 1 · Configuração */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className={stepLabel}>1 · Configuração</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="gtpl-name">Nome do template *</Label>
+                  <Input
+                    id="gtpl-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
 
-          <div className="space-y-2">
-            <Label>Canal</Label>
-            <Select
-              value={channel}
-              onValueChange={(v) => changeChannel(v as MessageChannel)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="email">E-mail</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {channel === "email" && (
-            <div className="space-y-2">
-              <Label htmlFor="gtpl-subject">Assunto</Label>
-              <Input
-                id="gtpl-subject"
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="gtpl-body">Mensagem *</Label>
-              <div className="flex items-center gap-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-auto gap-1.5 px-2 py-1 text-xs text-muted-foreground"
-                    >
-                      <Info className="h-3.5 w-3.5" />
-                      Variáveis disponíveis
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 overflow-hidden p-0">
-                    <TemplateVariablesInfo />
-                  </PopoverContent>
-                </Popover>
-                {channel === "email" && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-7 gap-1.5 text-xs"
-                    disabled={!activeStyle}
-                    title={activeStyle ? undefined : "Escolha um estilo para habilitar"}
-                    onClick={() => setLayoutEditorOpen(true)}
+                <div className="space-y-2">
+                  <Label>Canal de envio</Label>
+                  <Select
+                    value={channel}
+                    onValueChange={(v) => changeChannel(v as MessageChannel)}
                   >
-                    <Paintbrush className="h-3.5 w-3.5" />
-                    Editar layout
-                  </Button>
-                )}
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="email">E-mail</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {channel === "email" && (
-              <div className="flex flex-wrap gap-1.5">
-                {(Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map((key) => (
-                  <Button
-                    key={key}
-                    type="button"
-                    variant={activeStyle === key ? "default" : "outline"}
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => applyPreset(key)}
-                  >
-                    {EMAIL_TEMPLATE_LABELS[key]}
-                  </Button>
-                ))}
+          {/* 2 · Conteúdo */}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className={stepLabel}>2 · Conteúdo</CardTitle>
+              {channel === "email" && (
+                <ToneSegmentedControl
+                  aria-label="Tom da mensagem"
+                  value={activeStyle}
+                  onValueChange={applyPreset}
+                  options={TONE_OPTIONS}
+                />
+              )}
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {channel === "email" && (
+                <div className="space-y-2">
+                  <Label htmlFor="gtpl-subject">Assunto</Label>
+                  <Input
+                    id="gtpl-subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="gtpl-body">Mensagem *</Label>
+                <div className="overflow-hidden rounded-md border">
+                  {/* Toolbar */}
+                  <div className="flex items-center gap-1 border-b bg-muted/40 px-1.5 py-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                        >
+                          <Braces className="h-3.5 w-3.5" />
+                          Variáveis
+                          <ChevronDown className="h-3 w-3 opacity-60" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="start"
+                        className="max-h-[60vh] w-64 overflow-y-auto"
+                      >
+                        {VARIABLE_DESCRIPTIONS.map(({ variable, description }) => (
+                          <DropdownMenuItem
+                            key={variable}
+                            onSelect={() => insertVariable(variable)}
+                            className="flex-col items-start gap-0.5"
+                          >
+                            <code className="font-mono text-xs font-semibold">
+                              {`{{${variable}}}`}
+                            </code>
+                            <span className="text-xs text-muted-foreground">
+                              {description}
+                            </span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {channel === "email" && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 gap-1 px-2 text-xs"
+                          >
+                            <Ticket className="h-3.5 w-3.5" />
+                            Invite
+                            {inviteActive && (
+                              <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
+                            )}
+                            <ChevronDown className="h-3 w-3 opacity-60" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                          <DropdownMenuLabel>Vincular convite</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuCheckboxItem
+                            checked={inviteIcs}
+                            onCheckedChange={() => toggleInvite(INVITE_TOKEN)}
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            Invite
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
+                            checked={inviteRecurrent}
+                            onCheckedChange={() => toggleInvite(INVITE_RECURRENT_TOKEN)}
+                            onSelect={(e) => e.preventDefault()}
+                          >
+                            Invite Recorrente
+                          </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+
+                    {channel === "email" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto h-7 gap-1 px-2 text-xs"
+                        disabled={!activeStyle}
+                        title={activeStyle ? undefined : "Escolha um tom para habilitar"}
+                        onClick={() => setLayoutEditorOpen(true)}
+                      >
+                        <LayoutTemplate className="h-3.5 w-3.5" />
+                        Editar layout
+                      </Button>
+                    )}
+                  </div>
+
+                  {bodyIsHtml ? (
+                    <iframe
+                      ref={iframeRef}
+                      srcDoc={body}
+                      title="preview do e-mail"
+                      scrolling="no"
+                      className="block w-full overflow-hidden bg-white"
+                      style={{ minHeight: "300px" }}
+                      sandbox="allow-same-origin"
+                      onLoad={handleIframeLoad}
+                    />
+                  ) : (
+                    <VariableTextarea
+                      id="gtpl-body"
+                      ref={bodyRef}
+                      rows={12}
+                      placeholder="Escreva a mensagem..."
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      className="rounded-none border-0 shadow-none focus-visible:ring-0"
+                    />
+                  )}
+                </div>
               </div>
-            )}
-
-            {channel === "email" && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">Vincular:</span>
-                <Button
-                  type="button"
-                  variant={inviteIcs ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                  aria-pressed={inviteIcs}
-                  onClick={() => toggleInvite(INVITE_TOKEN)}
-                >
-                  Invite
-                </Button>
-                <Button
-                  type="button"
-                  variant={inviteRecurrent ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs"
-                  aria-pressed={inviteRecurrent}
-                  onClick={() => toggleInvite(INVITE_RECURRENT_TOKEN)}
-                >
-                  Invite Recorrente
-                </Button>
-              </div>
-            )}
-
-            {bodyIsHtml ? (
-              <iframe
-                ref={iframeRef}
-                srcDoc={body}
-                title="preview do e-mail"
-                scrolling="no"
-                className="block w-full overflow-hidden rounded-md border"
-                style={{ minHeight: "300px" }}
-                sandbox="allow-same-origin"
-                onLoad={handleIframeLoad}
-              />
-            ) : (
-              <VariableTextarea
-                id="gtpl-body"
-                ref={bodyRef}
-                rows={6}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-              />
-            )}
-
-            {!bodyIsHtml && (
-              <div className="flex flex-wrap gap-1.5">
-                {TEMPLATE_VARIABLES.map((variable) => (
-                  <button
-                    key={variable}
-                    type="button"
-                    onClick={() => insertVariable(variable)}
-                    aria-label={`Inserir variável ${variable}`}
-                  >
-                    <Badge variant="secondary" className="cursor-pointer hover:bg-accent">
-                      {`{{${variable}}}`}
-                    </Badge>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <DialogFooter>
@@ -340,12 +380,12 @@ export function GlobalTemplateDialog({
         <EmailLayoutEditorModal
           open={layoutEditorOpen}
           initialConfig={layoutConfig}
-        draftKey={`gtpl-${template?.id ?? "new"}`}
-        onSave={(cfg, html) => {
-          setLayoutConfig(cfg);
-          setBody(html);
-          setLayoutEditorOpen(false);
-        }}
+          draftKey={`gtpl-${template?.id ?? "new"}`}
+          onSave={(cfg, html) => {
+            setLayoutConfig(cfg);
+            setBody(html);
+            setLayoutEditorOpen(false);
+          }}
           onClose={() => setLayoutEditorOpen(false)}
         />
       )}

@@ -6,6 +6,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const FREQ_OPTIONS = [
+  { value: "DAILY", label: "Diária" },
+  { value: "WEEKLY", label: "Semanal" },
+  { value: "MONTHLY", label: "Mensal" },
+  { value: "YEARLY", label: "Anual" },
+] as const;
+
+const INTERVAL_UNIT: Record<string, string> = {
+  DAILY: "dia(s)",
+  WEEKLY: "semana(s)",
+  MONTHLY: "mês(es)",
+  YEARLY: "ano(s)",
+};
+
+const NO_RECURRENCE = "none";
 
 export function EventFormFields({
   form,
@@ -16,6 +39,8 @@ export function EventFormFields({
 }) {
   const { register, formState } = form;
   const errors = formState.errors;
+  const freq = form.watch("recurrenceFreq");
+  const isRecurring = Boolean(freq);
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -110,6 +135,96 @@ export function EventFormFields({
         {errors.groupLink && (
           <p className="text-sm text-destructive">{errors.groupLink.message}</p>
         )}
+      </div>
+
+      <div className="space-y-4 rounded-xl border p-4 sm:col-span-2">
+        <div>
+          <h3 className="font-semibold">Recorrência</h3>
+          <p className="text-sm text-muted-foreground">
+            Repete o convite de calendário (token{" "}
+            <code className="font-mono">{`{{invite_recorrente}}`}</code> no template de
+            e-mail). Baseia-se no início do evento.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="recurrenceFreq">Frequência</Label>
+            <Controller
+              control={form.control}
+              name="recurrenceFreq"
+              render={({ field }) => (
+                <Select
+                  disabled={disabled}
+                  value={field.value || NO_RECURRENCE}
+                  onValueChange={(v) =>
+                    field.onChange(v === NO_RECURRENCE ? "" : v)
+                  }
+                >
+                  <SelectTrigger id="recurrenceFreq">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_RECURRENCE}>Não repetir</SelectItem>
+                    {FREQ_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {isRecurring && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="recurrenceInterval">A cada</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="recurrenceInterval"
+                    type="number"
+                    min={1}
+                    disabled={disabled}
+                    className="w-20"
+                    {...register("recurrenceInterval")}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {INTERVAL_UNIT[freq as string]}
+                  </span>
+                </div>
+                {errors.recurrenceInterval && (
+                  <p className="text-sm text-destructive">
+                    {errors.recurrenceInterval.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="recurrenceUntil">Repetir até</Label>
+                <Controller
+                  control={form.control}
+                  name="recurrenceUntil"
+                  render={({ field }) => (
+                    <DateTimePicker
+                      id="recurrenceUntil"
+                      mode="datetime"
+                      disabled={disabled}
+                      value={(field.value as string) ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {errors.recurrenceUntil && (
+                  <p className="text-sm text-destructive">
+                    {errors.recurrenceUntil.message}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
