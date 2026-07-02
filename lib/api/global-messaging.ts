@@ -5,7 +5,6 @@ import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
   Automation,
-  AutomationWithEvent,
   MessageChannel,
   MessageLogWithEvent,
   PaginatedResponse,
@@ -31,16 +30,6 @@ export function useEventAutomations(eventId: string) {
     queryFn: () =>
       api.get<PaginatedResponse<Automation>>(`/events/${eventId}/automations`),
     enabled: Boolean(eventId),
-  });
-}
-
-export function useAllAutomations(page = 1, limit = 20) {
-  return useQuery({
-    queryKey: queryKeys.allAutomations({ page, limit }),
-    queryFn: () =>
-      api.get<PaginatedResponse<AutomationWithEvent>>(
-        `/automations?page=${page}&limit=${limit}`,
-      ),
   });
 }
 

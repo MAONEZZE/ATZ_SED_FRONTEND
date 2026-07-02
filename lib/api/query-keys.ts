@@ -40,10 +40,6 @@ export const queryKeys = {
     params
       ? (["global", "templates", params] as const)
       : (["global", "templates"] as const),
-  allAutomations: (params?: { page?: number; limit?: number }) =>
-    params
-      ? (["global", "automations", params] as const)
-      : (["global", "automations"] as const),
   allMessageLogs: (params?: { page?: number; limit?: number }) =>
     params
       ? (["global", "message-logs", params] as const)

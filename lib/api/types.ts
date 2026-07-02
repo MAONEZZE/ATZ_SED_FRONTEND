@@ -158,7 +158,6 @@ export interface EventRef {
 }
 
 export type TemplateWithEvent = MessageTemplate & { event: EventRef | null };
-export type AutomationWithEvent = Automation & { event: EventRef };
 export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
 
 export interface TemplateAutomationSummary {
