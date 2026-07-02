@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
+import { fieldOptions } from "@/lib/forms/field-options";
 import type { FieldType, FormField, FormFieldKind } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,9 +52,7 @@ const creatableTypes: FieldType[] = [
 ];
 
 function optionsToText(options: unknown): string {
-  return Array.isArray(options)
-    ? options.filter((o): o is string => typeof o === "string").join("\n")
-    : "";
+  return fieldOptions({ options }).join("\n");
 }
 
 export function FieldEditorDialog({
