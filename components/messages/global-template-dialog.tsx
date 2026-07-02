@@ -15,6 +15,7 @@ import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
+import { useEvents } from "@/lib/api/events";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
@@ -57,6 +58,7 @@ const TONE_OPTIONS = (Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).m
 );
 
 const stepLabel = "text-xs font-medium text-muted-foreground";
+const NO_EVENT = "__none_event__";
 
 export function GlobalTemplateDialog({
   template,
@@ -69,11 +71,14 @@ export function GlobalTemplateDialog({
 }) {
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
+  const { data: eventsResponse } = useEvents();
+  const events = eventsResponse?.data;
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<MessageChannel>("whatsapp");
+  const [eventId, setEventId] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
@@ -84,6 +89,7 @@ export function GlobalTemplateDialog({
     if (open) {
       setName(template?.name ?? "");
       setChannel(template?.channel ?? "whatsapp");
+      setEventId(template?.eventId ?? "");
       setSubject(template?.subject ?? "");
       setBody(template?.body ?? "");
       setLayoutConfig(template?.layoutConfig ?? null);
@@ -163,6 +169,7 @@ export function GlobalTemplateDialog({
       body,
       layoutConfig: channel === "email" ? layoutConfig : null,
       styleKey: channel === "email" ? activeStyle : null,
+      eventId: eventId || null,
     };
     const onDone = {
       onSuccess: () => {
@@ -171,8 +178,9 @@ export function GlobalTemplateDialog({
       },
       onError: (e: Error) => toast.error(e.message),
     };
-    if (template)
-      update.mutate({ eventId: template.eventId, id: template.id, input }, onDone);
+    // Endpoint global (/templates/:id) resolve por id + ownerId e aplica o eventId
+    // do input (vincula/desvincula), então roteamos sempre por ele.
+    if (template) update.mutate({ eventId: null, id: template.id, input }, onDone);
     else create.mutate({ input }, onDone);
   }
 
@@ -190,6 +198,26 @@ export function GlobalTemplateDialog({
               <CardTitle className={stepLabel}>1 · Configuração</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Evento</Label>
+                <Select
+                  value={eventId || NO_EVENT}
+                  onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Global (sem evento)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_EVENT}>Global (sem evento)</SelectItem>
+                    {events?.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="gtpl-name">Nome do template *</Label>

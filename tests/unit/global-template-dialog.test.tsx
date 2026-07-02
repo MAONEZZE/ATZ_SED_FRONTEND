@@ -10,6 +10,10 @@ vi.mock("@/lib/api/global-messaging", () => ({
   useUpdateTemplateGlobal: () => ({ mutate: updateMutate, isPending: false }),
 }));
 
+vi.mock("@/lib/api/events", () => ({
+  useEvents: () => ({ data: { data: [{ id: "ev1", title: "Festa" }] } }),
+}));
+
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
@@ -50,6 +54,8 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     expect(arg.input.styleKey).toBe("minimalista");
     expect(arg.input.layoutConfig).toBeTruthy();
     expect(arg.input.body).toContain("<");
+    expect(arg.input.eventId).toBeNull();
+    expect(arg.eventId).toBeNull();
   });
 });
 

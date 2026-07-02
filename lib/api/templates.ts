@@ -14,6 +14,8 @@ export interface TemplateInput {
   body: string;
   layoutConfig?: EmailLayoutConfig | null;
   styleKey?: EmailTemplateKey | null;
+  /** Vincula o template a um evento. null = global (sem evento). */
+  eventId?: string | null;
 }
 
 export const TEMPLATE_VARIABLES = [
