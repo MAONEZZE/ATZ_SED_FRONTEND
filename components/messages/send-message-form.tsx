@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   Braces,
   ChevronDown,
-  Copy,
   Download,
   LayoutTemplate,
   Loader2,
@@ -14,14 +13,13 @@ import {
   Send,
   Ticket,
   Trash2,
-  Users,
 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
-import { useProfile, useWhatsAppGroups } from "@/lib/api/profile";
+import { useProfile } from "@/lib/api/profile";
 import {
   INVITE_TOKEN,
   INVITE_RECURRENT_TOKEN,
@@ -49,6 +47,7 @@ import {
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { InviteConfigModal } from "@/components/messages/invite-config-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
+import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
   EMAIL_PREVIEW_MIN_HEIGHT,
@@ -153,12 +152,6 @@ export function SendMessageForm({
   const sendMessage = useSendMessage(effectiveEventId || undefined);
 
   const { data: profile } = useProfile();
-  const {
-    data: groups,
-    isLoading: loadingGroups,
-    isError: groupsError,
-  } = useWhatsAppGroups();
-  const [groupsOpen, setGroupsOpen] = useState(false);
 
   const composer = useEmailComposer();
   const {
@@ -681,72 +674,7 @@ export function SendMessageForm({
                 </Button>
               )}
               {channel === "whatsapp" && (
-                <Popover open={groupsOpen} onOpenChange={setGroupsOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 gap-1.5 text-xs"
-                    >
-                      <Users className="h-3.5 w-3.5" />
-                      Grupos
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0">
-                    <div className="border-b px-3 py-2">
-                      <p className="text-sm font-medium">Grupos WhatsApp</p>
-                      {profile?.evolutionInstance && (
-                        <p className="text-xs text-muted-foreground">
-                          Instância: {profile.evolutionInstance}
-                        </p>
-                      )}
-                    </div>
-                    {!profile?.evolutionInstance ? (
-                      <p className="px-3 py-4 text-sm text-muted-foreground">
-                        Configure sua instância Evolution no perfil para ver os grupos.
-                      </p>
-                    ) : loadingGroups ? (
-                      <div className="flex justify-center py-4">
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : groupsError ? (
-                      <p className="px-3 py-4 text-sm text-destructive">
-                        Erro ao carregar grupos. Verifique a instância Evolution.
-                      </p>
-                    ) : !groups || groups.length === 0 ? (
-                      <p className="px-3 py-4 text-sm text-muted-foreground">
-                        Nenhum grupo encontrado.
-                      </p>
-                    ) : (
-                      <div className="max-h-64 overflow-y-auto">
-                        {groups.map((g) => (
-                          <div
-                            key={g.id}
-                            className="flex items-center justify-between gap-2 border-b px-3 py-2 last:border-b-0"
-                          >
-                            <span className="min-w-0 flex-1 truncate text-sm">
-                              {g.subject}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 shrink-0"
-                              aria-label={`Copiar ID do grupo ${g.subject}`}
-                              onClick={() => {
-                                navigator.clipboard.writeText(g.id);
-                                toast.success("ID copiado para a área de transferência");
-                              }}
-                            >
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                <WhatsAppGroupsPopover evolutionInstance={profile?.evolutionInstance} />
               )}
               <Button
                 type="button"
