@@ -92,5 +92,5 @@ export function usePostEventResponses(
 }
 
 export function exportPostEventResponsesCsv(eventId: string): Promise<Blob> {
-  return apiFetchBlob(`/events/${eventId}/post-event-responses/export`);
+  return apiFetchBlob(`/events/${eventId}/post-event-responses?format=csv`);
 }

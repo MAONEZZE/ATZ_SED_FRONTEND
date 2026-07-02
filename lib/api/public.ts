@@ -48,7 +48,7 @@ export async function createPublicRegistration(
 
 export async function getPublicPostEventFields(slug: string): Promise<PublicFormField[]> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event-fields`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/form-fields`,
     { cache: "no-store" },
   );
   if (res.status === 404) return [];
@@ -61,7 +61,7 @@ export async function submitPublicPostEvent(
   payload: { identifier: string; answers: Record<string, unknown> },
 ): Promise<void> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/responses`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -82,7 +82,7 @@ export async function submitPublicPostEvent(
 
 export async function getPublicNpsFields(slug: string): Promise<PublicFormField[]> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps-fields`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/form-fields`,
     { cache: "no-store" },
   );
   if (res.status === 404) return [];
@@ -94,7 +94,7 @@ export async function submitPublicNps(
   slug: string,
   payload: { identifier: string; answers: Record<string, unknown> },
 ): Promise<void> {
-  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps`, {
+  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/responses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
