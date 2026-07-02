@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Braces, ChevronDown, LayoutTemplate, Loader2, Ticket } from "lucide-react";
 import {
@@ -17,10 +17,15 @@ import {
 } from "@/lib/api/global-messaging";
 import { useEvents } from "@/lib/api/events";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
-import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
-import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
-import { buildEmail } from "@/lib/email/build-email";
-import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import {
+  EMAIL_PREVIEW_MIN_HEIGHT,
+  NO_EVENT,
+  STEP_LABEL_CLASS,
+  TONE_OPTIONS,
+} from "@/lib/messages/composer-constants";
+import { useEmailComposer } from "@/hooks/use-email-composer";
+import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
+import { useVariableInsertion } from "@/hooks/use-variable-insertion";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
@@ -53,13 +58,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const TONE_OPTIONS = (Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map(
-  (key) => ({ value: key, label: EMAIL_TEMPLATE_LABELS[key] }),
-);
-
-const stepLabel = "text-xs font-medium text-muted-foreground";
-const NO_EVENT = "__none_event__";
-
 export function GlobalTemplateDialog({
   template,
   open,
@@ -73,34 +71,49 @@ export function GlobalTemplateDialog({
   const update = useUpdateTemplateGlobal();
   const { data: eventsResponse } = useEvents();
   const events = eventsResponse?.data;
-  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const composer = useEmailComposer();
+  const {
+    channel,
+    setChannel,
+    subject,
+    setSubject,
+    body,
+    setBody,
+    activeStyle,
+    setActiveStyle,
+    layoutConfig,
+    setLayoutConfig,
+    layoutEditorOpen,
+    bodyIsHtml,
+    applyPreset,
+    applyLayout,
+    openLayoutEditor,
+    closeLayoutEditor,
+    reset,
+  } = composer;
+  const { iframeRef, onLoad: handleIframeLoad } = useIframeAutosize();
+  const { textareaRef: bodyRef, insertVariable } = useVariableInsertion(body, setBody);
 
   const [name, setName] = useState("");
-  const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [eventId, setEventId] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
-  const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
-  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       setName(template?.name ?? "");
-      setChannel(template?.channel ?? "whatsapp");
       setEventId(template?.eventId ?? "");
-      setSubject(template?.subject ?? "");
-      setBody(template?.body ?? "");
-      setLayoutConfig(template?.layoutConfig ?? null);
-      setActiveStyle(template?.styleKey ?? null);
-      setLayoutEditorOpen(false);
+      reset({
+        channel: template?.channel ?? "whatsapp",
+        subject: template?.subject ?? "",
+        body: template?.body ?? "",
+        activeStyle: template?.styleKey ?? null,
+        layoutConfig: template?.layoutConfig ?? null,
+      });
     }
-  }, [open, template]);
+  }, [open, template, reset]);
 
   const isPending = create.isPending || update.isPending;
   const isEdit = Boolean(template);
-  const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
 
   const inviteIcs = hasInviteToken(body, INVITE_TOKEN);
   const inviteRecurrent = hasInviteToken(body, INVITE_RECURRENT_TOKEN);
@@ -117,29 +130,6 @@ export function GlobalTemplateDialog({
     });
   }
 
-  function insertVariable(variable: string) {
-    const token = `{{${variable}}}`;
-    const el = bodyRef.current;
-    if (!el) {
-      setBody((prev) => prev + token);
-      return;
-    }
-    const start = el.selectionStart ?? body.length;
-    const end = el.selectionEnd ?? body.length;
-    setBody(body.slice(0, start) + token + body.slice(end));
-    requestAnimationFrame(() => {
-      el.focus();
-      el.setSelectionRange(start + token.length, start + token.length);
-    });
-  }
-
-  function applyPreset(key: EmailTemplateKey) {
-    const cfg = EMAIL_LAYOUT_PRESETS[key];
-    setLayoutConfig(cfg);
-    setBody(buildEmail(cfg));
-    setActiveStyle(key);
-  }
-
   function changeChannel(next: MessageChannel) {
     setChannel(next);
     if (next !== "email") {
@@ -148,14 +138,6 @@ export function GlobalTemplateDialog({
       setLayoutConfig(null);
     }
   }
-
-  const handleIframeLoad = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentDocument?.documentElement) return;
-    const doc = iframe.contentDocument;
-    const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
-    if (h > 0) iframe.style.height = `${h + 4}px`;
-  }, []);
 
   function handleSave() {
     if (!name.trim() || !body.trim()) {
@@ -195,7 +177,7 @@ export function GlobalTemplateDialog({
           {/* 1 · Configuração */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className={stepLabel}>1 · Configuração</CardTitle>
+              <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -250,7 +232,7 @@ export function GlobalTemplateDialog({
           {/* 2 · Conteúdo */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className={stepLabel}>2 · Conteúdo</CardTitle>
+              <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
               {channel === "email" && (
                 <ToneSegmentedControl
                   aria-label="Tom da mensagem"
@@ -357,7 +339,7 @@ export function GlobalTemplateDialog({
                         className="ml-auto h-7 gap-1 px-2 text-xs"
                         disabled={!activeStyle}
                         title={activeStyle ? undefined : "Escolha um tom para habilitar"}
-                        onClick={() => setLayoutEditorOpen(true)}
+                        onClick={openLayoutEditor}
                       >
                         <LayoutTemplate className="h-3.5 w-3.5" />
                         Editar layout
@@ -372,7 +354,7 @@ export function GlobalTemplateDialog({
                       title="preview do e-mail"
                       scrolling="no"
                       className="block w-full overflow-hidden bg-white"
-                      style={{ minHeight: "300px" }}
+                      style={{ minHeight: EMAIL_PREVIEW_MIN_HEIGHT }}
                       sandbox="allow-same-origin"
                       onLoad={handleIframeLoad}
                     />
@@ -410,11 +392,10 @@ export function GlobalTemplateDialog({
           initialConfig={layoutConfig}
           draftKey={`gtpl-${template?.id ?? "new"}`}
           onSave={(cfg, html) => {
-            setLayoutConfig(cfg);
-            setBody(html);
-            setLayoutEditorOpen(false);
+            applyLayout(cfg, html);
+            closeLayoutEditor();
           }}
-          onClose={() => setLayoutEditorOpen(false)}
+          onClose={closeLayoutEditor}
         />
       )}
     </Dialog>

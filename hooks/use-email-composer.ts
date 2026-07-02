@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
 import type { EmailTemplateKey } from "@/lib/email-templates";
@@ -43,38 +43,38 @@ export function useEmailComposer(init?: EmailComposerInit) {
    * (o formulário de envio injeta o corpo do template selecionado; o dialog não
    * passa nada, preservando o parágrafo do preset).
    */
-  function applyPreset(key: EmailTemplateKey, opts?: { paragraph1?: string }) {
-    const preset = EMAIL_LAYOUT_PRESETS[key];
-    const cfg =
-      opts?.paragraph1 !== undefined ? { ...preset, paragraph1: opts.paragraph1 } : preset;
-    setLayoutConfig(cfg);
-    setBody(buildEmail(cfg));
-    setActiveStyle(key);
-  }
+  const applyPreset = useCallback(
+    (key: EmailTemplateKey, opts?: { paragraph1?: string }) => {
+      const preset = EMAIL_LAYOUT_PRESETS[key];
+      const cfg =
+        opts?.paragraph1 !== undefined
+          ? { ...preset, paragraph1: opts.paragraph1 }
+          : preset;
+      setLayoutConfig(cfg);
+      setBody(buildEmail(cfg));
+      setActiveStyle(key);
+    },
+    [],
+  );
 
   /** Aplica o resultado do editor de layout (config + HTML gerado). */
-  function applyLayout(cfg: EmailLayoutConfig, html: string) {
+  const applyLayout = useCallback((cfg: EmailLayoutConfig, html: string) => {
     setLayoutConfig(cfg);
     setBody(html);
-  }
+  }, []);
 
-  function openLayoutEditor() {
-    setLayoutEditorOpen(true);
-  }
-
-  function closeLayoutEditor() {
-    setLayoutEditorOpen(false);
-  }
+  const openLayoutEditor = useCallback(() => setLayoutEditorOpen(true), []);
+  const closeLayoutEditor = useCallback(() => setLayoutEditorOpen(false), []);
 
   /** Reinicia todos os campos do compositor a partir de um estado inicial. */
-  function reset(next?: EmailComposerInit) {
+  const reset = useCallback((next?: EmailComposerInit) => {
     setChannel(next?.channel ?? "whatsapp");
     setSubject(next?.subject ?? "");
     setBody(next?.body ?? "");
     setActiveStyle(next?.activeStyle ?? null);
     setLayoutConfig(next?.layoutConfig ?? null);
     setLayoutEditorOpen(false);
-  }
+  }, []);
 
   return {
     channel,
