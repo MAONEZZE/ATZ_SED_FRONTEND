@@ -7,10 +7,8 @@ import {
   ChevronDown,
   Download,
   LayoutTemplate,
-  Loader2,
   Paperclip,
   Plus,
-  Send,
   Ticket,
   Trash2,
 } from "lucide-react";
@@ -39,15 +37,12 @@ import type {
 } from "@/lib/api/types";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
-import {
-  type InviteConfig,
-  describeInvite,
-  isRecurrentInvite,
-} from "@/lib/messages/invite-config";
+import { type InviteConfig, isRecurrentInvite } from "@/lib/messages/invite-config";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { InviteConfigModal } from "@/components/messages/invite-config-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
+import { SendSummaryRail } from "@/components/messages/send-message/send-summary-rail";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
   EMAIL_PREVIEW_MIN_HEIGHT,
@@ -59,7 +54,6 @@ import {
 import {
   ATTACHMENT_MAX_SIZE,
   base64Bytes,
-  formatBytes,
   readAsAttachment,
 } from "@/lib/messages/attachments";
 import { useEmailComposer } from "@/hooks/use-email-composer";
@@ -74,7 +68,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -98,15 +91,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right">{children}</span>
-    </div>
-  );
-}
 
 export function SendMessageForm({
   eventId: fixedEventId,
@@ -885,68 +869,20 @@ export function SendMessageForm({
       </div>
 
       {/* Rail direito — Resumo do envio */}
-      <aside className="lg:sticky lg:top-4 lg:h-fit">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Resumo do envio</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <SummaryRow label="Canal">
-              {channel === "email" ? "E-mail" : "WhatsApp"}
-            </SummaryRow>
-            <SummaryRow label="Evento">{selectedEvent?.title ?? "—"}</SummaryRow>
-            <SummaryRow label="Destinatários">
-              <span className="font-medium">{count}</span>
-            </SummaryRow>
-            <SummaryRow label="Anexos">
-              {attachments.length > 0
-                ? `${attachments.length} · ${formatBytes(attachmentsBytes)}`
-                : "—"}
-            </SummaryRow>
-            <SummaryRow label="Invite">
-              {inviteConfig ? (
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={() => setInviteModalOpen(true)}
-                  title={describeInvite(inviteConfig)}
-                >
-                  Configurado
-                </button>
-              ) : (
-                "—"
-              )}
-            </SummaryRow>
-
-            <Separator />
-
-            <Button
-              className="w-full gap-2"
-              onClick={onSend}
-              disabled={count === 0 || bodyEmpty || sendMessage.isPending}
-            >
-              {sendMessage.isPending && !sendingTest ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              Enviar para {count}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={onSendTest}
-              disabled={sendMessage.isPending || channel !== "email"}
-              title={
-                channel === "email" ? undefined : "Teste disponível apenas para e-mail"
-              }
-            >
-              {sendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Enviar teste para mim
-            </Button>
-          </CardContent>
-        </Card>
-      </aside>
+      <SendSummaryRail
+        channel={channel}
+        eventTitle={selectedEvent?.title}
+        count={count}
+        attachmentCount={attachments.length}
+        attachmentsBytes={attachmentsBytes}
+        inviteConfig={inviteConfig}
+        onEditInvite={() => setInviteModalOpen(true)}
+        onSend={onSend}
+        onSendTest={onSendTest}
+        isSending={sendMessage.isPending}
+        sendingTest={sendingTest}
+        bodyEmpty={bodyEmpty}
+      />
 
       <EmailLayoutEditorModal
         open={layoutEditorOpen}
