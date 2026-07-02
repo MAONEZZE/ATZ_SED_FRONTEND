@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Braces,
@@ -16,9 +16,7 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
-import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
-import { buildEmail } from "@/lib/email/build-email";
+import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
@@ -52,7 +50,22 @@ import { EmailLayoutEditorModal } from "@/components/messages/email-layout-edito
 import { InviteConfigModal } from "@/components/messages/invite-config-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
-import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import {
+  EMAIL_PREVIEW_MIN_HEIGHT,
+  NO_EVENT,
+  NO_TEMPLATE,
+  STEP_LABEL_CLASS,
+  TONE_OPTIONS,
+} from "@/lib/messages/composer-constants";
+import {
+  ATTACHMENT_MAX_SIZE,
+  base64Bytes,
+  formatBytes,
+  readAsAttachment,
+} from "@/lib/messages/attachments";
+import { useEmailComposer } from "@/hooks/use-email-composer";
+import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
+import { useVariableInsertion } from "@/hooks/use-variable-insertion";
 import { PhoneField } from "@/components/forms/phone-field";
 import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
@@ -86,43 +99,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const NO_TEMPLATE = "__none__";
-const NO_EVENT = "__none_event__";
-const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
-
-const TONE_OPTIONS = (Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map(
-  (key) => ({ value: key, label: EMAIL_TEMPLATE_LABELS[key] }),
-);
-
-function readAsAttachment(file: File): Promise<MessageAttachment> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Falha ao ler o arquivo"));
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.includes(",") ? result.split(",")[1] : result;
-      resolve({
-        filename: file.name,
-        mimeType: file.type || "application/octet-stream",
-        contentBase64: base64,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function base64Bytes(b64: string): number {
-  const len = b64.length;
-  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
-  return Math.max(0, Math.floor((len * 3) / 4) - padding);
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -184,13 +160,32 @@ export function SendMessageForm({
   } = useWhatsAppGroups();
   const [groupsOpen, setGroupsOpen] = useState(false);
 
-  const [channel, setChannel] = useState<MessageChannel>("whatsapp");
+  const composer = useEmailComposer();
+  const {
+    channel,
+    setChannel,
+    subject,
+    setSubject,
+    body,
+    setBody,
+    activeStyle,
+    setActiveStyle,
+    layoutConfig,
+    setLayoutConfig,
+    layoutEditorOpen,
+    bodyIsHtml,
+    applyPreset,
+    applyLayout,
+    openLayoutEditor,
+    closeLayoutEditor,
+  } = composer;
+  const { iframeRef, onLoad: handleIframeLoad } = useIframeAutosize();
+  const { textareaRef: bodyTextareaRef, insertVariable } = useVariableInsertion(
+    body,
+    setBody,
+  );
+
   const [templateId, setTemplateId] = useState<string | null>(null);
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
-  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
-  const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
   const [inviteIcs, setInviteIcs] = useState(false);
   const [inviteRecurrent, setInviteRecurrent] = useState(false);
   const [inviteConfig, setInviteConfig] = useState<InviteConfig | null>(null);
@@ -206,30 +201,8 @@ export function SendMessageForm({
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [sendingTest, setSendingTest] = useState(false);
 
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
-
-  const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
-
-  function insertVariable(variable: string) {
-    const token = `{{${variable}}}`;
-    const ta = bodyTextareaRef.current;
-    if (!ta) {
-      setBody((prev) => prev + token);
-      return;
-    }
-    const start = ta.selectionStart ?? body.length;
-    const end = ta.selectionEnd ?? body.length;
-    const next = body.slice(0, start) + token + body.slice(end);
-    setBody(next);
-    requestAnimationFrame(() => {
-      ta.focus();
-      const pos = start + token.length;
-      ta.setSelectionRange(pos, pos);
-    });
-  }
 
   function saveInvite(config: InviteConfig) {
     setInviteConfig(config);
@@ -248,14 +221,6 @@ export function SendMessageForm({
     }
   }
 
-  const handleIframeLoad = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentDocument?.documentElement) return;
-    const doc = iframe.contentDocument;
-    const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
-    if (h > 0) iframe.style.height = `${h + 4}px`;
-  }, []);
-
   const appliedInitial = useRef(false);
   useEffect(() => {
     if (appliedInitial.current || !initialRegistrationId || registrations.length === 0)
@@ -273,13 +238,7 @@ export function SendMessageForm({
   const selectedTemplate = channelTemplates.find((t) => t.id === templateId);
 
   function applyEmailTemplate(key: EmailTemplateKey) {
-    const preset = EMAIL_LAYOUT_PRESETS[key];
-    const cfg = selectedTemplate
-      ? { ...preset, paragraph1: selectedTemplate.body }
-      : preset;
-    setLayoutConfig(cfg);
-    setBody(buildEmail(cfg));
-    setActiveStyle(key);
+    applyPreset(key, selectedTemplate ? { paragraph1: selectedTemplate.body } : undefined);
   }
 
   function selectTemplate(value: string) {
@@ -467,8 +426,6 @@ export function SendMessageForm({
 
   if (loadingRegs && effectiveEventId) return <LoadingSpinner />;
 
-  const stepLabel = "text-xs font-medium text-muted-foreground";
-
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
       {/* Coluna principal */}
@@ -476,7 +433,7 @@ export function SendMessageForm({
         {/* 1 · Configuração */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className={stepLabel}>1 · Configuração</CardTitle>
+            <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!fixedEventId && (
@@ -543,7 +500,7 @@ export function SendMessageForm({
         {/* 2 · Conteúdo */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className={stepLabel}>2 · Conteúdo</CardTitle>
+            <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
             {channel === "email" && (
               <ToneSegmentedControl
                 aria-label="Tom da mensagem"
@@ -639,7 +596,7 @@ export function SendMessageForm({
                       className="ml-auto h-7 gap-1 px-2 text-xs"
                       disabled={!activeStyle}
                       title={activeStyle ? undefined : "Escolha um tom para habilitar"}
-                      onClick={() => setLayoutEditorOpen(true)}
+                      onClick={openLayoutEditor}
                     >
                       <LayoutTemplate className="h-3.5 w-3.5" />
                       Editar layout
@@ -654,7 +611,7 @@ export function SendMessageForm({
                     title="preview do e-mail"
                     scrolling="no"
                     className="block w-full overflow-hidden bg-white"
-                    style={{ minHeight: "300px" }}
+                    style={{ minHeight: EMAIL_PREVIEW_MIN_HEIGHT }}
                     sandbox="allow-same-origin"
                     onLoad={handleIframeLoad}
                   />
@@ -709,7 +666,7 @@ export function SendMessageForm({
         {/* 3 · Destinatários */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className={stepLabel}>3 · Destinatários</CardTitle>
+            <CardTitle className={STEP_LABEL_CLASS}>3 · Destinatários</CardTitle>
             <div className="flex items-center gap-1.5">
               {manualRecipients.length > 0 && (
                 <Button
@@ -1067,11 +1024,8 @@ export function SendMessageForm({
         open={layoutEditorOpen}
         initialConfig={layoutConfig}
         draftKey={effectiveEventId || "global"}
-        onSave={(cfg, html) => {
-          setLayoutConfig(cfg);
-          setBody(html);
-        }}
-        onClose={() => setLayoutEditorOpen(false)}
+        onSave={applyLayout}
+        onClose={closeLayoutEditor}
       />
 
       <InviteConfigModal
