@@ -2,16 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  Braces,
-  ChevronDown,
-  Download,
-  LayoutTemplate,
-  Paperclip,
-  Plus,
-  Ticket,
-  Trash2,
-} from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
@@ -43,9 +34,11 @@ import { ToneSegmentedControl } from "@/components/messages/tone-segmented-contr
 import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
 import { SendSummaryRail } from "@/components/messages/send-message/send-summary-rail";
 import { RecipientTable } from "@/components/messages/send-message/recipient-table";
+import { MessageBodyEditor } from "@/components/messages/send-message/message-body-editor";
+import { ManualRecipientPopover } from "@/components/messages/send-message/manual-recipient-popover";
+import { ManualRecipientList } from "@/components/messages/send-message/manual-recipient-list";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
-  EMAIL_PREVIEW_MIN_HEIGHT,
   NO_EVENT,
   NO_TEMPLATE,
   STEP_LABEL_CLASS,
@@ -59,8 +52,6 @@ import {
 import { useEmailComposer } from "@/hooks/use-email-composer";
 import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
 import { useVariableInsertion } from "@/hooks/use-variable-insertion";
-import { PhoneField } from "@/components/forms/phone-field";
-import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,14 +64,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VariableTextarea } from "@/components/ui/variable-textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export function SendMessageForm({
   eventId: fixedEventId,
@@ -489,144 +472,26 @@ export function SendMessageForm({
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="send-body">Mensagem *</Label>
-              <div className="overflow-hidden rounded-md border">
-                {/* Toolbar */}
-                <div className="flex items-center gap-1 border-b bg-muted/40 px-1.5 py-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 px-2 text-xs"
-                      >
-                        <Braces className="h-3.5 w-3.5" />
-                        Variáveis
-                        <ChevronDown className="h-3 w-3 opacity-60" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      className="max-h-[60vh] w-64 overflow-y-auto"
-                    >
-                      {VARIABLE_DESCRIPTIONS.map(({ variable, description }) => (
-                        <DropdownMenuItem
-                          key={variable}
-                          onSelect={() => insertVariable(variable)}
-                          className="flex-col items-start gap-0.5"
-                        >
-                          <code className="font-mono text-xs font-semibold">
-                            {`{{${variable}}}`}
-                          </code>
-                          <span className="text-xs text-muted-foreground">
-                            {description}
-                          </span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1 px-2 text-xs"
-                    onClick={() => attachInputRef.current?.click()}
-                  >
-                    <Paperclip className="h-3.5 w-3.5" />
-                    Anexo
-                  </Button>
-
-                  {channel === "email" && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 px-2 text-xs"
-                      onClick={() => setInviteModalOpen(true)}
-                    >
-                      <Ticket className="h-3.5 w-3.5" />
-                      Invite
-                      {inviteConfig && (
-                        <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
-                      )}
-                    </Button>
-                  )}
-
-                  {channel === "email" && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="ml-auto h-7 gap-1 px-2 text-xs"
-                      disabled={!activeStyle}
-                      title={activeStyle ? undefined : "Escolha um tom para habilitar"}
-                      onClick={openLayoutEditor}
-                    >
-                      <LayoutTemplate className="h-3.5 w-3.5" />
-                      Editar layout
-                    </Button>
-                  )}
-                </div>
-
-                {bodyIsHtml ? (
-                  <iframe
-                    ref={iframeRef}
-                    srcDoc={body}
-                    title="preview do e-mail"
-                    scrolling="no"
-                    className="block w-full overflow-hidden bg-white"
-                    style={{ minHeight: EMAIL_PREVIEW_MIN_HEIGHT }}
-                    sandbox="allow-same-origin"
-                    onLoad={handleIframeLoad}
-                  />
-                ) : (
-                  <VariableTextarea
-                    id="send-body"
-                    ref={bodyTextareaRef}
-                    rows={12}
-                    placeholder="Escreva a mensagem..."
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    className="rounded-none border-0 shadow-none focus-visible:ring-0"
-                  />
-                )}
-              </div>
-
-              <input
-                ref={attachInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(e) => void addAttachments(e.target.files)}
-              />
-
-              {attachments.length > 0 && (
-                <ul className="flex flex-wrap gap-2">
-                  {attachments.map((a, index) => (
-                    <li
-                      key={`${a.filename}-${index}`}
-                      className="flex items-center gap-1.5 rounded-full border bg-muted/40 py-1 pl-3 pr-1 text-xs"
-                    >
-                      <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      <span className="max-w-[160px] truncate">{a.filename}</span>
-                      <button
-                        type="button"
-                        aria-label={`Remover ${a.filename}`}
-                        className="rounded-full p-0.5 hover:bg-muted"
-                        onClick={() =>
-                          setAttachments((prev) => prev.filter((_, i) => i !== index))
-                        }
-                      >
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <MessageBodyEditor
+              channel={channel}
+              body={body}
+              onBodyChange={setBody}
+              bodyIsHtml={bodyIsHtml}
+              iframeRef={iframeRef}
+              onIframeLoad={handleIframeLoad}
+              bodyTextareaRef={bodyTextareaRef}
+              onInsertVariable={insertVariable}
+              activeStyle={activeStyle}
+              hasInvite={Boolean(inviteConfig)}
+              attachments={attachments}
+              onRemoveAttachment={(index) =>
+                setAttachments((prev) => prev.filter((_, i) => i !== index))
+              }
+              attachInputRef={attachInputRef}
+              onAddAttachments={(files) => void addAttachments(files)}
+              onOpenInvite={() => setInviteModalOpen(true)}
+              onOpenLayoutEditor={openLayoutEditor}
+            />
           </CardContent>
         </Card>
 
@@ -660,55 +525,17 @@ export function SendMessageForm({
                 <Download className="h-3.5 w-3.5" />
                 Importar CSV
               </Button>
-              <Popover open={manualOpen} onOpenChange={setManualOpen}>
-                <PopoverTrigger asChild>
-                  <Button type="button" size="sm" className="h-7 gap-1.5 text-xs">
-                    <Plus className="h-3.5 w-3.5" />
-                    Adicionar manual
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80 space-y-2">
-                  <p className="text-sm font-medium">Adicionar destinatário</p>
-                  <Input
-                    placeholder="Nome"
-                    value={manualDraft.name}
-                    onChange={(e) =>
-                      setManualDraft((d) => ({ ...d, name: e.target.value }))
-                    }
-                  />
-                  <Input
-                    placeholder="nome@email.com"
-                    type="email"
-                    value={manualDraft.email}
-                    onChange={(e) =>
-                      setManualDraft((d) => ({ ...d, email: e.target.value }))
-                    }
-                  />
-                  {channel === "whatsapp" ? (
-                    <Input
-                      placeholder="+5511999999999 ou 120363@g.us"
-                      value={manualDraft.phone ?? ""}
-                      onChange={(e) =>
-                        setManualDraft((d) => ({ ...d, phone: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    <PhoneField
-                      value={manualDraft.phone ?? ""}
-                      onChange={(phone) => setManualDraft((d) => ({ ...d, phone }))}
-                    />
-                  )}
-                  <Button
-                    type="button"
-                    className="w-full gap-1.5"
-                    onClick={addManualRecipient}
-                    disabled={channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT}
-                  >
-                    <Plus className="h-4 w-4" />
-                    Adicionar
-                  </Button>
-                </PopoverContent>
-              </Popover>
+              <ManualRecipientPopover
+                open={manualOpen}
+                onOpenChange={setManualOpen}
+                draft={manualDraft}
+                setDraft={setManualDraft}
+                channel={channel}
+                onAdd={addManualRecipient}
+                addDisabled={
+                  channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT
+                }
+              />
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -740,35 +567,12 @@ export function SendMessageForm({
               hasEvent={Boolean(effectiveEventId)}
             />
 
-            {manualRecipients.length > 0 && (
-              <ul className="space-y-1">
-                {manualRecipients.map((r, index) => (
-                  <li
-                    key={`${r.name}-${index}`}
-                    className="flex items-center justify-between rounded-lg border px-3 py-1.5 text-sm"
-                  >
-                    <span>
-                      <span className="font-medium">{r.name}</span>{" "}
-                      <span className="text-muted-foreground">
-                        {[r.email, r.phone].filter(Boolean).join(" · ")}
-                      </span>
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      aria-label={`Remover ${r.name}`}
-                      onClick={() =>
-                        setManualRecipients((prev) => prev.filter((_, i) => i !== index))
-                      }
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <ManualRecipientList
+              recipients={manualRecipients}
+              onRemove={(index) =>
+                setManualRecipients((prev) => prev.filter((_, i) => i !== index))
+              }
+            />
           </CardContent>
         </Card>
       </div>
