@@ -9,7 +9,7 @@ import {
 } from "@/lib/api/user-subscriptions";
 import type { UserSubscription } from "@/lib/api/types";
 import { downloadBlob } from "@/lib/utils/download-blob";
-import { formatAnswer } from "@/lib/forms/format-answer";
+import { formatAnswer } from "@/lib/forms/field-types";
 import { formatDate } from "@/lib/utils/format-date";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Input } from "@/components/ui/input";

@@ -5,7 +5,7 @@ import { useRef } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { ImagePlus } from "lucide-react";
 import { answerKeyForField } from "@/lib/api/public";
-import { fieldOptions } from "@/lib/forms/field-options";
+import { fieldOptions, rendersAsRadioGroup } from "@/lib/forms/field-types";
 import type { PublicFormField } from "@/lib/api/types";
 import { PhoneField } from "@/components/forms/phone-field";
 import { Input } from "@/components/ui/input";
@@ -176,7 +176,7 @@ export function FormFieldsRenderer({
                 control={form.control}
                 name={key}
                 render={({ field: rhf }) =>
-                  options.length <= 4 ? (
+                  rendersAsRadioGroup(options) ? (
                     <RadioGroup
                       value={(rhf.value as string) ?? ""}
                       onValueChange={rhf.onChange}

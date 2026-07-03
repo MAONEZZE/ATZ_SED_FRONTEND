@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
-import { fieldOptions } from "@/lib/forms/field-options";
+import { fieldHasOptions, fieldOptions } from "@/lib/forms/field-types";
 import type { FieldType, FormField, FormFieldKind } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,7 +89,7 @@ export function FieldEditorDialog({
     }
   }, [open, field]);
 
-  const needsOptions = type === "select" || type === "multiselect";
+  const needsOptions = fieldHasOptions(type);
   const isPending = create.isPending || update.isPending;
 
   function handleSave() {
