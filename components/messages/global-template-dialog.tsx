@@ -144,6 +144,10 @@ export function GlobalTemplateDialog({
       toast.error("Nome e corpo da mensagem são obrigatórios");
       return;
     }
+    if (channel === "email" && !subject.trim()) {
+      toast.error("Assunto é obrigatório para templates de e-mail");
+      return;
+    }
     const input = {
       name: name.trim(),
       channel,
@@ -245,7 +249,7 @@ export function GlobalTemplateDialog({
             <CardContent className="space-y-3">
               {channel === "email" && (
                 <div className="space-y-2">
-                  <Label htmlFor="gtpl-subject">Assunto</Label>
+                  <Label htmlFor="gtpl-subject">Assunto *</Label>
                   <Input
                     id="gtpl-subject"
                     value={subject}
