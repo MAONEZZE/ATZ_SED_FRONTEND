@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const MAX_DELAY_MINUTES = 2147483647;
+
 export function EventAutomationDialog({
   eventId,
   automation,
@@ -79,6 +81,9 @@ export function EventAutomationDialog({
 
   function handleSave() {
     if (!templateId) return toast.error("Selecione o template");
+    if (supportsDelay && delayMinutes && Number(delayMinutes) > MAX_DELAY_MINUTES) {
+      return toast.error(`Atraso máximo é ${MAX_DELAY_MINUTES} minutos`);
+    }
     const input = {
       templateId,
       trigger,
@@ -146,6 +151,7 @@ export function EventAutomationDialog({
                 id="eauto-delay"
                 type="number"
                 min={0}
+                max={MAX_DELAY_MINUTES}
                 value={delayMinutes}
                 onChange={(e) => setDelayMinutes(e.target.value)}
               />
