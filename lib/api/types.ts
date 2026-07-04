@@ -26,6 +26,7 @@ export type AutomationTrigger =
   | "on_nps"
   | "on_approval"
   | "on_rejection"
+  | "after_approval"
   | "before_event"
   | "after_event";
 
