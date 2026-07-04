@@ -3,9 +3,7 @@ export const queryKeys = {
     params ? (["events", params] as const) : (["events"] as const),
   event: (id: string) => ["events", id] as const,
   formFields: (eventId: string, kind?: string) =>
-    kind
-      ? (["events", eventId, "form-fields", kind] as const)
-      : (["events", eventId, "form-fields"] as const),
+    ["events", eventId, "form-fields", kind] as const,
   collaborators: (eventId: string) => ["events", eventId, "collaborators"] as const,
   postEventResponses: (eventId: string, params?: { page?: number; limit?: number }) =>
     params
