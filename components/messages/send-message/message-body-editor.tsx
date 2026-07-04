@@ -7,7 +7,14 @@ import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-
 import { EmailBodyPreview } from "@/components/messages/send-message/email-body-preview";
 import { AttachmentList } from "@/components/messages/send-message/attachment-list";
 import { ATTACHMENT_ACCEPT } from "@/lib/messages/attachments";
+import {
+  INVITE_TOKEN,
+  hasInviteToken,
+  injectInviteToken,
+  removeInviteToken,
+} from "@/lib/validation/send-message";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
 import {
@@ -102,18 +109,37 @@ export function MessageBodyEditor({
           </Button>
 
           {channel === "email" && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="ml-auto h-7 gap-1 px-2 text-xs"
-              disabled={!activeStyle}
-              title={activeStyle ? undefined : "Escolha um tom para habilitar"}
-              onClick={onOpenLayoutEditor}
-            >
-              <LayoutTemplate className="h-3.5 w-3.5" />
-              Editar layout
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <Checkbox
+                  id="send-body-invite"
+                  checked={hasInviteToken(body, INVITE_TOKEN)}
+                  onCheckedChange={(checked) =>
+                    onBodyChange(
+                      checked
+                        ? injectInviteToken(body, INVITE_TOKEN)
+                        : removeInviteToken(body, INVITE_TOKEN),
+                    )
+                  }
+                />
+                <Label htmlFor="send-body-invite" className="text-xs font-normal">
+                  Enviar convite do evento
+                </Label>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1 px-2 text-xs"
+                disabled={!activeStyle}
+                title={activeStyle ? undefined : "Escolha um tom para habilitar"}
+                onClick={onOpenLayoutEditor}
+              >
+                <LayoutTemplate className="h-3.5 w-3.5" />
+                Editar layout
+              </Button>
+            </div>
           )}
         </div>
 

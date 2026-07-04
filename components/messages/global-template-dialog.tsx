@@ -22,8 +22,15 @@ import { useVariableInsertion } from "@/hooks/use-variable-insertion";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
+import {
+  INVITE_TOKEN,
+  hasInviteToken,
+  injectInviteToken,
+  removeInviteToken,
+} from "@/lib/validation/send-message";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
@@ -269,18 +276,37 @@ export function GlobalTemplateDialog({
                     </DropdownMenu>
 
                     {channel === "email" && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="ml-auto h-7 gap-1 px-2 text-xs"
-                        disabled={!activeStyle}
-                        title={activeStyle ? undefined : "Escolha um tom para habilitar"}
-                        onClick={openLayoutEditor}
-                      >
-                        <LayoutTemplate className="h-3.5 w-3.5" />
-                        Editar layout
-                      </Button>
+                      <div className="ml-auto flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <Checkbox
+                            id="gtpl-invite"
+                            checked={hasInviteToken(body, INVITE_TOKEN)}
+                            onCheckedChange={(checked) =>
+                              setBody(
+                                checked
+                                  ? injectInviteToken(body, INVITE_TOKEN)
+                                  : removeInviteToken(body, INVITE_TOKEN),
+                              )
+                            }
+                          />
+                          <Label htmlFor="gtpl-invite" className="text-xs font-normal">
+                            Enviar convite do evento
+                          </Label>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          disabled={!activeStyle}
+                          title={activeStyle ? undefined : "Escolha um tom para habilitar"}
+                          onClick={openLayoutEditor}
+                        >
+                          <LayoutTemplate className="h-3.5 w-3.5" />
+                          Editar layout
+                        </Button>
+                      </div>
                     )}
                   </div>
 

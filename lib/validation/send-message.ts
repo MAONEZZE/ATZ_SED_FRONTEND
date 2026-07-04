@@ -32,6 +32,25 @@ export function validateSendMessage(draft: SendMessageDraft): string | null {
   return null;
 }
 
+export const INVITE_TOKEN = "{{invite}}";
+
+export function injectInviteToken(body: string, token: string): string {
+  if (body.includes(token)) return body;
+  const closeIdx = body.toLowerCase().lastIndexOf("</body>");
+  if (closeIdx !== -1) {
+    return `${body.slice(0, closeIdx)}${token}\n${body.slice(closeIdx)}`;
+  }
+  return `${body}\n${token}`;
+}
+
+export function removeInviteToken(body: string, token: string): string {
+  return body.split(`${token}\n`).join("").split(token).join("");
+}
+
+export function hasInviteToken(body: string, token: string): boolean {
+  return body.includes(token);
+}
+
 export function validateManualRecipient(
   recipient: ManualRecipient,
   channel: MessageChannel,
