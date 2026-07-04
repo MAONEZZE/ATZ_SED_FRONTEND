@@ -15,12 +15,10 @@ export function exportRegistrationsCsv(
   filters: { status?: FunnelStatus; search?: string } = {},
 ): Promise<Blob> {
   const params = new URLSearchParams();
+  params.set("format", "csv");
   if (filters.status) params.set("status", filters.status);
   if (filters.search) params.set("search", filters.search);
-  const query = params.toString();
-  return apiFetchBlob(
-    `/events/${eventId}/registrations/export${query ? `?${query}` : ""}`,
-  );
+  return apiFetchBlob(`/events/${eventId}/registrations?${params.toString()}`);
 }
 
 export function useRegistrations(

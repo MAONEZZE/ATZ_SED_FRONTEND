@@ -3,8 +3,9 @@ import { eventStatusConfig, funnelStatusConfig } from "@/lib/utils/status-maps";
 import type { EventStatus, FunnelStatus } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-export function EventStatusBadge({ status }: { status: EventStatus }) {
-  const config = eventStatusConfig[status];
+/** Badge base dirigido por config { label, className } — compartilhado pelos
+ *  badges de status (composição, não herança). */
+function ConfigBadge({ config }: { config: { label: string; className: string } }) {
   return (
     <Badge variant="outline" className={cn("border-transparent", config.className)}>
       {config.label}
@@ -12,11 +13,10 @@ export function EventStatusBadge({ status }: { status: EventStatus }) {
   );
 }
 
+export function EventStatusBadge({ status }: { status: EventStatus }) {
+  return <ConfigBadge config={eventStatusConfig[status]} />;
+}
+
 export function FunnelStatusBadge({ status }: { status: FunnelStatus }) {
-  const config = funnelStatusConfig[status];
-  return (
-    <Badge variant="outline" className={cn("border-transparent", config.className)}>
-      {config.label}
-    </Badge>
-  );
+  return <ConfigBadge config={funnelStatusConfig[status]} />;
 }

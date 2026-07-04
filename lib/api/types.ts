@@ -26,6 +26,7 @@ export type AutomationTrigger =
   | "on_nps"
   | "on_approval"
   | "on_rejection"
+  | "after_approval"
   | "before_event"
   | "after_event";
 
@@ -94,21 +95,6 @@ export interface Collaborator {
   };
 }
 
-export interface PostEventResponse {
-  id: string;
-  eventId: string;
-  registrationId: string;
-  answers: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  registration: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-}
-
 export type PipedriveStatus = "pending" | "sent" | "failed" | "skipped";
 
 export interface UserSubscription {
@@ -158,7 +144,6 @@ export interface EventRef {
 }
 
 export type TemplateWithEvent = MessageTemplate & { event: EventRef | null };
-export type AutomationWithEvent = Automation & { event: EventRef };
 export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
 
 export interface TemplateAutomationSummary {

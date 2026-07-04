@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+const MAX_DELAY_MINUTES = 2147483647;
+
 export function EventAutomationDialog({
   eventId,
   automation,
@@ -48,8 +50,19 @@ export function EventAutomationDialog({
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
 
-  const { data: templatesResponse } = useAllTemplates(1, 100);
-  const templates = templatesResponse?.data;
+  const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
+  const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
+  // Dedup defensivo: os dois filtros são exclusivos no backend (globais vs. este
+  // evento), mas se essa garantia mudar/tiver bug, evita templates duplicados
+  // (e keys duplicadas no React) no Select.
+  const templates = Array.from(
+    new Map(
+      [
+        ...(globalTemplatesResponse?.data ?? []),
+        ...(eventTemplatesResponse?.data ?? []),
+      ].map((t) => [t.id, t]),
+    ).values(),
+  );
 
   useEffect(() => {
     if (open) {
@@ -68,6 +81,9 @@ export function EventAutomationDialog({
 
   function handleSave() {
     if (!templateId) return toast.error("Selecione o template");
+    if (supportsDelay && delayMinutes && Number(delayMinutes) > MAX_DELAY_MINUTES) {
+      return toast.error(`Atraso máximo é ${MAX_DELAY_MINUTES} minutos`);
+    }
     const input = {
       templateId,
       trigger,
@@ -135,6 +151,7 @@ export function EventAutomationDialog({
                 id="eauto-delay"
                 type="number"
                 min={0}
+                max={MAX_DELAY_MINUTES}
                 value={delayMinutes}
                 onChange={(e) => setDelayMinutes(e.target.value)}
               />
