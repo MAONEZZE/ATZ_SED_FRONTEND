@@ -37,6 +37,8 @@ const fieldTypeLabels: Record<FieldType, string> = {
   checkbox: "Caixa de seleção",
   image: "Imagem",
   date: "Data",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
 };
 
 const creatableTypes: FieldType[] = [
@@ -49,6 +51,8 @@ const creatableTypes: FieldType[] = [
   "checkbox",
   "image",
   "date",
+  "linkedin",
+  "instagram",
 ];
 
 function optionsToText(options: unknown): string {

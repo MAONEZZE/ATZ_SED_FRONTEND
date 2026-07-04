@@ -107,10 +107,7 @@ function TemplatesTab() {
     channelFilter === "all" ? undefined : channelFilter,
   );
 
-  const templates =
-    channelFilter === "all"
-      ? response?.data
-      : response?.data?.filter((t) => t.channel === channelFilter);
+  const templates = response?.data;
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);

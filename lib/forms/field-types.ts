@@ -27,6 +27,8 @@ export const FIELD_TYPES: Record<FieldType, FieldTypeSpec> = {
   checkbox: { hasOptions: false },
   image: { hasOptions: false },
   date: { hasOptions: false },
+  linkedin: { hasOptions: false },
+  instagram: { hasOptions: false },
 };
 
 /** O tipo usa a lista de opções? (escolha única/múltipla) */

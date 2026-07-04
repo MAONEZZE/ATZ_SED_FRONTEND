@@ -14,7 +14,9 @@ export type FieldType =
   | "multiselect"
   | "checkbox"
   | "image"
-  | "date";
+  | "date"
+  | "linkedin"
+  | "instagram";
 
 export type FormFieldKind = "registration" | "post_event" | "nps";
 

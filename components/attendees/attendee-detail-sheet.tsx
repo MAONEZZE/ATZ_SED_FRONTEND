@@ -93,6 +93,9 @@ function AnswerEditor({
       );
     case "image":
       return <p className="text-sm text-muted-foreground">{formatAnswer(value)}</p>;
+    case "linkedin":
+    case "instagram":
+      return <Input type="url" value={strVal} onChange={(e) => onChange(e.target.value)} />;
     default:
       return (
         <Input

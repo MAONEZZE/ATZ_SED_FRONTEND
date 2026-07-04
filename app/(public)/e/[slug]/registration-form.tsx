@@ -49,6 +49,10 @@ function buildSchema(fields: PublicFormField[]) {
       case "date":
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
         break;
+      case "linkedin":
+      case "instagram":
+        schema = z.string().url("URL inválida");
+        break;
       default:
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
     }

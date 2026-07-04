@@ -125,6 +125,26 @@ export function FormFieldsRenderer({
               />
             )}
 
+            {field.type === "linkedin" && (
+              <Input
+                id={key}
+                type="url"
+                placeholder="https://www.linkedin.com/in/..."
+                disabled={disabled}
+                {...form.register(key)}
+              />
+            )}
+
+            {field.type === "instagram" && (
+              <Input
+                id={key}
+                type="url"
+                placeholder="https://www.instagram.com/..."
+                disabled={disabled}
+                {...form.register(key)}
+              />
+            )}
+
             {field.type === "phone" && (
               <Controller
                 control={form.control}

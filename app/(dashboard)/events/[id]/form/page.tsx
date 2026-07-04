@@ -60,6 +60,8 @@ const typeLabels: Record<string, string> = {
   checkbox: "Caixa de seleção",
   image: "Imagem",
   date: "Data",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
 };
 
 function SortableFieldRow({
