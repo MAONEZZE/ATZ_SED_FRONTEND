@@ -70,6 +70,7 @@ export async function submitPublicPostEvent(
   );
   if (!res.ok) {
     if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
       throw new Error(
         "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
       );
@@ -106,6 +107,7 @@ export async function submitPublicNps(
   });
   if (!res.ok) {
     if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
       throw new Error(
         "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
       );
