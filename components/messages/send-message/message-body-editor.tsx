@@ -6,6 +6,7 @@ import type { MessageAttachment, MessageChannel } from "@/lib/api/types";
 import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
 import { EmailBodyPreview } from "@/components/messages/send-message/email-body-preview";
 import { AttachmentList } from "@/components/messages/send-message/attachment-list";
+import { ATTACHMENT_ACCEPT } from "@/lib/messages/attachments";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
@@ -155,6 +156,7 @@ export function MessageBodyEditor({
         ref={attachInputRef}
         type="file"
         multiple
+        accept={ATTACHMENT_ACCEPT}
         className="hidden"
         onChange={(e) => onAddAttachments(e.target.files)}
       />

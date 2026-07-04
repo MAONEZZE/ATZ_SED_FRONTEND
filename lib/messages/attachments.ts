@@ -1,31 +1,34 @@
-import type { MessageAttachment } from "@/lib/api/types";
+/** Tamanho máximo de um anexo (25MB) — espelha MAX_ATTACHMENT_BYTES do backend. */
+export const ATTACHMENT_MAX_SIZE = 25 * 1024 * 1024;
 
-/** Tamanho máximo de um anexo (10MB). */
-export const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
+/**
+ * Tipos MIME aceitos — espelha o FileTypeValidator do backend
+ * (global-messaging.controller.ts). Manter em sincronia com o regex de lá.
+ */
+const ATTACHMENT_MIME_REGEX =
+  /^(image\/(jpeg|png|webp|gif)|application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.[\w.-]+|application\/vnd\.ms-(excel|powerpoint)|video\/mp4|audio\/(mpeg|ogg))$/;
 
-/** Lê um arquivo como anexo base64 pronto para envio. */
-export function readAsAttachment(file: File): Promise<MessageAttachment> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Falha ao ler o arquivo"));
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.includes(",") ? result.split(",")[1] : result;
-      resolve({
-        filename: file.name,
-        mimeType: file.type || "application/octet-stream",
-        contentBase64: base64,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
+/** Valor para o atributo `accept` do <input type="file">. */
+export const ATTACHMENT_ACCEPT = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.ms-excel",
+  "application/vnd.ms-powerpoint",
+  "video/mp4",
+  "audio/mpeg",
+  "audio/ogg",
+].join(",");
 
-/** Estima o tamanho em bytes de uma string base64 (descontando padding). */
-export function base64Bytes(b64: string): number {
-  const len = b64.length;
-  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
-  return Math.max(0, Math.floor((len * 3) / 4) - padding);
+/** True se o tipo do arquivo é aceito pelo backend. */
+export function isAcceptedAttachment(file: File): boolean {
+  return ATTACHMENT_MIME_REGEX.test(file.type);
 }
 
 /** Formata bytes em B / KB / MB legível. */

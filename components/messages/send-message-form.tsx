@@ -6,7 +6,7 @@ import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
-import { useSendMessage } from "@/lib/api/messaging";
+import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
 import { useProfile } from "@/lib/api/profile";
 import {
@@ -44,11 +44,7 @@ import {
   STEP_LABEL_CLASS,
   TONE_OPTIONS,
 } from "@/lib/messages/composer-constants";
-import {
-  ATTACHMENT_MAX_SIZE,
-  base64Bytes,
-  readAsAttachment,
-} from "@/lib/messages/attachments";
+import { ATTACHMENT_MAX_SIZE, isAcceptedAttachment } from "@/lib/messages/attachments";
 import { useEmailComposer } from "@/hooks/use-email-composer";
 import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
 import { useVariableInsertion } from "@/hooks/use-variable-insertion";
@@ -107,6 +103,7 @@ export function SendMessageForm({
   const { data: templatesResponse } = useAllTemplates(1, 100);
   const templates = templatesResponse?.data;
   const sendMessage = useSendMessage(effectiveEventId || undefined);
+  const uploadAttachment = useUploadAttachment();
 
   const { data: profile } = useProfile();
 
@@ -232,10 +229,7 @@ export function SendMessageForm({
   const bodyEmpty = !body.trim();
 
   const selectedEvent = events?.find((e) => e.id === effectiveEventId);
-  const attachmentsBytes = attachments.reduce(
-    (sum, a) => sum + base64Bytes(a.contentBase64),
-    0,
-  );
+  const attachmentsBytes = attachments.reduce((sum, a) => sum + a.size, 0);
 
   const allSelected =
     visibleRegistrations.length > 0 &&
@@ -305,14 +299,21 @@ export function SendMessageForm({
     const accepted: File[] = [];
     for (const file of list) {
       if (file.size > ATTACHMENT_MAX_SIZE) {
-        toast.error(`"${file.name}" excede 10MB e foi ignorado.`);
+        toast.error(`"${file.name}" excede 25MB e foi ignorado.`);
+        continue;
+      }
+      if (!isAcceptedAttachment(file)) {
+        toast.error(`Tipo de arquivo não suportado: "${file.name}".`);
         continue;
       }
       accepted.push(file);
     }
+    if (accepted.length === 0) return;
     try {
-      const read = await Promise.all(accepted.map(readAsAttachment));
-      setAttachments((prev) => [...prev, ...read]);
+      const uploaded = await Promise.all(
+        accepted.map((file) => uploadAttachment.mutateAsync(file)),
+      );
+      setAttachments((prev) => [...prev, ...uploaded]);
     } catch {
       toast.error("Falha ao anexar arquivo(s).");
     }
@@ -530,7 +531,6 @@ export function SendMessageForm({
                 onOpenChange={setManualOpen}
                 draft={manualDraft}
                 setDraft={setManualDraft}
-                channel={channel}
                 onAdd={addManualRecipient}
                 addDisabled={
                   channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT

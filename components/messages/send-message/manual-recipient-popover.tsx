@@ -2,7 +2,7 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import { Plus } from "lucide-react";
-import type { ManualRecipient, MessageChannel } from "@/lib/api/types";
+import type { ManualRecipient } from "@/lib/api/types";
 import { PhoneField } from "@/components/forms/phone-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ export function ManualRecipientPopover({
   onOpenChange,
   draft,
   setDraft,
-  channel,
   onAdd,
   addDisabled,
 }: {
@@ -22,7 +21,6 @@ export function ManualRecipientPopover({
   onOpenChange: (open: boolean) => void;
   draft: ManualRecipient;
   setDraft: Dispatch<SetStateAction<ManualRecipient>>;
-  channel: MessageChannel;
   onAdd: () => void;
   addDisabled: boolean;
 }) {
@@ -47,18 +45,10 @@ export function ManualRecipientPopover({
           value={draft.email}
           onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
         />
-        {channel === "whatsapp" ? (
-          <Input
-            placeholder="+5511999999999 ou 120363@g.us"
-            value={draft.phone ?? ""}
-            onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
-          />
-        ) : (
-          <PhoneField
-            value={draft.phone ?? ""}
-            onChange={(phone) => setDraft((d) => ({ ...d, phone }))}
-          />
-        )}
+        <PhoneField
+          value={draft.phone ?? ""}
+          onChange={(phone) => setDraft((d) => ({ ...d, phone }))}
+        />
         <Button
           type="button"
           className="w-full gap-1.5"

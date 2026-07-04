@@ -265,10 +265,12 @@ export interface ManualRecipient {
 }
 
 export interface MessageAttachment {
+  /** path retornado por POST /messages/attachments */
+  path: string;
   filename: string;
-  mimeType: string;
-
-  contentBase64: string;
+  mimetype: string;
+  /** bytes do arquivo — usado só na UI, não vai no envio */
+  size: number;
 }
 
 export interface InviteRecurrencePayload {
@@ -299,7 +301,7 @@ export interface SendMessageInput {
   body?: string;
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
-  attachments?: MessageAttachment[];
+  attachments?: Omit<MessageAttachment, "size">[];
   invite?: InvitePayload;
 }
 

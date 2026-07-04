@@ -94,7 +94,13 @@ export function toSendMessageInput(
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
     attachments:
-      draft.attachments && draft.attachments.length > 0 ? draft.attachments : undefined,
+      draft.attachments && draft.attachments.length > 0
+        ? draft.attachments.map(({ path, filename, mimetype }) => ({
+            path,
+            filename,
+            mimetype,
+          }))
+        : undefined,
     invite:
       draft.channel === "email" && draft.inviteConfig
         ? toInvitePayload(draft.inviteConfig)
