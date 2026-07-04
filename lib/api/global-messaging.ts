@@ -10,15 +10,33 @@ import type {
   PaginatedResponse,
   TemplateWithEvent,
 } from "@/lib/api/types";
-import type { TemplateInput } from "@/lib/api/templates";
 import type { AutomationInput } from "@/lib/api/automations";
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import type { EmailTemplateKey } from "@/lib/email-templates";
 
-export function useAllTemplates(page = 1, limit = 20, channel?: MessageChannel) {
+export interface TemplateInput {
+  name: string;
+  channel: MessageChannel;
+  subject?: string;
+  body: string;
+  layoutConfig?: EmailLayoutConfig | null;
+  styleKey?: EmailTemplateKey | null;
+  /** Vincula o template a um evento. null = global (sem evento). */
+  eventId?: string | null;
+}
+
+export function useAllTemplates(
+  page = 1,
+  limit = 20,
+  channel?: MessageChannel,
+  eventId?: string | null,
+) {
   return useQuery({
-    queryKey: queryKeys.allTemplates({ page, limit, channel }),
+    queryKey: queryKeys.allTemplates({ page, limit, channel, eventId }),
     queryFn: () => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (channel) qs.set("channel", channel);
+      if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
   });

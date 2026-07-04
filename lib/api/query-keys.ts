@@ -23,7 +23,6 @@ export const queryKeys = {
     params
       ? (["events", eventId, "user-subscriptions", params] as const)
       : (["events", eventId, "user-subscriptions"] as const),
-  templates: (eventId: string) => ["events", eventId, "templates"] as const,
   automations: (eventId: string) => ["events", eventId, "automations"] as const,
   landing: (eventId: string) => ["events", eventId, "landing"] as const,
   messageLogs: (eventId: string, params?: { page?: number; limit?: number }) =>
@@ -32,7 +31,12 @@ export const queryKeys = {
       : (["events", eventId, "message-logs"] as const),
   profile: ["profile"] as const,
 
-  allTemplates: (params?: { page?: number; limit?: number; channel?: string }) =>
+  allTemplates: (params?: {
+    page?: number;
+    limit?: number;
+    channel?: string;
+    eventId?: string | null;
+  }) =>
     params
       ? (["global", "templates", params] as const)
       : (["global", "templates"] as const),

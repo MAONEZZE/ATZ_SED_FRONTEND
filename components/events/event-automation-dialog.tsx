@@ -48,8 +48,12 @@ export function EventAutomationDialog({
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
 
-  const { data: templatesResponse } = useAllTemplates(1, 100);
-  const templates = templatesResponse?.data;
+  const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
+  const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
+  const templates = [
+    ...(globalTemplatesResponse?.data ?? []),
+    ...(eventTemplatesResponse?.data ?? []),
+  ];
 
   useEffect(() => {
     if (open) {
