@@ -94,21 +94,6 @@ export interface Collaborator {
   };
 }
 
-export interface PostEventResponse {
-  id: string;
-  eventId: string;
-  registrationId: string;
-  answers: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  registration: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-}
-
 export type PipedriveStatus = "pending" | "sent" | "failed" | "skipped";
 
 export interface UserSubscription {
