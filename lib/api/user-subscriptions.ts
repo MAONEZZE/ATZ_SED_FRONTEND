@@ -10,9 +10,11 @@ export function exportUserSubscriptionsCsv(
   filters: { search?: string } = {},
 ): Promise<Blob> {
   const params = new URLSearchParams();
-  params.set("format", "csv");
   if (filters.search) params.set("search", filters.search);
-  return apiFetchBlob(`/events/${eventId}/user-subscriptions?${params.toString()}`);
+  const query = params.toString();
+  return apiFetchBlob(
+    `/events/${eventId}/user-subscriptions/export${query ? `?${query}` : ""}`,
+  );
 }
 
 export function useUserSubscriptions(

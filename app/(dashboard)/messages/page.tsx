@@ -310,7 +310,7 @@ function LogsTab() {
                   {log.status === "sent" ? (
                     <Badge
                       variant="outline"
-                      className="border-transparent bg-status-success-bg text-status-success-fg"
+                      className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
                     >
                       <CheckCircle2 className="mr-1 h-3 w-3" />
                       Enviada
@@ -318,7 +318,7 @@ function LogsTab() {
                   ) : (
                     <Badge
                       variant="outline"
-                      className="border-transparent bg-status-danger-bg text-status-danger-fg"
+                      className="border-transparent bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
                     >
                       <XCircle className="mr-1 h-3 w-3" />
                       Falhou

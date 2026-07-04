@@ -6,8 +6,6 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
-    "./hooks/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
   	extend: {
@@ -53,16 +51,6 @@ const config: Config = {
   			},
   			destructive: 'hsl(var(--destructive))',
   			danger: 'hsl(var(--danger))',
-  			status: {
-  				'success-bg': 'var(--status-success-bg)',
-  				'success-fg': 'var(--status-success-fg)',
-  				'danger-bg': 'var(--status-danger-bg)',
-  				'danger-fg': 'var(--status-danger-fg)',
-  				'pending-bg': 'var(--status-pending-bg)',
-  				'pending-fg': 'var(--status-pending-fg)',
-  				'neutral-bg': 'var(--status-neutral-bg)',
-  				'neutral-fg': 'var(--status-neutral-fg)'
-  			},
   			warn: {
   				DEFAULT: 'hsl(var(--warn))',
   				strong: 'hsl(var(--warn-strong))',

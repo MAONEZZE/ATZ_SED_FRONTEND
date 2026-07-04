@@ -5,7 +5,6 @@ import { useRef } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { ImagePlus } from "lucide-react";
 import { answerKeyForField } from "@/lib/api/public";
-import { fieldOptions, rendersAsRadioGroup } from "@/lib/forms/field-types";
 import type { PublicFormField } from "@/lib/api/types";
 import { PhoneField } from "@/components/forms/phone-field";
 import { Input } from "@/components/ui/input";
@@ -21,6 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+function fieldOptions(field: PublicFormField): string[] {
+  if (Array.isArray(field.options)) {
+    return field.options.filter((o): o is string => typeof o === "string");
+  }
+  return [];
+}
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -176,7 +182,7 @@ export function FormFieldsRenderer({
                 control={form.control}
                 name={key}
                 render={({ field: rhf }) =>
-                  rendersAsRadioGroup(options) ? (
+                  options.length <= 4 ? (
                     <RadioGroup
                       value={(rhf.value as string) ?? ""}
                       onValueChange={rhf.onChange}

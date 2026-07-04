@@ -67,13 +67,11 @@ function SortableFieldRow({
   onEdit,
   onDelete,
   deleting,
-  readonly,
 }: {
   field: FormField;
   onEdit: () => void;
   onDelete: () => void;
   deleting: boolean;
-  readonly: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: field.id });
@@ -109,7 +107,6 @@ function SortableFieldRow({
         size="icon"
         aria-label={`Editar campo ${field.label}`}
         onClick={onEdit}
-        disabled={readonly}
       >
         <Pencil className="h-4 w-4" />
       </Button>
@@ -120,7 +117,7 @@ function SortableFieldRow({
             variant="ghost"
             size="icon"
             aria-label={`Excluir campo ${field.label}`}
-            disabled={readonly || deleting}
+            disabled={deleting}
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
@@ -208,14 +205,11 @@ function FormBuilderSection({
   eventId,
   kind,
   slug,
-  readonly,
 }: {
   eventId: string;
   kind: FormFieldKind;
   slug?: string;
-  readonly: boolean;
 }) {
-  const { data: event } = useEvent(eventId);
   const { data: fields, isLoading } = useFormFields(eventId, kind);
   const reorder = useReorderFormFields(eventId);
   const deleteField = useDeleteFormField(eventId);
@@ -235,7 +229,7 @@ function FormBuilderSection({
 
   function handleDragEnd(dragEvent: DragEndEvent) {
     const { active, over } = dragEvent;
-    if (readonly || !over || active.id === over.id) return;
+    if (!over || active.id === over.id) return;
 
     const oldIndex = localFields.findIndex((f) => f.id === active.id);
     const newIndex = localFields.findIndex((f) => f.id === over.id);
@@ -280,13 +274,6 @@ function FormBuilderSection({
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
       <div className="space-y-4">
-        {readonly && (
-          <p className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-200">
-            Evento {event?.status === "cancelled" ? "cancelado" : "encerrado"} — somente
-            leitura.
-          </p>
-        )}
-
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-semibold">{title}</h2>
@@ -295,7 +282,6 @@ function FormBuilderSection({
             </p>
           </div>
           <Button
-            disabled={readonly}
             onClick={() => {
               setEditing(null);
               setEditorOpen(true);
@@ -321,7 +307,6 @@ function FormBuilderSection({
                   key={field.id}
                   field={field}
                   deleting={deleteField.isPending}
-                  readonly={readonly}
                   onEdit={() => {
                     setEditing(field);
                     setEditorOpen(true);
@@ -365,7 +350,6 @@ export default function FormBuilderPage() {
   const eventId = params.id;
   const { data: event } = useEvent(eventId);
   const [kind, setKind] = useState<FormFieldKind>("registration");
-  const readonly = event?.status === "cancelled" || event?.status === "ended";
 
   const formPaths: Record<FormFieldKind, string> = {
     registration: "",
@@ -418,12 +402,7 @@ export default function FormBuilderPage() {
         </Button>
       </div>
 
-      <FormBuilderSection
-        eventId={eventId}
-        kind={kind}
-        slug={event?.slug}
-        readonly={readonly}
-      />
+      <FormBuilderSection eventId={eventId} kind={kind} slug={event?.slug} />
     </div>
   );
 }

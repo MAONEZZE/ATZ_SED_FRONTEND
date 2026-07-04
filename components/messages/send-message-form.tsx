@@ -1,14 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Trash2 } from "lucide-react";
-import { type EmailTemplateKey } from "@/lib/email-templates";
+import {
+  Braces,
+  ChevronDown,
+  Copy,
+  Download,
+  LayoutTemplate,
+  Loader2,
+  Paperclip,
+  Plus,
+  Send,
+  Ticket,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { EMAIL_TEMPLATE_LABELS, type EmailTemplateKey } from "@/lib/email-templates";
+import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
+import { buildEmail } from "@/lib/email/build-email";
 import { useEvents } from "@/lib/api/events";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
-import { useProfile } from "@/lib/api/profile";
+import { useProfile, useWhatsAppGroups } from "@/lib/api/profile";
 import {
   INVITE_TOKEN,
   INVITE_RECURRENT_TOKEN,
@@ -26,37 +41,28 @@ import type {
   MessageAttachment,
   MessageChannel,
 } from "@/lib/api/types";
+import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
-import { type InviteConfig, isRecurrentInvite } from "@/lib/messages/invite-config";
+import {
+  type InviteConfig,
+  describeInvite,
+  isRecurrentInvite,
+} from "@/lib/messages/invite-config";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { InviteConfigModal } from "@/components/messages/invite-config-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
-import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
-import { SendSummaryRail } from "@/components/messages/send-message/send-summary-rail";
-import { RecipientTable } from "@/components/messages/send-message/recipient-table";
-import { MessageBodyEditor } from "@/components/messages/send-message/message-body-editor";
-import { ManualRecipientPopover } from "@/components/messages/send-message/manual-recipient-popover";
-import { ManualRecipientList } from "@/components/messages/send-message/manual-recipient-list";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
-import {
-  NO_EVENT,
-  NO_TEMPLATE,
-  STEP_LABEL_CLASS,
-  TONE_OPTIONS,
-} from "@/lib/messages/composer-constants";
-import {
-  ATTACHMENT_MAX_SIZE,
-  base64Bytes,
-  readAsAttachment,
-} from "@/lib/messages/attachments";
-import { useEmailComposer } from "@/hooks/use-email-composer";
-import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
-import { useVariableInsertion } from "@/hooks/use-variable-insertion";
+import type { EmailLayoutConfig } from "@/lib/email/email-layout-config";
+import { PhoneField } from "@/components/forms/phone-field";
+import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
+import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -64,6 +70,68 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { VariableTextarea } from "@/components/ui/variable-textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const NO_TEMPLATE = "__none__";
+const NO_EVENT = "__none_event__";
+const ATTACHMENT_MAX_SIZE = 10 * 1024 * 1024;
+
+const TONE_OPTIONS = (Object.keys(EMAIL_LAYOUT_PRESETS) as EmailTemplateKey[]).map(
+  (key) => ({ value: key, label: EMAIL_TEMPLATE_LABELS[key] }),
+);
+
+function readAsAttachment(file: File): Promise<MessageAttachment> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Falha ao ler o arquivo"));
+    reader.onload = () => {
+      const result = reader.result as string;
+      const base64 = result.includes(",") ? result.split(",")[1] : result;
+      resolve({
+        filename: file.name,
+        mimeType: file.type || "application/octet-stream",
+        contentBase64: base64,
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function base64Bytes(b64: string): number {
+  const len = b64.length;
+  const padding = b64.endsWith("==") ? 2 : b64.endsWith("=") ? 1 : 0;
+  return Math.max(0, Math.floor((len * 3) / 4) - padding);
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right">{children}</span>
+    </div>
+  );
+}
 
 export function SendMessageForm({
   eventId: fixedEventId,
@@ -109,33 +177,20 @@ export function SendMessageForm({
   const sendMessage = useSendMessage(effectiveEventId || undefined);
 
   const { data: profile } = useProfile();
-
-  const composer = useEmailComposer();
   const {
-    channel,
-    setChannel,
-    subject,
-    setSubject,
-    body,
-    setBody,
-    activeStyle,
-    setActiveStyle,
-    layoutConfig,
-    setLayoutConfig,
-    layoutEditorOpen,
-    bodyIsHtml,
-    applyPreset,
-    applyLayout,
-    openLayoutEditor,
-    closeLayoutEditor,
-  } = composer;
-  const { iframeRef, onLoad: handleIframeLoad } = useIframeAutosize();
-  const { textareaRef: bodyTextareaRef, insertVariable } = useVariableInsertion(
-    body,
-    setBody,
-  );
+    data: groups,
+    isLoading: loadingGroups,
+    isError: groupsError,
+  } = useWhatsAppGroups();
+  const [groupsOpen, setGroupsOpen] = useState(false);
 
+  const [channel, setChannel] = useState<MessageChannel>("whatsapp");
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [activeStyle, setActiveStyle] = useState<EmailTemplateKey | null>(null);
+  const [layoutEditorOpen, setLayoutEditorOpen] = useState(false);
+  const [layoutConfig, setLayoutConfig] = useState<EmailLayoutConfig | null>(null);
   const [inviteIcs, setInviteIcs] = useState(false);
   const [inviteRecurrent, setInviteRecurrent] = useState(false);
   const [inviteConfig, setInviteConfig] = useState<InviteConfig | null>(null);
@@ -151,8 +206,30 @@ export function SendMessageForm({
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [sendingTest, setSendingTest] = useState(false);
 
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
+
+  const bodyIsHtml = /^<[a-zA-Z!]/.test(body.trim());
+
+  function insertVariable(variable: string) {
+    const token = `{{${variable}}}`;
+    const ta = bodyTextareaRef.current;
+    if (!ta) {
+      setBody((prev) => prev + token);
+      return;
+    }
+    const start = ta.selectionStart ?? body.length;
+    const end = ta.selectionEnd ?? body.length;
+    const next = body.slice(0, start) + token + body.slice(end);
+    setBody(next);
+    requestAnimationFrame(() => {
+      ta.focus();
+      const pos = start + token.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }
 
   function saveInvite(config: InviteConfig) {
     setInviteConfig(config);
@@ -171,6 +248,14 @@ export function SendMessageForm({
     }
   }
 
+  const handleIframeLoad = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe?.contentDocument?.documentElement) return;
+    const doc = iframe.contentDocument;
+    const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+    if (h > 0) iframe.style.height = `${h + 4}px`;
+  }, []);
+
   const appliedInitial = useRef(false);
   useEffect(() => {
     if (appliedInitial.current || !initialRegistrationId || registrations.length === 0)
@@ -188,7 +273,13 @@ export function SendMessageForm({
   const selectedTemplate = channelTemplates.find((t) => t.id === templateId);
 
   function applyEmailTemplate(key: EmailTemplateKey) {
-    applyPreset(key, selectedTemplate ? { paragraph1: selectedTemplate.body } : undefined);
+    const preset = EMAIL_LAYOUT_PRESETS[key];
+    const cfg = selectedTemplate
+      ? { ...preset, paragraph1: selectedTemplate.body }
+      : preset;
+    setLayoutConfig(cfg);
+    setBody(buildEmail(cfg));
+    setActiveStyle(key);
   }
 
   function selectTemplate(value: string) {
@@ -376,6 +467,8 @@ export function SendMessageForm({
 
   if (loadingRegs && effectiveEventId) return <LoadingSpinner />;
 
+  const stepLabel = "text-xs font-medium text-muted-foreground";
+
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
       {/* Coluna principal */}
@@ -383,7 +476,7 @@ export function SendMessageForm({
         {/* 1 · Configuração */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
+            <CardTitle className={stepLabel}>1 · Configuração</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {!fixedEventId && (
@@ -450,7 +543,7 @@ export function SendMessageForm({
         {/* 2 · Conteúdo */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
+            <CardTitle className={stepLabel}>2 · Conteúdo</CardTitle>
             {channel === "email" && (
               <ToneSegmentedControl
                 aria-label="Tom da mensagem"
@@ -472,33 +565,151 @@ export function SendMessageForm({
               </div>
             )}
 
-            <MessageBodyEditor
-              channel={channel}
-              body={body}
-              onBodyChange={setBody}
-              bodyIsHtml={bodyIsHtml}
-              iframeRef={iframeRef}
-              onIframeLoad={handleIframeLoad}
-              bodyTextareaRef={bodyTextareaRef}
-              onInsertVariable={insertVariable}
-              activeStyle={activeStyle}
-              hasInvite={Boolean(inviteConfig)}
-              attachments={attachments}
-              onRemoveAttachment={(index) =>
-                setAttachments((prev) => prev.filter((_, i) => i !== index))
-              }
-              attachInputRef={attachInputRef}
-              onAddAttachments={(files) => void addAttachments(files)}
-              onOpenInvite={() => setInviteModalOpen(true)}
-              onOpenLayoutEditor={openLayoutEditor}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="send-body">Mensagem *</Label>
+              <div className="overflow-hidden rounded-md border">
+                {/* Toolbar */}
+                <div className="flex items-center gap-1 border-b bg-muted/40 px-1.5 py-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-xs"
+                      >
+                        <Braces className="h-3.5 w-3.5" />
+                        Variáveis
+                        <ChevronDown className="h-3 w-3 opacity-60" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      className="max-h-[60vh] w-64 overflow-y-auto"
+                    >
+                      {VARIABLE_DESCRIPTIONS.map(({ variable, description }) => (
+                        <DropdownMenuItem
+                          key={variable}
+                          onSelect={() => insertVariable(variable)}
+                          className="flex-col items-start gap-0.5"
+                        >
+                          <code className="font-mono text-xs font-semibold">
+                            {`{{${variable}}}`}
+                          </code>
+                          <span className="text-xs text-muted-foreground">
+                            {description}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs"
+                    onClick={() => attachInputRef.current?.click()}
+                  >
+                    <Paperclip className="h-3.5 w-3.5" />
+                    Anexo
+                  </Button>
+
+                  {channel === "email" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 px-2 text-xs"
+                      onClick={() => setInviteModalOpen(true)}
+                    >
+                      <Ticket className="h-3.5 w-3.5" />
+                      Invite
+                      {inviteConfig && (
+                        <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
+                      )}
+                    </Button>
+                  )}
+
+                  {channel === "email" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto h-7 gap-1 px-2 text-xs"
+                      disabled={!activeStyle}
+                      title={activeStyle ? undefined : "Escolha um tom para habilitar"}
+                      onClick={() => setLayoutEditorOpen(true)}
+                    >
+                      <LayoutTemplate className="h-3.5 w-3.5" />
+                      Editar layout
+                    </Button>
+                  )}
+                </div>
+
+                {bodyIsHtml ? (
+                  <iframe
+                    ref={iframeRef}
+                    srcDoc={body}
+                    title="preview do e-mail"
+                    scrolling="no"
+                    className="block w-full overflow-hidden bg-white"
+                    style={{ minHeight: "300px" }}
+                    sandbox="allow-same-origin"
+                    onLoad={handleIframeLoad}
+                  />
+                ) : (
+                  <VariableTextarea
+                    id="send-body"
+                    ref={bodyTextareaRef}
+                    rows={12}
+                    placeholder="Escreva a mensagem..."
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    className="rounded-none border-0 shadow-none focus-visible:ring-0"
+                  />
+                )}
+              </div>
+
+              <input
+                ref={attachInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => void addAttachments(e.target.files)}
+              />
+
+              {attachments.length > 0 && (
+                <ul className="flex flex-wrap gap-2">
+                  {attachments.map((a, index) => (
+                    <li
+                      key={`${a.filename}-${index}`}
+                      className="flex items-center gap-1.5 rounded-full border bg-muted/40 py-1 pl-3 pr-1 text-xs"
+                    >
+                      <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="max-w-[160px] truncate">{a.filename}</span>
+                      <button
+                        type="button"
+                        aria-label={`Remover ${a.filename}`}
+                        className="rounded-full p-0.5 hover:bg-muted"
+                        onClick={() =>
+                          setAttachments((prev) => prev.filter((_, i) => i !== index))
+                        }
+                      >
+                        <Trash2 className="h-3 w-3 text-destructive" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* 3 · Destinatários */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className={STEP_LABEL_CLASS}>3 · Destinatários</CardTitle>
+            <CardTitle className={stepLabel}>3 · Destinatários</CardTitle>
             <div className="flex items-center gap-1.5">
               {manualRecipients.length > 0 && (
                 <Button
@@ -513,7 +724,72 @@ export function SendMessageForm({
                 </Button>
               )}
               {channel === "whatsapp" && (
-                <WhatsAppGroupsPopover evolutionInstance={profile?.evolutionInstance} />
+                <Popover open={groupsOpen} onOpenChange={setGroupsOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 gap-1.5 text-xs"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      Grupos
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 p-0">
+                    <div className="border-b px-3 py-2">
+                      <p className="text-sm font-medium">Grupos WhatsApp</p>
+                      {profile?.evolutionInstance && (
+                        <p className="text-xs text-muted-foreground">
+                          Instância: {profile.evolutionInstance}
+                        </p>
+                      )}
+                    </div>
+                    {!profile?.evolutionInstance ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground">
+                        Configure sua instância Evolution no perfil para ver os grupos.
+                      </p>
+                    ) : loadingGroups ? (
+                      <div className="flex justify-center py-4">
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : groupsError ? (
+                      <p className="px-3 py-4 text-sm text-destructive">
+                        Erro ao carregar grupos. Verifique a instância Evolution.
+                      </p>
+                    ) : !groups || groups.length === 0 ? (
+                      <p className="px-3 py-4 text-sm text-muted-foreground">
+                        Nenhum grupo encontrado.
+                      </p>
+                    ) : (
+                      <div className="max-h-64 overflow-y-auto">
+                        {groups.map((g) => (
+                          <div
+                            key={g.id}
+                            className="flex items-center justify-between gap-2 border-b px-3 py-2 last:border-b-0"
+                          >
+                            <span className="min-w-0 flex-1 truncate text-sm">
+                              {g.subject}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0"
+                              aria-label={`Copiar ID do grupo ${g.subject}`}
+                              onClick={() => {
+                                navigator.clipboard.writeText(g.id);
+                                toast.success("ID copiado para a área de transferência");
+                              }}
+                            >
+                              <Copy className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
               )}
               <Button
                 type="button"
@@ -525,17 +801,55 @@ export function SendMessageForm({
                 <Download className="h-3.5 w-3.5" />
                 Importar CSV
               </Button>
-              <ManualRecipientPopover
-                open={manualOpen}
-                onOpenChange={setManualOpen}
-                draft={manualDraft}
-                setDraft={setManualDraft}
-                channel={channel}
-                onAdd={addManualRecipient}
-                addDisabled={
-                  channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT
-                }
-              />
+              <Popover open={manualOpen} onOpenChange={setManualOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" size="sm" className="h-7 gap-1.5 text-xs">
+                    <Plus className="h-3.5 w-3.5" />
+                    Adicionar manual
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 space-y-2">
+                  <p className="text-sm font-medium">Adicionar destinatário</p>
+                  <Input
+                    placeholder="Nome"
+                    value={manualDraft.name}
+                    onChange={(e) =>
+                      setManualDraft((d) => ({ ...d, name: e.target.value }))
+                    }
+                  />
+                  <Input
+                    placeholder="nome@email.com"
+                    type="email"
+                    value={manualDraft.email}
+                    onChange={(e) =>
+                      setManualDraft((d) => ({ ...d, email: e.target.value }))
+                    }
+                  />
+                  {channel === "whatsapp" ? (
+                    <Input
+                      placeholder="+5511999999999 ou 120363@g.us"
+                      value={manualDraft.phone ?? ""}
+                      onChange={(e) =>
+                        setManualDraft((d) => ({ ...d, phone: e.target.value }))
+                      }
+                    />
+                  ) : (
+                    <PhoneField
+                      value={manualDraft.phone ?? ""}
+                      onChange={(phone) => setManualDraft((d) => ({ ...d, phone }))}
+                    />
+                  )}
+                  <Button
+                    type="button"
+                    className="w-full gap-1.5"
+                    onClick={addManualRecipient}
+                    disabled={channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Adicionar
+                  </Button>
+                </PopoverContent>
+              </Popover>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -555,50 +869,209 @@ export function SendMessageForm({
               </p>
             )}
 
-            <RecipientTable
-              registrations={visibleRegistrations}
-              selected={selected}
-              allSelected={allSelected}
-              onToggleAll={toggleAll}
-              onToggleOne={toggleOne}
-              statusFilter={statusFilter}
-              onToggleStatusFilter={toggleStatusFilter}
-              onClearStatusFilter={() => setStatusFilter(new Set())}
-              hasEvent={Boolean(effectiveEventId)}
-            />
+            <div className="max-h-72 overflow-y-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={toggleAll}
+                        disabled={visibleRegistrations.length === 0}
+                        aria-label="Selecionar todos"
+                      />
+                    </TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>E-mail</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className="-ml-1 flex items-center gap-1 rounded px-1 py-0.5 font-medium hover:bg-muted hover:text-foreground"
+                          >
+                            Status
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent align="start" className="w-48 p-2">
+                          <p className="px-1 pb-1 text-xs text-muted-foreground">
+                            Mostrar status
+                          </p>
+                          {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((s) => (
+                            <label
+                              key={s}
+                              className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-sm hover:bg-muted"
+                            >
+                              <Checkbox
+                                checked={statusFilter.has(s)}
+                                onCheckedChange={() => toggleStatusFilter(s)}
+                              />
+                              {funnelStatusConfig[s].label}
+                            </label>
+                          ))}
+                          {statusFilter.size > 0 && (
+                            <button
+                              type="button"
+                              className="mt-1 w-full rounded px-1 py-1 text-left text-xs text-muted-foreground hover:bg-muted"
+                              onClick={() => setStatusFilter(new Set())}
+                            >
+                              Limpar filtro
+                            </button>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleRegistrations.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="py-8 text-center text-sm text-muted-foreground"
+                      >
+                        {!effectiveEventId
+                          ? "Vincule um evento para listar os inscritos, ou adicione destinatários manualmente."
+                          : statusFilter.size > 0
+                            ? "Nenhum inscrito com esse status."
+                            : "Nenhum inscrito ainda — adicione destinatários manualmente."}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    visibleRegistrations.map((r) => (
+                      <TableRow
+                        key={r.id}
+                        className="cursor-pointer"
+                        onClick={() => toggleOne(r.id)}
+                      >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selected.has(r.id)}
+                            onCheckedChange={() => toggleOne(r.id)}
+                            aria-label={`Selecionar ${r.name}`}
+                          />
+                        </TableCell>
+                        <TableCell className="font-medium">{r.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.email}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.phone}</TableCell>
+                        <TableCell>
+                          <FunnelStatusBadge status={r.status} />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-            <ManualRecipientList
-              recipients={manualRecipients}
-              onRemove={(index) =>
-                setManualRecipients((prev) => prev.filter((_, i) => i !== index))
-              }
-            />
+            {manualRecipients.length > 0 && (
+              <ul className="space-y-1">
+                {manualRecipients.map((r, index) => (
+                  <li
+                    key={`${r.name}-${index}`}
+                    className="flex items-center justify-between rounded-lg border px-3 py-1.5 text-sm"
+                  >
+                    <span>
+                      <span className="font-medium">{r.name}</span>{" "}
+                      <span className="text-muted-foreground">
+                        {[r.email, r.phone].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      aria-label={`Remover ${r.name}`}
+                      onClick={() =>
+                        setManualRecipients((prev) => prev.filter((_, i) => i !== index))
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Rail direito — Resumo do envio */}
-      <SendSummaryRail
-        channel={channel}
-        eventTitle={selectedEvent?.title}
-        count={count}
-        attachmentCount={attachments.length}
-        attachmentsBytes={attachmentsBytes}
-        inviteConfig={inviteConfig}
-        onEditInvite={() => setInviteModalOpen(true)}
-        onSend={onSend}
-        onSendTest={onSendTest}
-        isSending={sendMessage.isPending}
-        sendingTest={sendingTest}
-        bodyEmpty={bodyEmpty}
-      />
+      <aside className="lg:sticky lg:top-4 lg:h-fit">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Resumo do envio</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <SummaryRow label="Canal">
+              {channel === "email" ? "E-mail" : "WhatsApp"}
+            </SummaryRow>
+            <SummaryRow label="Evento">{selectedEvent?.title ?? "—"}</SummaryRow>
+            <SummaryRow label="Destinatários">
+              <span className="font-medium">{count}</span>
+            </SummaryRow>
+            <SummaryRow label="Anexos">
+              {attachments.length > 0
+                ? `${attachments.length} · ${formatBytes(attachmentsBytes)}`
+                : "—"}
+            </SummaryRow>
+            <SummaryRow label="Invite">
+              {inviteConfig ? (
+                <button
+                  type="button"
+                  className="text-primary hover:underline"
+                  onClick={() => setInviteModalOpen(true)}
+                  title={describeInvite(inviteConfig)}
+                >
+                  Configurado
+                </button>
+              ) : (
+                "—"
+              )}
+            </SummaryRow>
+
+            <Separator />
+
+            <Button
+              className="w-full gap-2"
+              onClick={onSend}
+              disabled={count === 0 || bodyEmpty || sendMessage.isPending}
+            >
+              {sendMessage.isPending && !sendingTest ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Enviar para {count}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={onSendTest}
+              disabled={sendMessage.isPending || channel !== "email"}
+              title={
+                channel === "email" ? undefined : "Teste disponível apenas para e-mail"
+              }
+            >
+              {sendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Enviar teste para mim
+            </Button>
+          </CardContent>
+        </Card>
+      </aside>
 
       <EmailLayoutEditorModal
         open={layoutEditorOpen}
         initialConfig={layoutConfig}
         draftKey={effectiveEventId || "global"}
-        onSave={applyLayout}
-        onClose={closeLayoutEditor}
+        onSave={(cfg, html) => {
+          setLayoutConfig(cfg);
+          setBody(html);
+        }}
+        onClose={() => setLayoutEditorOpen(false)}
       />
 
       <InviteConfigModal

@@ -9,7 +9,8 @@ import {
   useCreateAutomationGlobal,
   useUpdateAutomationGlobal,
 } from "@/lib/api/global-messaging";
-import type { Automation, AutomationTrigger } from "@/lib/api/types";
+import { useEvents } from "@/lib/api/events";
+import type { AutomationTrigger, AutomationWithEvent } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,20 +30,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function EventAutomationDialog({
-  eventId,
+export function GlobalAutomationDialog({
   automation,
   open,
   onOpenChange,
 }: {
-  eventId: string;
-  automation: Automation | null;
+  automation: AutomationWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { data: eventsResponse } = useEvents();
+  const events = eventsResponse?.data;
   const create = useCreateAutomationGlobal();
   const update = useUpdateAutomationGlobal();
 
+  const [eventId, setEventId] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [trigger, setTrigger] = useState<AutomationTrigger>("on_registration");
   const [delayMinutes, setDelayMinutes] = useState("");
@@ -53,6 +55,7 @@ export function EventAutomationDialog({
 
   useEffect(() => {
     if (open) {
+      setEventId(automation?.eventId ?? "");
       setTemplateId(automation?.templateId ?? "");
       setTrigger(automation?.trigger ?? "on_registration");
       setDelayMinutes(
@@ -67,6 +70,7 @@ export function EventAutomationDialog({
   const supportsDelay = DELAYED_TRIGGERS.includes(trigger);
 
   function handleSave() {
+    if (!eventId) return toast.error("Selecione o evento");
     if (!templateId) return toast.error("Selecione o template");
     const input = {
       templateId,
@@ -81,7 +85,8 @@ export function EventAutomationDialog({
       },
       onError: (e: Error) => toast.error(e.message),
     };
-    if (automation) update.mutate({ eventId, id: automation.id, input }, onDone);
+    if (automation)
+      update.mutate({ eventId: automation.eventId, id: automation.id, input }, onDone);
     else create.mutate({ eventId, input }, onDone);
   }
 
@@ -94,15 +99,38 @@ export function EventAutomationDialog({
 
         <div className="space-y-4">
           <div className="space-y-2">
+            <Label>Evento *</Label>
+            <Select
+              value={eventId}
+              onValueChange={(v) => {
+                setEventId(v);
+                setTemplateId("");
+              }}
+              disabled={isEdit}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o evento" />
+              </SelectTrigger>
+              <SelectContent>
+                {events?.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
             <Label>Template *</Label>
-            <Select value={templateId} onValueChange={setTemplateId}>
+            <Select value={templateId} onValueChange={setTemplateId} disabled={!eventId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o template" />
               </SelectTrigger>
               <SelectContent>
                 {templates?.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
-                    {t.name} ({t.channel === "whatsapp" ? "WhatsApp" : "E-mail"})
+                    {t.name} ({t.channel})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -130,9 +158,9 @@ export function EventAutomationDialog({
 
           {supportsDelay && (
             <div className="space-y-2">
-              <Label htmlFor="eauto-delay">Atraso (minutos)</Label>
+              <Label htmlFor="gauto-delay">Atraso (minutos)</Label>
               <Input
-                id="eauto-delay"
+                id="gauto-delay"
                 type="number"
                 min={0}
                 value={delayMinutes}
@@ -142,8 +170,8 @@ export function EventAutomationDialog({
           )}
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="eauto-active">Ativa</Label>
-            <Switch id="eauto-active" checked={active} onCheckedChange={setActive} />
+            <Label htmlFor="gauto-active">Ativa</Label>
+            <Switch id="gauto-active" checked={active} onCheckedChange={setActive} />
           </div>
         </div>
 
