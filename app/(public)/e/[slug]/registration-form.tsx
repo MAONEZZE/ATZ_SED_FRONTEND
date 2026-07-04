@@ -3,87 +3,14 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { isValidPhoneNumber } from "react-phone-number-input/core";
-import { phoneMetadata } from "@/lib/phone/metadata";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { answerKeyForField, createPublicRegistration } from "@/lib/api/public";
+import { createPublicRegistration } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
 import { renderRichText } from "@/components/ui/rich-text";
-import { fieldOptions } from "@/lib/forms/field-types";
-
-export function buildSchema(fields: PublicFormField[]) {
-  const shape: Record<string, z.ZodTypeAny> = {};
-  for (const field of fields) {
-    const key = answerKeyForField(field);
-    let schema: z.ZodTypeAny;
-    switch (field.type) {
-      case "email":
-        schema = z.string().email("E-mail inválido");
-        break;
-      case "phone":
-        schema = field.required
-          ? z
-              .string()
-              .min(1, "Campo obrigatório")
-              .refine((v) => isValidPhoneNumber(v, phoneMetadata), "Telefone inválido")
-          : z
-              .string()
-              .refine(
-                (v) => !v || isValidPhoneNumber(v, phoneMetadata),
-                "Telefone inválido",
-              );
-        break;
-      case "select": {
-        const opts = fieldOptions(field);
-        schema = field.required
-          ? z.string().min(1, "Campo obrigatório").refine((v) => opts.includes(v), "Opção inválida")
-          : z.string().refine((v) => !v || opts.includes(v), "Opção inválida");
-        break;
-      }
-      case "multiselect": {
-        const opts = fieldOptions(field);
-        const base = z.array(z.string()).refine(
-          (vals) => vals.every((v) => opts.includes(v)),
-          "Opção inválida",
-        );
-        schema = field.required
-          ? base.refine((vals) => vals.length > 0, "Selecione ao menos uma opção")
-          : base;
-        break;
-      }
-      case "checkbox":
-        schema = field.required
-          ? z.boolean().refine((v) => v, "Campo obrigatório")
-          : z.boolean();
-        break;
-      case "date":
-        schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
-        break;
-      default:
-        schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
-    }
-    if (!field.required && field.type !== "checkbox" && field.type !== "multiselect") {
-      schema = schema.optional().or(z.literal(""));
-    }
-    shape[key] = schema;
-  }
-  return z.object(shape);
-}
-
-function defaultValues(fields: PublicFormField[]): Record<string, unknown> {
-  const values: Record<string, unknown> = {};
-  for (const field of fields) {
-    const key = answerKeyForField(field);
-    if (field.type === "multiselect") values[key] = [];
-    else if (field.type === "checkbox") values[key] = false;
-    else values[key] = "";
-  }
-  return values;
-}
+import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
 
 export function RegistrationForm({
   slug,
@@ -136,7 +63,9 @@ export function RegistrationForm({
     try {
       await createPublicRegistration(slug, values);
       setSuccess(true);
-      try { localStorage.removeItem(`reg_draft_${slug}`); } catch {}
+      try {
+        localStorage.removeItem(`reg_draft_${slug}`);
+      } catch {}
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha ao enviar inscrição");
     } finally {

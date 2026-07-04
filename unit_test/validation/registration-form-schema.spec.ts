@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSchema } from "@/app/(public)/e/[slug]/registration-form";
+import { buildSchema } from "@/lib/validation/registration-form-schema";
 import type { PublicFormField } from "@/lib/api/types";
 
 function selectField(overrides: Partial<PublicFormField> = {}): PublicFormField {
@@ -44,6 +44,15 @@ describe("buildSchema — select", () => {
   it("campo opcional aceita vazio sem cair na checagem de opções", () => {
     const schema = buildSchema([selectField({ required: false })]);
     expect(schema.safeParse({ Camiseta: "" }).success).toBe(true);
+  });
+
+  it("obrigatório rejeita vazio com 'Campo obrigatório', antes de checar opções", () => {
+    const schema = buildSchema([selectField()]);
+    const result = schema.safeParse({ Camiseta: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe("Campo obrigatório");
+    }
   });
 });
 
