@@ -69,6 +69,12 @@ export async function submitPublicPostEvent(
     },
   );
   if (!res.ok) {
+    if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
+      throw new Error(
+        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
+      );
+    }
     let message = "Falha ao enviar respostas";
     try {
       const body = (await res.json()) as { message?: string | string[] };
@@ -100,6 +106,12 @@ export async function submitPublicNps(
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
+    if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
+      throw new Error(
+        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
+      );
+    }
     let message = "Falha ao enviar avaliação";
     try {
       const body = (await res.json()) as { message?: string | string[] };

@@ -28,6 +28,7 @@ export type AutomationTrigger =
   | "on_nps"
   | "on_approval"
   | "on_rejection"
+  | "after_approval"
   | "before_event"
   | "after_event";
 
@@ -93,21 +94,6 @@ export interface Collaborator {
     name: string;
     email: string;
     photoUrl: string | null;
-  };
-}
-
-export interface PostEventResponse {
-  id: string;
-  eventId: string;
-  registrationId: string;
-  answers: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  registration: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
   };
 }
 
