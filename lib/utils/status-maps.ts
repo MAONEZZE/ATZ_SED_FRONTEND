@@ -6,15 +6,15 @@ export const funnelStatusConfig: Record<
 > = {
   pending: {
     label: "Pendente",
-    className: "bg-status-pending-bg text-status-pending-fg",
+    className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
   },
   approved: {
     label: "Aprovado",
-    className: "bg-status-success-bg text-status-success-fg",
+    className: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
   },
   rejected: {
     label: "Rejeitado",
-    className: "bg-status-danger-bg text-status-danger-fg",
+    className: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
   },
 };
 
@@ -28,14 +28,14 @@ export const eventStatusConfig: Record<
   },
   published: {
     label: "Publicado",
-    className: "bg-status-success-bg text-status-success-fg",
+    className: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
   },
   cancelled: {
     label: "Cancelado",
-    className: "bg-status-danger-bg text-status-danger-fg",
+    className: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
   },
   ended: {
     label: "Encerrado",
-    className: "bg-status-neutral-bg text-status-neutral-fg",
+    className: "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
   },
 };

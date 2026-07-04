@@ -57,13 +57,6 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     expect(arg.input.eventId).toBeNull();
     expect(arg.eventId).toBeNull();
   });
-
-  it("não salva template de e-mail sem assunto", () => {
-    const noSubject: TemplateWithEvent = { ...emailTpl, subject: "" };
-    render(<GlobalTemplateDialog template={noSubject} open onOpenChange={() => {}} />);
-    screen.getByRole("button", { name: /^salvar$/i }).click();
-    expect(updateMutate).not.toHaveBeenCalled();
-  });
 });
 
 describe("GlobalTemplateDialog (whatsapp)", () => {

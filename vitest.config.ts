@@ -6,10 +6,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
-    include: [
-      "unit_test/**/*.spec.{ts,tsx}",
-      "integration_test/**/*.spec.{ts,tsx}",
-    ],
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
     env: {
       NEXT_PUBLIC_API_URL: "http://localhost:3000",
       NEXT_PUBLIC_SUPABASE_URL: "https://test.supabase.co",

@@ -9,7 +9,7 @@ export function useSendMessage(eventId?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: SendMessageInput) =>
-      api.post<SendMessageResult>(`/messages`, { eventId, ...input }),
+      api.post<SendMessageResult>(`/messaging/send`, { eventId, ...input }),
     onSuccess: () => {
       if (eventId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.messageLogs(eventId) });

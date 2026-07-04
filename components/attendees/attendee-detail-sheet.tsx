@@ -9,7 +9,6 @@ import { useFormFields } from "@/lib/api/form-fields";
 import { useUpdateRegistration } from "@/lib/api/registrations";
 import { useUserSubscriptions } from "@/lib/api/user-subscriptions";
 import type { FormField, Registration } from "@/lib/api/types";
-import { fieldOptions, formatAnswer } from "@/lib/forms/field-types";
 import { formatDate } from "@/lib/utils/format-date";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +32,19 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
+function formatAnswer(value: unknown): string {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "Sim" : "Não";
+  if (value == null || value === "") return "—";
+  return String(value);
+}
+
+function fieldOpts(field: FormField): string[] {
+  if (Array.isArray(field.options))
+    return field.options.filter((o): o is string => typeof o === "string");
+  return [];
+}
+
 function AnswerEditor({
   field,
   value,
@@ -42,7 +54,7 @@ function AnswerEditor({
   value: unknown;
   onChange: (v: unknown) => void;
 }) {
-  const opts = fieldOptions(field);
+  const opts = fieldOpts(field);
   const strVal = String(value ?? "");
   const arrVal = Array.isArray(value) ? value.map(String) : [];
 
