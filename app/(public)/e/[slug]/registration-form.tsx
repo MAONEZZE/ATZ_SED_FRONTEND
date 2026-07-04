@@ -13,8 +13,9 @@ import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
 import { renderRichText } from "@/components/ui/rich-text";
+import { fieldOptions } from "@/lib/forms/field-types";
 
-function buildSchema(fields: PublicFormField[]) {
+export function buildSchema(fields: PublicFormField[]) {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
     const key = answerKeyForField(field);
@@ -36,11 +37,24 @@ function buildSchema(fields: PublicFormField[]) {
                 "Telefone inválido",
               );
         break;
-      case "multiselect":
+      case "select": {
+        const opts = fieldOptions(field);
         schema = field.required
-          ? z.array(z.string()).min(1, "Selecione ao menos uma opção")
-          : z.array(z.string());
+          ? z.string().min(1, "Campo obrigatório").refine((v) => opts.includes(v), "Opção inválida")
+          : z.string().refine((v) => !v || opts.includes(v), "Opção inválida");
         break;
+      }
+      case "multiselect": {
+        const opts = fieldOptions(field);
+        const base = z.array(z.string()).refine(
+          (vals) => vals.every((v) => opts.includes(v)),
+          "Opção inválida",
+        );
+        schema = field.required
+          ? base.refine((vals) => vals.length > 0, "Selecione ao menos uma opção")
+          : base;
+        break;
+      }
       case "checkbox":
         schema = field.required
           ? z.boolean().refine((v) => v, "Campo obrigatório")
