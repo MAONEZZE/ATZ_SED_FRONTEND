@@ -273,26 +273,6 @@ export interface MessageAttachment {
   size: number;
 }
 
-export interface InviteRecurrencePayload {
-  freq: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-  interval: number;
-  until?: string;
-}
-
-export interface InvitePayload {
-  /** "YYYY-MM-DD" */
-  date: string;
-  allDay: boolean;
-  /** "HH:mm" — ausente quando allDay */
-  startTime?: string;
-  /** "HH:mm" — ausente quando allDay */
-  endTime?: string;
-  /** IANA timezone id */
-  timezone: string;
-  /** null = convite único */
-  recurrence?: InviteRecurrencePayload | null;
-}
-
 export interface SendMessageInput {
   eventId?: string;
   channel: MessageChannel;
@@ -302,7 +282,6 @@ export interface SendMessageInput {
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
   attachments?: Omit<MessageAttachment, "size">[];
-  invite?: InvitePayload;
 }
 
 export interface SendMessageResult {

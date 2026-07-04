@@ -4,7 +4,6 @@ import type {
   MessageChannel,
   SendMessageInput,
 } from "@/lib/api/types";
-import { toInvitePayload, type InviteConfig } from "@/lib/messages/invite-config";
 
 export interface SendMessageDraft {
   channel: MessageChannel;
@@ -13,12 +12,6 @@ export interface SendMessageDraft {
   body: string;
   registrationIds: string[];
   manualRecipients: ManualRecipient[];
-
-  inviteIcs?: boolean;
-
-  inviteRecurrent?: boolean;
-
-  inviteConfig?: InviteConfig | null;
 
   attachments?: MessageAttachment[];
 }
@@ -51,38 +44,11 @@ export function validateManualRecipient(
   return null;
 }
 
-export const INVITE_TOKEN = "{{invite}}";
-export const INVITE_RECURRENT_TOKEN = "{{invite_recorrente}}";
-
-export function injectInviteToken(body: string, token: string): string {
-  if (body.includes(token)) return body;
-  const closeIdx = body.toLowerCase().lastIndexOf("</body>");
-  if (closeIdx !== -1) {
-    return `${body.slice(0, closeIdx)}${token}\n${body.slice(closeIdx)}`;
-  }
-  return `${body}\n${token}`;
-}
-
-export function removeInviteToken(body: string, token: string): string {
-  return body.split(`${token}\n`).join("").split(token).join("");
-}
-
-export function hasInviteToken(body: string, token: string): boolean {
-  return body.includes(token);
-}
-
 export function toSendMessageInput(
   draft: SendMessageDraft,
   opts: { hasEventId: boolean },
 ): SendMessageInput {
-  let body = draft.body.trim();
-
-  if (body && draft.channel === "email") {
-    if (draft.inviteIcs) body = injectInviteToken(body, "{{invite}}");
-    if (draft.inviteRecurrent) {
-      body = injectInviteToken(body, "{{invite_recorrente}}");
-    }
-  }
+  const body = draft.body.trim();
 
   return {
     channel: draft.channel,
@@ -100,10 +66,6 @@ export function toSendMessageInput(
             filename,
             mimetype,
           }))
-        : undefined,
-    invite:
-      draft.channel === "email" && draft.inviteConfig
-        ? toInvitePayload(draft.inviteConfig)
         : undefined,
   };
 }

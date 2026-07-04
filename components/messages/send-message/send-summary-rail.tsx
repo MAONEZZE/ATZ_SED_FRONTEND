@@ -2,7 +2,6 @@
 
 import { Loader2, Send } from "lucide-react";
 import type { MessageChannel } from "@/lib/api/types";
-import { type InviteConfig, describeInvite } from "@/lib/messages/invite-config";
 import { formatBytes } from "@/lib/messages/attachments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,8 +23,6 @@ export function SendSummaryRail({
   count,
   attachmentCount,
   attachmentsBytes,
-  inviteConfig,
-  onEditInvite,
   onSend,
   onSendTest,
   isSending,
@@ -37,8 +34,6 @@ export function SendSummaryRail({
   count: number;
   attachmentCount: number;
   attachmentsBytes: number;
-  inviteConfig: InviteConfig | null;
-  onEditInvite: () => void;
   onSend: () => void;
   onSendTest: () => void;
   isSending: boolean;
@@ -64,21 +59,6 @@ export function SendSummaryRail({
               ? `${attachmentCount} · ${formatBytes(attachmentsBytes)}`
               : "—"}
           </SummaryRow>
-          <SummaryRow label="Invite">
-            {inviteConfig ? (
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={onEditInvite}
-                title={describeInvite(inviteConfig)}
-              >
-                Configurado
-              </button>
-            ) : (
-              "—"
-            )}
-          </SummaryRow>
-
           <Separator />
 
           <Button

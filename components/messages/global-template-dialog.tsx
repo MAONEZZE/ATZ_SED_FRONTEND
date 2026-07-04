@@ -3,14 +3,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Braces, ChevronDown, LayoutTemplate, Loader2, Ticket } from "lucide-react";
-import {
-  INVITE_TOKEN,
-  INVITE_RECURRENT_TOKEN,
-  injectInviteToken,
-  removeInviteToken,
-  hasInviteToken,
-} from "@/lib/validation/send-message";
+import { Braces, ChevronDown, LayoutTemplate, Loader2 } from "lucide-react";
 import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
@@ -50,11 +43,8 @@ import {
 } from "@/components/ui/select";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -114,21 +104,6 @@ export function GlobalTemplateDialog({
 
   const isPending = create.isPending || update.isPending;
   const isEdit = Boolean(template);
-
-  const inviteIcs = hasInviteToken(body, INVITE_TOKEN);
-  const inviteRecurrent = hasInviteToken(body, INVITE_RECURRENT_TOKEN);
-  const inviteActive = inviteIcs || inviteRecurrent;
-
-  function toggleInvite(token: string) {
-    setBody((prev) => {
-      const other = token === INVITE_TOKEN ? INVITE_RECURRENT_TOKEN : INVITE_TOKEN;
-      let next = removeInviteToken(prev, other);
-      next = hasInviteToken(prev, token)
-        ? removeInviteToken(next, token)
-        : injectInviteToken(next, token);
-      return next;
-    });
-  }
 
   function changeChannel(next: MessageChannel) {
     setChannel(next);
@@ -292,44 +267,6 @@ export function GlobalTemplateDialog({
                         ))}
                       </DropdownMenuContent>
                     </DropdownMenu>
-
-                    {channel === "email" && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 gap-1 px-2 text-xs"
-                          >
-                            <Ticket className="h-3.5 w-3.5" />
-                            Invite
-                            {inviteActive && (
-                              <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
-                            )}
-                            <ChevronDown className="h-3 w-3 opacity-60" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <DropdownMenuLabel>Vincular convite</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuCheckboxItem
-                            checked={inviteIcs}
-                            onCheckedChange={() => toggleInvite(INVITE_TOKEN)}
-                            onSelect={(e) => e.preventDefault()}
-                          >
-                            Invite
-                          </DropdownMenuCheckboxItem>
-                          <DropdownMenuCheckboxItem
-                            checked={inviteRecurrent}
-                            onCheckedChange={() => toggleInvite(INVITE_RECURRENT_TOKEN)}
-                            onSelect={(e) => e.preventDefault()}
-                          >
-                            Invite Recorrente
-                          </DropdownMenuCheckboxItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
 
                     {channel === "email" && (
                       <Button

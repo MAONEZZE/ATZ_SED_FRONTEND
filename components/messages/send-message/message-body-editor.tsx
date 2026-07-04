@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { Braces, ChevronDown, LayoutTemplate, Paperclip, Ticket } from "lucide-react";
+import { Braces, ChevronDown, LayoutTemplate, Paperclip } from "lucide-react";
 import type { MessageAttachment, MessageChannel } from "@/lib/api/types";
 import { VARIABLE_DESCRIPTIONS } from "@/components/messages/template-variables-info";
 import { EmailBodyPreview } from "@/components/messages/send-message/email-body-preview";
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 /**
- * Editor do corpo da mensagem: toolbar (variáveis, anexo, invite, layout),
+ * Editor do corpo da mensagem: toolbar (variáveis, anexo, layout),
  * preview HTML ou textarea, input de arquivo e lista de anexos.
  */
 export function MessageBodyEditor({
@@ -31,12 +31,10 @@ export function MessageBodyEditor({
   bodyTextareaRef,
   onInsertVariable,
   activeStyle,
-  hasInvite,
   attachments,
   onRemoveAttachment,
   attachInputRef,
   onAddAttachments,
-  onOpenInvite,
   onOpenLayoutEditor,
 }: {
   channel: MessageChannel;
@@ -48,12 +46,10 @@ export function MessageBodyEditor({
   bodyTextareaRef: RefObject<HTMLTextAreaElement>;
   onInsertVariable: (variable: string) => void;
   activeStyle: string | null;
-  hasInvite: boolean;
   attachments: MessageAttachment[];
   onRemoveAttachment: (index: number) => void;
   attachInputRef: RefObject<HTMLInputElement>;
   onAddAttachments: (files: FileList | null) => void;
-  onOpenInvite: () => void;
   onOpenLayoutEditor: () => void;
 }) {
   return (
@@ -104,22 +100,6 @@ export function MessageBodyEditor({
             <Paperclip className="h-3.5 w-3.5" />
             Anexo
           </Button>
-
-          {channel === "email" && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1 px-2 text-xs"
-              onClick={onOpenInvite}
-            >
-              <Ticket className="h-3.5 w-3.5" />
-              Invite
-              {hasInvite && (
-                <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-primary" />
-              )}
-            </Button>
-          )}
 
           {channel === "email" && (
             <Button

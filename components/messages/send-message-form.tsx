@@ -10,9 +10,6 @@ import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
 import { useProfile } from "@/lib/api/profile";
 import {
-  INVITE_TOKEN,
-  INVITE_RECURRENT_TOKEN,
-  removeInviteToken,
   WHATSAPP_RECIPIENT_LIMIT,
   recipientCount,
   toSendMessageInput,
@@ -27,9 +24,7 @@ import type {
   MessageChannel,
 } from "@/lib/api/types";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
-import { type InviteConfig, isRecurrentInvite } from "@/lib/messages/invite-config";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
-import { InviteConfigModal } from "@/components/messages/invite-config-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
 import { SendSummaryRail } from "@/components/messages/send-message/send-summary-rail";
@@ -133,10 +128,6 @@ export function SendMessageForm({
   );
 
   const [templateId, setTemplateId] = useState<string | null>(null);
-  const [inviteIcs, setInviteIcs] = useState(false);
-  const [inviteRecurrent, setInviteRecurrent] = useState(false);
-  const [inviteConfig, setInviteConfig] = useState<InviteConfig | null>(null);
-  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [manualRecipients, setManualRecipients] = useState<ManualRecipient[]>([]);
   const [manualOpen, setManualOpen] = useState(false);
@@ -150,23 +141,6 @@ export function SendMessageForm({
 
   const csvInputRef = useRef<HTMLInputElement>(null);
   const attachInputRef = useRef<HTMLInputElement>(null);
-
-  function saveInvite(config: InviteConfig) {
-    setInviteConfig(config);
-    const recurrent = isRecurrentInvite(config.recurrence);
-    setInviteIcs(!recurrent);
-    setInviteRecurrent(recurrent);
-    // Em texto plano, mostra o token no editor. Em HTML, o token é injetado antes
-    // de </body> pelo toSendMessageInput no envio (não há textarea no preview).
-    if (!bodyIsHtml) {
-      const token = recurrent ? INVITE_RECURRENT_TOKEN : INVITE_TOKEN;
-      setBody((prev) => {
-        let next = removeInviteToken(prev, INVITE_TOKEN);
-        next = removeInviteToken(next, INVITE_RECURRENT_TOKEN);
-        return `${next.trimEnd()}\n${token}`.trimStart();
-      });
-    }
-  }
 
   const appliedInitial = useRef(false);
   useEffect(() => {
@@ -206,9 +180,6 @@ export function SendMessageForm({
     setSubject("");
     setActiveStyle(null);
     setLayoutConfig(null);
-    setInviteIcs(false);
-    setInviteRecurrent(false);
-    setInviteConfig(null);
   }
 
   const draft: SendMessageDraft = {
@@ -218,9 +189,6 @@ export function SendMessageForm({
     body,
     registrationIds: Array.from(selected),
     manualRecipients,
-    inviteIcs,
-    inviteRecurrent,
-    inviteConfig,
     attachments,
   };
   const hasEventId = Boolean(effectiveEventId);
@@ -326,9 +294,6 @@ export function SendMessageForm({
     setTemplateId(null);
     setActiveStyle(null);
     setLayoutConfig(null);
-    setInviteIcs(false);
-    setInviteRecurrent(false);
-    setInviteConfig(null);
   }
 
   function onSend() {
@@ -483,14 +448,12 @@ export function SendMessageForm({
               bodyTextareaRef={bodyTextareaRef}
               onInsertVariable={insertVariable}
               activeStyle={activeStyle}
-              hasInvite={Boolean(inviteConfig)}
               attachments={attachments}
               onRemoveAttachment={(index) =>
                 setAttachments((prev) => prev.filter((_, i) => i !== index))
               }
               attachInputRef={attachInputRef}
               onAddAttachments={(files) => void addAttachments(files)}
-              onOpenInvite={() => setInviteModalOpen(true)}
               onOpenLayoutEditor={openLayoutEditor}
             />
           </CardContent>
@@ -584,8 +547,6 @@ export function SendMessageForm({
         count={count}
         attachmentCount={attachments.length}
         attachmentsBytes={attachmentsBytes}
-        inviteConfig={inviteConfig}
-        onEditInvite={() => setInviteModalOpen(true)}
         onSend={onSend}
         onSendTest={onSendTest}
         isSending={sendMessage.isPending}
@@ -599,13 +560,6 @@ export function SendMessageForm({
         draftKey={effectiveEventId || "global"}
         onSave={applyLayout}
         onClose={closeLayoutEditor}
-      />
-
-      <InviteConfigModal
-        open={inviteModalOpen}
-        onOpenChange={setInviteModalOpen}
-        initial={inviteConfig}
-        onSave={saveInvite}
       />
     </div>
   );
