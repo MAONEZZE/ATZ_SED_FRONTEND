@@ -25,6 +25,10 @@ export interface TemplateInput {
   eventId?: string | null;
 }
 
+// eventId: undefined = sem filtro (todos os templates); null = envia o literal
+// "null" ao backend (apenas templates globais); string = filtra exclusivamente
+// pelo evento informado (NÃO soma com os globais — precisa de duas chamadas
+// para combinar "globais + este evento", ver event-automation-dialog.tsx).
 export function useAllTemplates(
   page = 1,
   limit = 20,

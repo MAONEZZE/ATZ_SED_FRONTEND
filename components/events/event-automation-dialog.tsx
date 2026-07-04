@@ -50,10 +50,17 @@ export function EventAutomationDialog({
 
   const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
   const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
-  const templates = [
-    ...(globalTemplatesResponse?.data ?? []),
-    ...(eventTemplatesResponse?.data ?? []),
-  ];
+  // Dedup defensivo: os dois filtros são exclusivos no backend (globais vs. este
+  // evento), mas se essa garantia mudar/tiver bug, evita templates duplicados
+  // (e keys duplicadas no React) no Select.
+  const templates = Array.from(
+    new Map(
+      [
+        ...(globalTemplatesResponse?.data ?? []),
+        ...(eventTemplatesResponse?.data ?? []),
+      ].map((t) => [t.id, t]),
+    ).values(),
+  );
 
   useEffect(() => {
     if (open) {
