@@ -120,9 +120,14 @@ export function useDeleteEventCover(id: string) {
 
 export function useCancelEvent(id: string) {
   const invalidate = useInvalidateEvents();
+  // Cancelamento é uma transição de status com efeito colateral (notificação):
+  // o backend não expõe POST /cancel, e sim PATCH /status com status=cancelled.
   return useMutation({
     mutationFn: (notifyParticipants: boolean) =>
-      api.post<EventObject>(`/events/${id}/cancel`, { notifyParticipants }),
+      api.patch<EventObject>(`/events/${id}/status`, {
+        status: "cancelled",
+        notifyParticipants,
+      }),
     onSuccess: () => invalidate(id),
   });
 }

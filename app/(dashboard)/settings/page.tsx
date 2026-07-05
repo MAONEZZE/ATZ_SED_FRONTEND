@@ -180,7 +180,7 @@ export default function SettingsPage() {
             />
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
-              <Input id="name" {...form.register("name")} />
+              <Input id="name" maxLength={120} {...form.register("name")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>

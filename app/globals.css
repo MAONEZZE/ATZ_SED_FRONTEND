@@ -33,6 +33,17 @@
     --warn-text: 37 86% 23%;
     --danger: 2 64% 58%;
 
+    /* Status semânticos (badges/alertas) — bg suave + texto forte.
+       Valores hex idênticos à paleta Tailwind usada antes da tokenização. */
+    --status-success-bg: #dcfce7; /* green-100 */
+    --status-success-fg: #166534; /* green-800 */
+    --status-danger-bg: #fee2e2; /* red-100 */
+    --status-danger-fg: #991b1b; /* red-800 */
+    --status-pending-bg: #fef9c3; /* yellow-100 */
+    --status-pending-fg: #854d0e; /* yellow-800 */
+    --status-neutral-bg: #e4e4e7; /* zinc-200 */
+    --status-neutral-fg: #3f3f46; /* zinc-700 */
+
     /* Escala marrom auxiliar */
     --brown-900: 24 31% 14%;
     --brown-700: 25 31% 23%;
@@ -100,6 +111,16 @@
     --warn-soft: 36 60% 20%;
     --warn-text: 36 76% 70%;
     --danger: 2 64% 55%;
+    /* Status semânticos — dark. bg com alpha /40 (66 hex) reproduz o
+       dark:bg-*-900/40 anterior; texto usa o tom -300. */
+    --status-success-bg: #14532d66; /* green-900 / 40% */
+    --status-success-fg: #86efac; /* green-300 */
+    --status-danger-bg: #7f1d1d66; /* red-900 / 40% */
+    --status-danger-fg: #fca5a5; /* red-300 */
+    --status-pending-bg: #713f1266; /* yellow-900 / 40% */
+    --status-pending-fg: #fde047; /* yellow-300 */
+    --status-neutral-bg: #27272a; /* zinc-800 */
+    --status-neutral-fg: #d4d4d8; /* zinc-300 */
     --chart-1: 36 76% 55%;
     --chart-2: 33 50% 65%;
     --chart-3: 36 40% 75%;

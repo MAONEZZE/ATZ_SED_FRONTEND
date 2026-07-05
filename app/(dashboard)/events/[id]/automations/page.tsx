@@ -95,7 +95,7 @@ export default function EventAutomationsPage() {
                   {a.active ? (
                     <Badge
                       variant="outline"
-                      className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                      className="border-transparent bg-status-success-bg text-status-success-fg"
                     >
                       Ativa
                     </Badge>

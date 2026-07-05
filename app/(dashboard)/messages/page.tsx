@@ -107,10 +107,7 @@ function TemplatesTab() {
     channelFilter === "all" ? undefined : channelFilter,
   );
 
-  const templates =
-    channelFilter === "all"
-      ? response?.data
-      : response?.data?.filter((t) => t.channel === channelFilter);
+  const templates = response?.data;
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -310,7 +307,7 @@ function LogsTab() {
                   {log.status === "sent" ? (
                     <Badge
                       variant="outline"
-                      className="border-transparent bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                      className="border-transparent bg-status-success-bg text-status-success-fg"
                     >
                       <CheckCircle2 className="mr-1 h-3 w-3" />
                       Enviada
@@ -318,7 +315,7 @@ function LogsTab() {
                   ) : (
                     <Badge
                       variant="outline"
-                      className="border-transparent bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
+                      className="border-transparent bg-status-danger-bg text-status-danger-fg"
                     >
                       <XCircle className="mr-1 h-3 w-3" />
                       Falhou

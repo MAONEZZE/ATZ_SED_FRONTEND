@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session && !profileEnsured.current) {
       profileEnsured.current = true;
-      api.post("/profile/ensure").catch(() => {
+      api.post("/profile").catch(() => {
         profileEnsured.current = false;
       });
     }

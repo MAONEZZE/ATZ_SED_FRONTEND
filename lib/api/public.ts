@@ -48,7 +48,7 @@ export async function createPublicRegistration(
 
 export async function getPublicPostEventFields(slug: string): Promise<PublicFormField[]> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event-fields`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/form-fields`,
     { cache: "no-store" },
   );
   if (res.status === 404) return [];
@@ -61,7 +61,7 @@ export async function submitPublicPostEvent(
   payload: { identifier: string; answers: Record<string, unknown> },
 ): Promise<void> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/responses`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -69,6 +69,12 @@ export async function submitPublicPostEvent(
     },
   );
   if (!res.ok) {
+    if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
+      throw new Error(
+        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
+      );
+    }
     let message = "Falha ao enviar respostas";
     try {
       const body = (await res.json()) as { message?: string | string[] };
@@ -82,7 +88,7 @@ export async function submitPublicPostEvent(
 
 export async function getPublicNpsFields(slug: string): Promise<PublicFormField[]> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps-fields`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/form-fields`,
     { cache: "no-store" },
   );
   if (res.status === 404) return [];
@@ -94,12 +100,18 @@ export async function submitPublicNps(
   slug: string,
   payload: { identifier: string; answers: Record<string, unknown> },
 ): Promise<void> {
-  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps`, {
+  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/responses`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
+    if (res.status === 404) {
+      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
+      throw new Error(
+        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
+      );
+    }
     let message = "Falha ao enviar avaliação";
     try {
       const body = (await res.json()) as { message?: string | string[] };

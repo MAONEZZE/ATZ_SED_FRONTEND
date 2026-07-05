@@ -14,7 +14,9 @@ export type FieldType =
   | "multiselect"
   | "checkbox"
   | "image"
-  | "date";
+  | "date"
+  | "linkedin"
+  | "instagram";
 
 export type FormFieldKind = "registration" | "post_event" | "nps";
 
@@ -26,6 +28,7 @@ export type AutomationTrigger =
   | "on_nps"
   | "on_approval"
   | "on_rejection"
+  | "after_approval"
   | "before_event"
   | "after_event";
 
@@ -94,21 +97,6 @@ export interface Collaborator {
   };
 }
 
-export interface PostEventResponse {
-  id: string;
-  eventId: string;
-  registrationId: string;
-  answers: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  registration: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-}
-
 export type PipedriveStatus = "pending" | "sent" | "failed" | "skipped";
 
 export interface UserSubscription {
@@ -158,7 +146,6 @@ export interface EventRef {
 }
 
 export type TemplateWithEvent = MessageTemplate & { event: EventRef | null };
-export type AutomationWithEvent = Automation & { event: EventRef };
 export type MessageLogWithEvent = MessageLog & { event: EventRef | null };
 
 export interface TemplateAutomationSummary {
@@ -266,30 +253,12 @@ export interface ManualRecipient {
 }
 
 export interface MessageAttachment {
+  /** path retornado por POST /messages/attachments */
+  path: string;
   filename: string;
-  mimeType: string;
-
-  contentBase64: string;
-}
-
-export interface InviteRecurrencePayload {
-  freq: "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
-  interval: number;
-  until?: string;
-}
-
-export interface InvitePayload {
-  /** "YYYY-MM-DD" */
-  date: string;
-  allDay: boolean;
-  /** "HH:mm" — ausente quando allDay */
-  startTime?: string;
-  /** "HH:mm" — ausente quando allDay */
-  endTime?: string;
-  /** IANA timezone id */
-  timezone: string;
-  /** null = convite único */
-  recurrence?: InviteRecurrencePayload | null;
+  mimetype: string;
+  /** bytes do arquivo — usado só na UI, não vai no envio */
+  size: number;
 }
 
 export interface SendMessageInput {
@@ -300,8 +269,7 @@ export interface SendMessageInput {
   body?: string;
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
-  attachments?: MessageAttachment[];
-  invite?: InvitePayload;
+  attachments?: Omit<MessageAttachment, "size">[];
 }
 
 export interface SendMessageResult {

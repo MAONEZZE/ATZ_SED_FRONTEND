@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
+import { fieldHasOptions, fieldOptions } from "@/lib/forms/field-types";
 import type { FieldType, FormField, FormFieldKind } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,8 @@ const fieldTypeLabels: Record<FieldType, string> = {
   checkbox: "Caixa de seleção",
   image: "Imagem",
   date: "Data",
+  linkedin: "LinkedIn",
+  instagram: "Instagram",
 };
 
 const creatableTypes: FieldType[] = [
@@ -48,12 +51,12 @@ const creatableTypes: FieldType[] = [
   "checkbox",
   "image",
   "date",
+  "linkedin",
+  "instagram",
 ];
 
 function optionsToText(options: unknown): string {
-  return Array.isArray(options)
-    ? options.filter((o): o is string => typeof o === "string").join("\n")
-    : "";
+  return fieldOptions({ options }).join("\n");
 }
 
 export function FieldEditorDialog({
@@ -90,7 +93,7 @@ export function FieldEditorDialog({
     }
   }, [open, field]);
 
-  const needsOptions = type === "select" || type === "multiselect";
+  const needsOptions = fieldHasOptions(type);
   const isPending = create.isPending || update.isPending;
 
   function handleSave() {

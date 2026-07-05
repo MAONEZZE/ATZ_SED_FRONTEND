@@ -4,7 +4,6 @@ import type {
   MessageChannel,
   SendMessageInput,
 } from "@/lib/api/types";
-import { toInvitePayload, type InviteConfig } from "@/lib/messages/invite-config";
 
 export interface SendMessageDraft {
   channel: MessageChannel;
@@ -13,12 +12,6 @@ export interface SendMessageDraft {
   body: string;
   registrationIds: string[];
   manualRecipients: ManualRecipient[];
-
-  inviteIcs?: boolean;
-
-  inviteRecurrent?: boolean;
-
-  inviteConfig?: InviteConfig | null;
 
   attachments?: MessageAttachment[];
 }
@@ -39,20 +32,7 @@ export function validateSendMessage(draft: SendMessageDraft): string | null {
   return null;
 }
 
-export function validateManualRecipient(
-  recipient: ManualRecipient,
-  channel: MessageChannel,
-): string | null {
-  if (!recipient.name.trim()) return "Nome é obrigatório";
-  if (channel === "email" && !recipient.email?.trim())
-    return "E-mail é obrigatório para envio por e-mail";
-  if (channel === "whatsapp" && !recipient.phone?.trim())
-    return "Telefone é obrigatório para envio por WhatsApp";
-  return null;
-}
-
 export const INVITE_TOKEN = "{{invite}}";
-export const INVITE_RECURRENT_TOKEN = "{{invite_recorrente}}";
 
 export function injectInviteToken(body: string, token: string): string {
   if (body.includes(token)) return body;
@@ -71,18 +51,23 @@ export function hasInviteToken(body: string, token: string): boolean {
   return body.includes(token);
 }
 
+export function validateManualRecipient(
+  recipient: ManualRecipient,
+  channel: MessageChannel,
+): string | null {
+  if (!recipient.name.trim()) return "Nome é obrigatório";
+  if (channel === "email" && !recipient.email?.trim())
+    return "E-mail é obrigatório para envio por e-mail";
+  if (channel === "whatsapp" && !recipient.phone?.trim())
+    return "Telefone é obrigatório para envio por WhatsApp";
+  return null;
+}
+
 export function toSendMessageInput(
   draft: SendMessageDraft,
   opts: { hasEventId: boolean },
 ): SendMessageInput {
-  let body = draft.body.trim();
-
-  if (body && draft.channel === "email") {
-    if (draft.inviteIcs) body = injectInviteToken(body, "{{invite}}");
-    if (draft.inviteRecurrent) {
-      body = injectInviteToken(body, "{{invite_recorrente}}");
-    }
-  }
+  const body = draft.body.trim();
 
   return {
     channel: draft.channel,
@@ -94,10 +79,12 @@ export function toSendMessageInput(
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
     attachments:
-      draft.attachments && draft.attachments.length > 0 ? draft.attachments : undefined,
-    invite:
-      draft.channel === "email" && draft.inviteConfig
-        ? toInvitePayload(draft.inviteConfig)
+      draft.attachments && draft.attachments.length > 0
+        ? draft.attachments.map(({ path, filename, mimetype }) => ({
+            path,
+            filename,
+            mimetype,
+          }))
         : undefined,
   };
 }

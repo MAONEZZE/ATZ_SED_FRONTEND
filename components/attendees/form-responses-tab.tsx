@@ -9,6 +9,7 @@ import {
 } from "@/lib/api/user-subscriptions";
 import type { UserSubscription } from "@/lib/api/types";
 import { downloadBlob } from "@/lib/utils/download-blob";
+import { formatAnswer } from "@/lib/forms/field-types";
 import { formatDate } from "@/lib/utils/format-date";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Input } from "@/components/ui/input";
@@ -70,11 +71,8 @@ function AnswerValue({ value }: { value: unknown }) {
     );
   }
 
-  if (Array.isArray(value)) return <p className="font-medium">{value.join(", ")}</p>;
-  if (typeof value === "boolean")
-    return <p className="font-medium">{value ? "Sim" : "Não"}</p>;
-  if (value == null || value === "")
-    return <p className="font-medium">—</p>;
+  if (Array.isArray(value) || typeof value === "boolean" || value == null || value === "")
+    return <p className="font-medium">{formatAnswer(value)}</p>;
   return <p className="whitespace-pre-line font-medium">{String(value)}</p>;
 }
 

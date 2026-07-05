@@ -141,9 +141,8 @@ export function EventFormFields({
         <div>
           <h3 className="font-semibold">Recorrência</h3>
           <p className="text-sm text-muted-foreground">
-            Repete o convite de calendário (token{" "}
-            <code className="font-mono">{`{{invite_recorrente}}`}</code> no template de
-            e-mail). Baseia-se no início do evento.
+            Repete o convite de calendário. Ative com o checkbox &quot;Enviar convite do
+            evento&quot; ao compor a mensagem. Baseia-se no início do evento.
           </p>
         </div>
 
