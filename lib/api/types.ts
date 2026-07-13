@@ -32,20 +32,6 @@ export type AutomationTrigger =
   | "before_event"
   | "after_event";
 
-export type LandingSectionType =
-  | "hero"
-  | "about"
-  | "registration"
-  | "speakers"
-  | "schedule"
-  | "venue"
-  | "faq"
-  | "gallery"
-  | "testimonials"
-  | "sponsors";
-
-export type UserRole = "admin" | "organizer";
-
 export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
 export interface EventObject {
@@ -174,25 +160,6 @@ export interface Automation {
   };
 }
 
-export interface LandingSection {
-  id: string;
-  landingPageId: string;
-  type: LandingSectionType;
-  order: number;
-  enabled: boolean;
-  content: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface LandingPage {
-  id: string;
-  eventId: string;
-  sections: LandingSection[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface MessageLog {
   id: string;
   eventId: string | null;
@@ -213,7 +180,6 @@ export interface Profile {
   email: string;
   photoUrl: string | null;
   evolutionInstance: string | null;
-  roles: { id: string; role: UserRole }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -231,10 +197,6 @@ export interface PublicEvent {
   endDate: string | null;
   postRegistrationMessage: string | null;
   status: "published";
-  landingPage: {
-    id: string;
-    sections: LandingSection[];
-  };
 }
 
 export interface PublicFormField {

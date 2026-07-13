@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LogOut, MessageSquare, Moon, Settings, Shield, Sun } from "lucide-react";
+import { CalendarDays, LogOut, MessageSquare, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useProfile } from "@/lib/api/profile";
@@ -31,7 +31,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { session, signOut } = useAuth();
   const { data: profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
-  const isAdmin = session?.user.role === "admin";
 
   const displayName = profile?.name || session?.user.name || "";
   const displayEmail = profile?.email || session?.user.email || "";
@@ -76,20 +75,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <span className="hidden sm:inline">{label}</span>
               </Link>
             ))}
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={cn(
-                  "flex items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-brown-100",
-                  pathname.startsWith("/admin")
-                    ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary"
-                    : "text-brown-500",
-                )}
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
-            )}
           </nav>
           <div className="ml-auto flex items-center gap-2">
             <Button

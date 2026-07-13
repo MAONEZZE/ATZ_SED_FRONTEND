@@ -8,7 +8,6 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "organizer";
 }
 
 export interface AuthSession {
@@ -33,7 +32,6 @@ function mapSession(session: Session | null): AuthSession | null {
       id: session.user.id,
       email: session.user.email ?? "",
       name: typeof meta.name === "string" ? meta.name : "",
-      role: meta.role === "admin" ? "admin" : "organizer",
     },
     accessToken: session.access_token,
   };

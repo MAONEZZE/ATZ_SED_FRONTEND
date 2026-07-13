@@ -1,8 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createMiddlewareSupabase } from "@/lib/auth/supabase-server";
 
-const ADMIN_PREFIX = "/admin";
-
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request });
   const supabase = createMiddlewareSupabase(request, response);
@@ -20,17 +18,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith(ADMIN_PREFIX)) {
-    const role = (user.user_metadata as Record<string, unknown>)?.role;
-    if (role !== "admin") {
-      return NextResponse.redirect(new URL("/events", request.url));
-    }
-  }
-
   return response;
 }
 
 export const config = {
   // Apenas rotas do grupo (dashboard) — públicas ficam fora
-  matcher: ["/events/:path*", "/admin/:path*", "/settings/:path*"],
+  matcher: ["/events/:path*", "/settings/:path*"],
 };
