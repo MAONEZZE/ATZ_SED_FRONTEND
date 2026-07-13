@@ -36,6 +36,8 @@ yarn-error.log*
 next-env.d.ts
 
 .docs/
+.claude/
+CLAUDE.md
 
 # git worktrees (local dev workspaces)
 .worktrees/
