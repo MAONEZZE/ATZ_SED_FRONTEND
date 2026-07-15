@@ -47,25 +47,24 @@ describe("submitPublicNps", () => {
     vi.unstubAllGlobals();
   });
 
-  it("lança mensagem específica quando identifier não é encontrado (404)", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(404, { message: "Not Found" })),
-    );
+  it("envia só answers, sem identifier (NPS anônimo)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(201, {}));
+    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(
-      submitPublicNps("evt-1", { identifier: "x@x.com", answers: {} }),
-    ).rejects.toThrow(NOT_FOUND_MESSAGE);
+    await submitPublicNps("evt-1", { answers: { nota: 10 } });
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body).toEqual({ answers: { nota: 10 } });
   });
 
-  it("repassa body.message em outros erros", async () => {
+  it("repassa body.message em erros", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(jsonResponse(500, { message: "erro interno" })),
     );
 
-    await expect(
-      submitPublicNps("evt-1", { identifier: "x@x.com", answers: {} }),
-    ).rejects.toThrow("erro interno");
+    await expect(submitPublicNps("evt-1", { answers: {} })).rejects.toThrow(
+      "erro interno",
+    );
   });
 });

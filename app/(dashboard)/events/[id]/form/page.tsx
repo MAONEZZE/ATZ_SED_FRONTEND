@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -20,14 +20,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Link2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
+  useCreateFormField,
   useDeleteFormField,
   useFormFields,
   useReorderFormFields,
 } from "@/lib/api/form-fields";
 import { useEvent, useUpdateEvent } from "@/lib/api/events";
+import { useForm as useFormMeta, useUpdateForm } from "@/lib/api/forms";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import type { FormField, FormFieldKind } from "@/lib/api/types";
 import { FieldEditorDialog } from "@/components/form-builder/field-editor-dialog";
@@ -38,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -206,6 +209,82 @@ function PipedriveToggle({ eventId }: { eventId: string }) {
   );
 }
 
+function FormMetaEditor({
+  eventId,
+  kind,
+  readonly,
+}: {
+  eventId: string;
+  kind: FormFieldKind;
+  readonly: boolean;
+}) {
+  const { data: form, isLoading } = useFormMeta(eventId, kind);
+  const update = useUpdateForm(eventId, kind);
+
+  const [description, setDescription] = useState("");
+  const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
+
+  useEffect(() => {
+    setDescription(form?.description ?? "");
+    setPostRegistrationMessage(form?.postRegistrationMessage ?? "");
+  }, [form]);
+
+  const dirty =
+    description !== (form?.description ?? "") ||
+    postRegistrationMessage !== (form?.postRegistrationMessage ?? "");
+
+  function handleSave() {
+    update.mutate(
+      { description: description || null, postRegistrationMessage: postRegistrationMessage || null },
+      {
+        onSuccess: () => toast.success("Formulário atualizado"),
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  }
+
+  if (isLoading) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Descrição e mensagem</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="form-description">Descrição</Label>
+          <Textarea
+            id="form-description"
+            rows={3}
+            disabled={readonly}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="form-post-message">Mensagem pós-inscrição</Label>
+          <Textarea
+            id="form-post-message"
+            rows={3}
+            disabled={readonly}
+            placeholder="Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
+            value={postRegistrationMessage}
+            onChange={(e) => setPostRegistrationMessage(e.target.value)}
+          />
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={readonly || !dirty || update.isPending}
+        >
+          {update.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 function FormBuilderSection({
   eventId,
   kind,
@@ -221,14 +300,35 @@ function FormBuilderSection({
   const { data: fields, isLoading } = useFormFields(eventId, kind);
   const reorder = useReorderFormFields(eventId);
   const deleteField = useDeleteFormField(eventId);
+  const createField = useCreateFormField(eventId);
 
   const [localFields, setLocalFields] = useState<FormField[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FormField | null>(null);
+  const seededPhone = useRef(false);
 
   useEffect(() => {
     if (fields) setLocalFields([...fields].sort((a, b) => a.order - b.order));
   }, [fields]);
+
+  useEffect(() => {
+    if (
+      kind === "post_event" &&
+      fields &&
+      fields.length === 0 &&
+      !seededPhone.current &&
+      !readonly
+    ) {
+      seededPhone.current = true;
+      createField.mutate({
+        label: "Telefone",
+        type: "phone",
+        kind: "post_event",
+        required: true,
+        order: 0,
+      });
+    }
+  }, [kind, fields, readonly, createField]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -288,6 +388,8 @@ function FormBuilderSection({
             leitura.
           </p>
         )}
+
+        <FormMetaEditor eventId={eventId} kind={kind} readonly={readonly} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -355,7 +457,9 @@ function FormBuilderSection({
       </div>
 
       <div className="space-y-4">
-        {isRegistration && <PipedriveToggle eventId={eventId} />}
+        {(isRegistration || kind === "post_event") && (
+          <PipedriveToggle eventId={eventId} />
+        )}
         <FormPreview fields={localFields} submitLabel={submitLabel} />
       </div>
     </div>

@@ -9,6 +9,7 @@ import {
   useCreateAutomationGlobal,
   useUpdateAutomationGlobal,
 } from "@/lib/api/global-messaging";
+import { buildCron, parseCron, type CronFreq } from "@/lib/utils/automation-cron";
 import type { Automation, AutomationTrigger } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,23 @@ import {
 } from "@/components/ui/select";
 
 const MAX_DELAY_MINUTES = 2147483647;
+const RECURRING_TIMEZONE = "America/Sao_Paulo";
+
+const FREQ_OPTIONS: { value: CronFreq; label: string }[] = [
+  { value: "DAILY", label: "Diário" },
+  { value: "WEEKLY", label: "Semanal" },
+  { value: "MONTHLY", label: "Mensal" },
+];
+
+const DOW_OPTIONS = [
+  { value: 0, label: "Domingo" },
+  { value: 1, label: "Segunda" },
+  { value: 2, label: "Terça" },
+  { value: 3, label: "Quarta" },
+  { value: 4, label: "Quinta" },
+  { value: 5, label: "Sexta" },
+  { value: 6, label: "Sábado" },
+];
 
 export function EventAutomationDialog({
   eventId,
@@ -49,6 +67,10 @@ export function EventAutomationDialog({
   const [trigger, setTrigger] = useState<AutomationTrigger>("on_registration");
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
+  const [cronFreq, setCronFreq] = useState<CronFreq>("WEEKLY");
+  const [cronTime, setCronTime] = useState("09:00");
+  const [cronDayOfWeek, setCronDayOfWeek] = useState(1);
+  const [cronDayOfMonth, setCronDayOfMonth] = useState(1);
 
   const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
   const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
@@ -72,12 +94,19 @@ export function EventAutomationDialog({
         automation?.delayMinutes != null ? String(automation.delayMinutes) : "",
       );
       setActive(automation?.active ?? true);
+
+      const parsed = automation?.cron ? parseCron(automation.cron) : null;
+      setCronFreq(parsed?.freq ?? "WEEKLY");
+      setCronTime(parsed?.time ?? "09:00");
+      setCronDayOfWeek(parsed?.dayOfWeek ?? 1);
+      setCronDayOfMonth(parsed?.dayOfMonth ?? 1);
     }
   }, [open, automation]);
 
   const isPending = create.isPending || update.isPending;
   const isEdit = Boolean(automation);
   const supportsDelay = DELAYED_TRIGGERS.includes(trigger);
+  const isRecurring = trigger === "recurring";
 
   function handleSave() {
     if (!templateId) return toast.error("Selecione o template");
@@ -88,6 +117,15 @@ export function EventAutomationDialog({
       templateId,
       trigger,
       delayMinutes: supportsDelay && delayMinutes ? Number(delayMinutes) : undefined,
+      cron: isRecurring
+        ? buildCron({
+            freq: cronFreq,
+            time: cronTime,
+            dayOfWeek: cronDayOfWeek,
+            dayOfMonth: cronDayOfMonth,
+          })
+        : undefined,
+      timezone: isRecurring ? RECURRING_TIMEZONE : undefined,
       active,
     };
     const onDone = {
@@ -155,6 +193,79 @@ export function EventAutomationDialog({
                 value={delayMinutes}
                 onChange={(e) => setDelayMinutes(e.target.value)}
               />
+            </div>
+          )}
+
+          {isRecurring && (
+            <div className="space-y-4 rounded-xl border p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Frequência</Label>
+                  <Select
+                    value={cronFreq}
+                    onValueChange={(v) => setCronFreq(v as CronFreq)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {FREQ_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="eauto-cron-time">Hora</Label>
+                  <Input
+                    id="eauto-cron-time"
+                    type="time"
+                    value={cronTime}
+                    onChange={(e) => setCronTime(e.target.value)}
+                  />
+                </div>
+
+                {cronFreq === "WEEKLY" && (
+                  <div className="space-y-2">
+                    <Label>Dia da semana</Label>
+                    <Select
+                      value={String(cronDayOfWeek)}
+                      onValueChange={(v) => setCronDayOfWeek(Number(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DOW_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={String(opt.value)}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {cronFreq === "MONTHLY" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="eauto-cron-dom">Dia do mês</Label>
+                    <Input
+                      id="eauto-cron-dom"
+                      type="number"
+                      min={1}
+                      max={31}
+                      value={cronDayOfMonth}
+                      onChange={(e) => setCronDayOfMonth(Number(e.target.value))}
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Fuso horário: America/Sao_Paulo.
+              </p>
             </div>
           )}
 

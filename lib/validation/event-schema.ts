@@ -3,7 +3,6 @@ import { z } from "zod";
 export const eventSchema = z
   .object({
     title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
-    description: z.string().optional(),
     location: z.string().optional(),
     capacity: z
       .string()
@@ -21,7 +20,6 @@ export const eventSchema = z
       .optional()
       .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 1), "Intervalo mínimo: 1"),
     recurrenceUntil: z.string().optional(),
-    postRegistrationMessage: z.string().optional(),
   })
   .refine(
     (v) => !v.eventDate || !v.endDate || new Date(v.endDate) > new Date(v.eventDate),
@@ -42,7 +40,6 @@ export function toEventInput(values: EventFormValues) {
   const hasRecurrence = Boolean(values.recurrenceFreq);
   return {
     title: values.title,
-    description: values.description || undefined,
     location: values.location || undefined,
     capacity: values.capacity ? Number(values.capacity) : undefined,
     dressCode: values.dressCode || undefined,
@@ -59,6 +56,5 @@ export function toEventInput(values: EventFormValues) {
       hasRecurrence && values.recurrenceUntil
         ? new Date(values.recurrenceUntil).toISOString()
         : null,
-    postRegistrationMessage: values.postRegistrationMessage || undefined,
   };
 }

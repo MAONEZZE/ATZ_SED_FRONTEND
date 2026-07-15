@@ -3,17 +3,23 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Eye, Loader2, Search, Users } from "lucide-react";
-import { exportRegistrationsCsv, useRegistrations } from "@/lib/api/registrations";
+import { Download, Eye, Loader2, Search, Upload, Users } from "lucide-react";
+import {
+  exportRegistrationsCsv,
+  useImportRegistrations,
+  useRegistrations,
+} from "@/lib/api/registrations";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { formatDate } from "@/lib/utils/format-date";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
+import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
 import type { FunnelStatus, Registration } from "@/lib/api/types";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { StatusSelect } from "@/components/attendees/status-select";
 import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
 import { FormResponsesTab } from "@/components/attendees/form-responses-tab";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { CsvImportModal } from "@/components/common/csv-import-modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +55,29 @@ export default function AttendeesPage() {
   const [selected, setSelected] = useState<Registration | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [csvModalOpen, setCsvModalOpen] = useState(false);
+  const importRegistrations = useImportRegistrations(eventId);
+
+  function handleImportFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const { recipients } = parseRecipientsCsv(reader.result as string);
+      if (recipients.length === 0) {
+        toast.error("Nenhum inscrito válido no CSV (verifique colunas Nome, Telefone, Email).");
+        return;
+      }
+      importRegistrations.mutate(
+        recipients.map((r) => ({ nome: r.name, telefone: r.phone, email: r.email })),
+        {
+          onSuccess: (result) =>
+            toast.success(`${result.created} criado(s), ${result.skipped} ignorado(s)`),
+          onError: (e) => toast.error(e.message),
+        },
+      );
+    };
+    reader.onerror = () => toast.error("Falha ao ler o CSV");
+    reader.readAsText(file);
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -143,6 +172,10 @@ export default function AttendeesPage() {
             ))}
           </SelectContent>
         </Select>
+        <Button variant="outline" onClick={() => setCsvModalOpen(true)}>
+          <Upload className="mr-2 h-4 w-4" />
+          Importar CSV
+        </Button>
         <Button variant="outline" onClick={handleExport} disabled={exporting}>
           {exporting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -267,6 +300,12 @@ export default function AttendeesPage() {
       />
         </>
       )}
+
+      <CsvImportModal
+        open={csvModalOpen}
+        onOpenChange={setCsvModalOpen}
+        onFile={handleImportFile}
+      />
     </div>
   );
 }

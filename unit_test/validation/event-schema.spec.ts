@@ -42,13 +42,10 @@ describe("toEventInput — campos novos", () => {
       title: "Meu evento",
       eventDate: "2026-07-01T19:00",
       endDate: "2026-07-01T22:00",
-      postRegistrationMessage: "Obrigado!",
     });
     expect(input.endDate).toBe(new Date("2026-07-01T22:00").toISOString());
-    expect(input.postRegistrationMessage).toBe("Obrigado!");
 
     const empty = toEventInput({ title: "Meu evento" });
     expect(empty.endDate).toBeUndefined();
-    expect(empty.postRegistrationMessage).toBeUndefined();
   });
 });

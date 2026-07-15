@@ -98,7 +98,7 @@ export async function getPublicNpsFields(slug: string): Promise<PublicFormField[
 
 export async function submitPublicNps(
   slug: string,
-  payload: { identifier: string; answers: Record<string, unknown> },
+  payload: { answers: Record<string, unknown> },
 ): Promise<void> {
   const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/responses`, {
     method: "POST",
@@ -106,12 +106,6 @@ export async function submitPublicNps(
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    if (res.status === 404) {
-      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
-      throw new Error(
-        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
-      );
-    }
     let message = "Falha ao enviar avaliação";
     try {
       const body = (await res.json()) as { message?: string | string[] };

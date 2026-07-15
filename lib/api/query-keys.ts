@@ -6,6 +6,7 @@ export const queryKeys = {
     kind
       ? (["events", eventId, "form-fields", kind] as const)
       : (["events", eventId, "form-fields"] as const),
+  form: (eventId: string, kind: string) => ["events", eventId, "forms", kind] as const,
   collaborators: (eventId: string) => ["events", eventId, "collaborators"] as const,
   registrations: (
     eventId: string,

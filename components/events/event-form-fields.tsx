@@ -3,7 +3,6 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import {
@@ -50,16 +49,6 @@ export function EventFormFields({
         {errors.title && (
           <p className="text-sm text-destructive">{errors.title.message}</p>
         )}
-      </div>
-
-      <div className="space-y-2 sm:col-span-2">
-        <Label htmlFor="description">Descrição</Label>
-        <Textarea
-          id="description"
-          rows={4}
-          disabled={disabled}
-          {...register("description")}
-        />
       </div>
 
       <div className="space-y-2">

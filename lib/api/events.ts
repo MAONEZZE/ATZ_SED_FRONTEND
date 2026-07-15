@@ -12,7 +12,6 @@ import type {
 
 export interface EventInput {
   title: string;
-  description?: string;
   location?: string;
   capacity?: number;
   dressCode?: string;
@@ -22,7 +21,6 @@ export interface EventInput {
   recurrenceFreq?: RecurrenceFreq | null;
   recurrenceInterval?: number | null;
   recurrenceUntil?: string | null;
-  postRegistrationMessage?: string;
   sendToPipedrive?: boolean;
 }
 

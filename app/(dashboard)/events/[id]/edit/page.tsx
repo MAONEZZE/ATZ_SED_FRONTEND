@@ -19,7 +19,6 @@ import { CancelEventDialog } from "@/components/events/cancel-event-dialog";
 import { CoverUploader } from "@/components/events/cover-uploader";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import type { EventObject } from "@/lib/api/types";
 
 function utcIsoToLocalInput(iso: string): string {
@@ -30,7 +29,6 @@ function utcIsoToLocalInput(iso: string): string {
 function toFormValues(event: EventObject): EventFormValues {
   return {
     title: event.title,
-    description: event.description ?? "",
     location: event.location ?? "",
     capacity: event.capacity != null ? String(event.capacity) : "",
     dressCode: event.dressCode ?? "",
@@ -43,7 +41,6 @@ function toFormValues(event: EventObject): EventFormValues {
     recurrenceUntil: event.recurrenceUntil
       ? utcIsoToLocalInput(event.recurrenceUntil)
       : "",
-    postRegistrationMessage: event.postRegistrationMessage ?? "",
   };
 }
 
@@ -103,22 +100,6 @@ export default function EditEventPage() {
         )}
 
         <EventFormFields form={form} disabled={readonly} />
-
-        <div className="space-y-3 rounded-xl border p-4">
-          <div>
-            <h3 className="font-semibold">Mensagem pós-inscrição</h3>
-            <p className="text-sm text-muted-foreground">
-              Exibida ao inscrito logo após enviar o formulário.
-            </p>
-          </div>
-          <Textarea
-            id="postRegistrationMessage"
-            rows={4}
-            disabled={readonly}
-            placeholder="Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
-            {...form.register("postRegistrationMessage")}
-          />
-        </div>
 
         {!readonly && (
           <div className="flex flex-wrap items-center gap-3">

@@ -30,7 +30,8 @@ export type AutomationTrigger =
   | "on_rejection"
   | "after_approval"
   | "before_event"
-  | "after_event";
+  | "after_event"
+  | "recurring";
 
 export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
@@ -40,7 +41,6 @@ export interface EventObject {
   title: string;
   slug: string;
   status: EventStatus;
-  description: string | null;
   coverUrl: string | null;
   location: string | null;
   capacity: number | null;
@@ -51,7 +51,6 @@ export interface EventObject {
   recurrenceFreq: RecurrenceFreq | null;
   recurrenceInterval: number | null;
   recurrenceUntil: string | null;
-  postRegistrationMessage: string | null;
   evolutionInstance: string | null;
   sendToPipedrive: boolean;
   createdAt: string;
@@ -60,15 +59,24 @@ export interface EventObject {
 
 export interface FormField {
   id: string;
-  eventId: string;
+  formId: string;
   label: string;
   type: FieldType;
-  kind: FormFieldKind;
   required: boolean;
   options: unknown | null;
   order: number;
   isFixed: boolean;
   createdAt: string;
+}
+
+export interface Form {
+  id: string;
+  eventId: string;
+  kind: FormFieldKind;
+  description: string | null;
+  postRegistrationMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Collaborator {
@@ -151,6 +159,8 @@ export interface Automation {
   templateId: string;
   trigger: AutomationTrigger;
   delayMinutes: number | null;
+  cron: string | null;
+  timezone: string | null;
   active: boolean;
   createdAt: string;
   template: {
