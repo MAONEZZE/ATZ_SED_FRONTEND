@@ -173,14 +173,14 @@ export default function AttendeesPage() {
           </SelectContent>
         </Select>
         <Button variant="outline" onClick={() => setCsvModalOpen(true)}>
-          <Upload className="mr-2 h-4 w-4" />
+          <Download className="mr-2 h-4 w-4" />
           Importar CSV
         </Button>
         <Button variant="outline" onClick={handleExport} disabled={exporting}>
           {exporting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Download className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" />
           )}
           Exportar CSV
         </Button>

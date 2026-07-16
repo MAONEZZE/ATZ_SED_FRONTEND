@@ -212,10 +212,12 @@ function PipedriveToggle({ eventId }: { eventId: string }) {
 function FormMetaEditor({
   eventId,
   kind,
+  slug,
   readonly,
 }: {
   eventId: string;
   kind: FormFieldKind;
+  slug?: string;
   readonly: boolean;
 }) {
   const { data: form, isLoading } = useFormMeta(eventId, kind);
@@ -223,6 +225,7 @@ function FormMetaEditor({
 
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
+  const [activeField, setActiveField] = useState<"description" | "post">("description");
 
   useEffect(() => {
     setDescription(form?.description ?? "");
@@ -233,11 +236,17 @@ function FormMetaEditor({
     description !== (form?.description ?? "") ||
     postRegistrationMessage !== (form?.postRegistrationMessage ?? "");
 
+  const value = activeField === "description" ? description : postRegistrationMessage;
+  const setValue = activeField === "description" ? setDescription : setPostRegistrationMessage;
+
   function handleSave() {
     update.mutate(
       { description: description || null, postRegistrationMessage: postRegistrationMessage || null },
       {
-        onSuccess: () => toast.success("Formulário atualizado"),
+        onSuccess: () => {
+          toast.success("Formulário atualizado");
+          if (slug) void revalidatePublicEvent(slug);
+        },
         onError: (e) => toast.error(e.message),
       },
     );
@@ -248,38 +257,52 @@ function FormMetaEditor({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Descrição e mensagem</CardTitle>
+        <CardTitle className="text-base">Mensagem</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="form-description">Descrição</Label>
+        <div className="rounded-md border">
+          <div className="flex gap-1 border-b p-1">
+            <Button
+              type="button"
+              size="sm"
+              variant={activeField === "description" ? "secondary" : "ghost"}
+              onClick={() => setActiveField("description")}
+            >
+              Descrição
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={activeField === "post" ? "secondary" : "ghost"}
+              onClick={() => setActiveField("post")}
+            >
+              Pós-inscrição
+            </Button>
+          </div>
           <Textarea
-            id="form-description"
-            rows={3}
+            id="form-message"
+            rows={4}
             disabled={readonly}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            placeholder={
+              activeField === "post"
+                ? "Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
+                : undefined
+            }
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="rounded-t-none border-0 focus-visible:ring-0"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="form-post-message">Mensagem pós-inscrição</Label>
-          <Textarea
-            id="form-post-message"
-            rows={3}
-            disabled={readonly}
-            placeholder="Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
-            value={postRegistrationMessage}
-            onChange={(e) => setPostRegistrationMessage(e.target.value)}
-          />
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={readonly || !dirty || update.isPending}
+          >
+            {update.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Salvar
+          </Button>
         </div>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={readonly || !dirty || update.isPending}
-        >
-          {update.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Salvar
-        </Button>
       </CardContent>
     </Card>
   );
@@ -389,7 +412,7 @@ function FormBuilderSection({
           </p>
         )}
 
-        <FormMetaEditor eventId={eventId} kind={kind} readonly={readonly} />
+        <FormMetaEditor eventId={eventId} kind={kind} slug={slug} readonly={readonly} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
