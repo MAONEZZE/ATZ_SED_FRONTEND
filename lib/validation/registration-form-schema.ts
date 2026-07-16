@@ -56,8 +56,12 @@ export function buildSchema(fields: PublicFormField[]) {
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
         break;
       case "linkedin":
-      case "instagram":
         schema = z.string().url("URL inválida");
+        break;
+      case "instagram":
+        schema = z
+          .string()
+          .regex(/^@?[a-zA-Z0-9_.]+$/, "Usuário do Instagram inválido");
         break;
       default:
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();

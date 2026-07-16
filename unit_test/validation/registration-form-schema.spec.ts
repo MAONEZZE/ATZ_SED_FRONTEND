@@ -56,6 +56,33 @@ describe("buildSchema — select", () => {
   });
 });
 
+function instagramField(overrides: Partial<PublicFormField> = {}): PublicFormField {
+  return {
+    id: "f3",
+    label: "Instagram",
+    type: "instagram",
+    required: true,
+    options: [],
+    order: 0,
+    ...overrides,
+  };
+}
+
+describe("buildSchema — instagram", () => {
+  it("aceita @usuario sem exigir URL", () => {
+    const schema = buildSchema([instagramField()]);
+    expect(schema.safeParse({ Instagram: "@ruan.sanchez" }).success).toBe(true);
+  });
+
+  it("rejeita valor com espaços ou caracteres inválidos", () => {
+    const schema = buildSchema([instagramField()]);
+    expect(schema.safeParse({ Instagram: "https://instagram.com/x" }).success).toBe(
+      false,
+    );
+    expect(schema.safeParse({ Instagram: "usuario invalido" }).success).toBe(false);
+  });
+});
+
 describe("buildSchema — multiselect", () => {
   it("rejeita quando algum valor selecionado não está nas opções", () => {
     const schema = buildSchema([multiselectField()]);

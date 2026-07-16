@@ -138,8 +138,8 @@ export function FormFieldsRenderer({
             {field.type === "instagram" && (
               <Input
                 id={key}
-                type="url"
-                placeholder="https://www.instagram.com/..."
+                type="text"
+                placeholder="@seu_usuario"
                 disabled={disabled}
                 {...form.register(key)}
               />

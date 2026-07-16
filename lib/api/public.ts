@@ -120,11 +120,5 @@ export async function submitPublicNps(
 export function answerKeyForField(
   field: Pick<PublicFormField, "label" | "type">,
 ): string {
-  const normalized = field.label.trim().toLowerCase();
-  if (field.type === "email" || normalized === "e-mail" || normalized === "email") {
-    return "email";
-  }
-  if (field.type === "phone" || normalized === "telefone") return "telefone";
-  if (normalized === "nome" || normalized === "name") return "nome";
   return field.label;
 }
