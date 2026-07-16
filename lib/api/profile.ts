@@ -7,7 +7,6 @@ import type { Profile, WhatsAppGroup } from "@/lib/api/types";
 
 export interface ProfileUpdateInput {
   name?: string;
-  evolutionInstance?: string;
 }
 
 export function useProfile() {
@@ -38,15 +37,10 @@ export function useUploadProfilePhoto() {
 }
 
 export function useWhatsAppGroups() {
-  const { data: profile } = useProfile();
-  const instance = profile?.evolutionInstance;
   return useQuery({
-    queryKey: ["whatsapp-groups", instance ?? ""],
-    queryFn: () =>
-      api.get<WhatsAppGroup[]>(
-        `/whatsapp/groups?instancia=${encodeURIComponent(instance!)}`,
-      ),
-    enabled: Boolean(instance),
+    queryKey: ["whatsapp-groups"],
+    queryFn: () => api.get<WhatsAppGroup[]>("/whatsapp/groups"),
+    enabled: false,
   });
 }
 

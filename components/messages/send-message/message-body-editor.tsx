@@ -63,7 +63,6 @@ export function MessageBodyEditor({
     <div className="space-y-2">
       <Label htmlFor="send-body">Mensagem *</Label>
       <div className="overflow-hidden rounded-md border">
-        {/* Toolbar */}
         <div className="flex items-center gap-1 border-b bg-muted/40 px-1.5 py-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-// img2.jpg (12 KB) removed — too small for full-screen background
 const BACKGROUNDS = [
   "/auth_background/img1.jpg",
   "/auth_background/img3.jpg",

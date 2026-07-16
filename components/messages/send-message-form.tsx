@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
+import { useEvolutionInstances } from "@/lib/api/evolution-instances";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
@@ -36,6 +37,7 @@ import { ManualRecipientList } from "@/components/messages/send-message/manual-r
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
   NO_EVENT,
+  NO_INSTANCE,
   NO_TEMPLATE,
   STEP_LABEL_CLASS,
   TONE_OPTIONS,
@@ -68,6 +70,10 @@ export function SendMessageForm({
   const events = eventsResponse?.data;
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
+
+  const { data: evolutionInstances } = useEvolutionInstances();
+  const [instanceId, setInstanceId] = useState("");
+  const selectedInstance = evolutionInstances?.find((i) => i.id === instanceId);
 
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
@@ -190,11 +196,12 @@ export function SendMessageForm({
     body,
     registrationIds: Array.from(selected),
     manualRecipients,
+    instanceId,
     attachments,
   };
   const hasEventId = Boolean(effectiveEventId);
   const count = recipientCount(draft);
-  const validationError = validateSendMessage(draft);
+  const validationError = validateSendMessage(draft, { hasEventId });
   const bodyEmpty = !body.trim();
 
   const selectedEvent = events?.find((e) => e.id === effectiveEventId);
@@ -343,9 +350,7 @@ export function SendMessageForm({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-      {/* Coluna principal */}
       <div className="space-y-4">
-        {/* 1 · Configuração */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
@@ -357,6 +362,7 @@ export function SendMessageForm({
                 <Select
                   value={localEventId || NO_EVENT}
                   onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
+                  disabled={Boolean(instanceId)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o evento (opcional)" />
@@ -372,6 +378,27 @@ export function SendMessageForm({
                 </Select>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label>Instância</Label>
+              <Select
+                value={instanceId || NO_INSTANCE}
+                onValueChange={(v) => setInstanceId(v === NO_INSTANCE ? "" : v)}
+                disabled={Boolean(effectiveEventId)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a instância (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
+                  {evolutionInstances?.map((instance) => (
+                    <SelectItem key={instance.id} value={instance.id}>
+                      {instance.nickname}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -412,7 +439,6 @@ export function SendMessageForm({
           </CardContent>
         </Card>
 
-        {/* 2 · Conteúdo */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
@@ -458,7 +484,6 @@ export function SendMessageForm({
           </CardContent>
         </Card>
 
-        {/* 3 · Destinatários */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>3 · Destinatários</CardTitle>
@@ -475,9 +500,7 @@ export function SendMessageForm({
                   Limpar
                 </Button>
               )}
-              {channel === "whatsapp" && (
-                <WhatsAppGroupsPopover evolutionInstance={profile?.evolutionInstance} />
-              )}
+              {channel === "whatsapp" && <WhatsAppGroupsPopover />}
               <Button
                 type="button"
                 variant="outline"
@@ -531,10 +554,10 @@ export function SendMessageForm({
         </Card>
       </div>
 
-      {/* Rail direito — Resumo do envio */}
       <SendSummaryRail
         channel={channel}
         eventTitle={selectedEvent?.title}
+        instanceLabel={selectedInstance?.nickname}
         count={count}
         attachmentCount={attachments.length}
         attachmentsBytes={attachmentsBytes}

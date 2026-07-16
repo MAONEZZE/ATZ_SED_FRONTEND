@@ -22,11 +22,10 @@ export interface EventInput {
   recurrenceInterval?: number | null;
   recurrenceUntil?: string | null;
   sendToPipedrive?: boolean;
+  evolutionInstanceId?: string;
 }
 
-export interface EventUpdateInput extends Partial<EventInput> {
-  evolutionInstance?: string;
-}
+export type EventUpdateInput = Partial<EventInput>;
 
 export function useEvents(page = 1, limit = 20) {
   return useQuery({

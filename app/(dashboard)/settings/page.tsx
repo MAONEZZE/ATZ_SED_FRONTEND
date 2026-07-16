@@ -25,7 +25,6 @@ import {
 
 interface SettingsForm {
   name: string;
-  evolutionInstance: string;
 }
 
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -135,15 +134,12 @@ export default function SettingsPage() {
   const updateProfile = useUpdateProfile();
 
   const form = useForm<SettingsForm>({
-    defaultValues: { name: "", evolutionInstance: "" },
+    defaultValues: { name: "" },
   });
 
   useEffect(() => {
     if (profile) {
-      form.reset({
-        name: profile.name ?? "",
-        evolutionInstance: profile.evolutionInstance ?? "",
-      });
+      form.reset({ name: profile.name ?? "" });
     }
   }, [profile, form]);
 
@@ -151,10 +147,7 @@ export default function SettingsPage() {
 
   function onSubmit(values: SettingsForm) {
     updateProfile.mutate(
-      {
-        name: values.name || undefined,
-        evolutionInstance: values.evolutionInstance || undefined,
-      },
+      { name: values.name || undefined },
       {
         onSuccess: () => toast.success("Configurações salvas!"),
         onError: (e) => toast.error(e.message),
@@ -185,25 +178,6 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" value={profile.email} disabled readOnly />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>WhatsApp (Evolution API)</CardTitle>
-            <CardDescription>
-              Instância usada para enviar mensagens de WhatsApp dos seus eventos.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="evolutionInstance">Instância</Label>
-              <Input
-                id="evolutionInstance"
-                autoComplete="off"
-                {...form.register("evolutionInstance")}
-              />
             </div>
           </CardContent>
         </Card>

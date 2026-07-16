@@ -11,6 +11,7 @@ import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
 import { renderRichText } from "@/components/ui/rich-text";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
+import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
 
 export function RegistrationForm({
   slug,
@@ -22,7 +23,7 @@ export function RegistrationForm({
   successMessage?: string;
 }) {
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState(() => isSubmitted(`reg_submitted_${slug}`));
 
   const visibleFields = useMemo(
     () => [...fields].sort((a, b) => a.order - b.order),
@@ -63,6 +64,7 @@ export function RegistrationForm({
     try {
       await createPublicRegistration(slug, values);
       setSuccess(true);
+      markSubmitted(`reg_submitted_${slug}`);
       try {
         localStorage.removeItem(`reg_draft_${slug}`);
       } catch {}

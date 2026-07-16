@@ -2,6 +2,7 @@
 
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
+import { useEvolutionInstances } from "@/lib/api/evolution-instances";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -28,6 +29,7 @@ const INTERVAL_UNIT: Record<string, string> = {
 };
 
 const NO_RECURRENCE = "none";
+const NO_INSTANCE = "none";
 
 export function EventFormFields({
   form,
@@ -40,6 +42,7 @@ export function EventFormFields({
   const errors = formState.errors;
   const freq = form.watch("recurrenceFreq");
   const isRecurring = Boolean(freq);
+  const { data: evolutionInstances } = useEvolutionInstances();
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -124,6 +127,40 @@ export function EventFormFields({
         {errors.groupLink && (
           <p className="text-sm text-destructive">{errors.groupLink.message}</p>
         )}
+      </div>
+
+      <div className="space-y-2 sm:col-span-2">
+        <Label htmlFor="evolutionInstanceId">Instância</Label>
+        <Controller
+          control={form.control}
+          name="evolutionInstanceId"
+          render={({ field }) => {
+            const [selectedInstance] = evolutionInstances?.filter(
+              (instance) => instance.id === field.value,
+            ) ?? [];
+            return (
+              <Select
+                disabled={disabled}
+                value={field.value || NO_INSTANCE}
+                onValueChange={(v) => field.onChange(v === NO_INSTANCE ? "" : v)}
+              >
+                <SelectTrigger id="evolutionInstanceId">
+                  <SelectValue>
+                    {field.value ? selectedInstance?.nickname : "Sem instância"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
+                  {evolutionInstances?.map((instance) => (
+                    <SelectItem key={instance.id} value={instance.id}>
+                      {instance.nickname}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          }}
+        />
       </div>
 
       <div className="space-y-4 rounded-xl border p-4 sm:col-span-2">
