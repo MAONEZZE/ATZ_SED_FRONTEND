@@ -31,6 +31,7 @@ export const queryKeys = {
       ? (["events", eventId, "message-logs", params] as const)
       : (["events", eventId, "message-logs"] as const),
   profile: ["profile"] as const,
+  evolutionInstances: ["evolution-instances"] as const,
 
   allTemplates: (params?: {
     page?: number;

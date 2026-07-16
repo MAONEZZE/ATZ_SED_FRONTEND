@@ -11,18 +11,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
  * Popover de grupos WhatsApp (canal WhatsApp). Auto-contido: busca os grupos da
  * instância Evolution e copia o ID do grupo para a área de transferência.
  */
-export function WhatsAppGroupsPopover({
-  evolutionInstance,
-}: {
-  evolutionInstance?: string | null;
-}) {
+export function WhatsAppGroupsPopover() {
   const [open, setOpen] = useState(false);
   const { data: groups, isLoading, isError } = useWhatsAppGroups();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="h-7 gap-1.5 text-xs">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1.5 text-xs"
+          disabled
+        >
           <Users className="h-3.5 w-3.5" />
           Grupos
         </Button>
@@ -30,15 +32,8 @@ export function WhatsAppGroupsPopover({
       <PopoverContent align="end" className="w-80 p-0">
         <div className="border-b px-3 py-2">
           <p className="text-sm font-medium">Grupos WhatsApp</p>
-          {evolutionInstance && (
-            <p className="text-xs text-muted-foreground">Instância: {evolutionInstance}</p>
-          )}
         </div>
-        {!evolutionInstance ? (
-          <p className="px-3 py-4 text-sm text-muted-foreground">
-            Configure sua instância Evolution no perfil para ver os grupos.
-          </p>
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           </div>

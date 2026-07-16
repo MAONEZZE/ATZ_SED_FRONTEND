@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -31,13 +31,19 @@ type LoginForm = z.infer<typeof loginSchema>;
 function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn } = useAuth();
+  const { session, isLoading, signIn } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  useEffect(() => {
+    if (isLoading || !session) return;
+    const next = searchParams.get("next");
+    router.replace(next && next.startsWith("/") ? next : "/events");
+  }, [isLoading, session, searchParams, router]);
 
   async function onSubmit(values: LoginForm) {
     setSubmitting(true);

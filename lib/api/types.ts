@@ -51,7 +51,7 @@ export interface EventObject {
   recurrenceFreq: RecurrenceFreq | null;
   recurrenceInterval: number | null;
   recurrenceUntil: string | null;
-  evolutionInstance: string | null;
+  evolutionInstanceId: string | null;
   sendToPipedrive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -189,9 +189,13 @@ export interface Profile {
   name: string;
   email: string;
   photoUrl: string | null;
-  evolutionInstance: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface EvolutionInstance {
+  id: string;
+  nickname: string;
 }
 
 export interface PublicEvent {
@@ -235,6 +239,7 @@ export interface MessageAttachment {
 
 export interface SendMessageInput {
   eventId?: string;
+  instanceId?: string;
   channel: MessageChannel;
   templateId?: string;
   subject?: string;

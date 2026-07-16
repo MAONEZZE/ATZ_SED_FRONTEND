@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -16,6 +16,7 @@ import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { EventCoverHero } from "@/components/forms/event-cover-hero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDraft, isSubmitted, markSubmitted, removeDraft, setDraft } from "@/lib/utils/local-draft";
 
 export default function PostEventPage() {
   const params = useParams<{ slug: string }>();
@@ -26,7 +27,7 @@ export default function PostEventPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(() => isSubmitted("posevent_submitted"));
 
   const form = useForm<Record<string, unknown>>({ defaultValues: {} });
 
@@ -38,10 +39,23 @@ export default function PostEventPage() {
           setLoadError("Formulário pós-evento não disponível para este evento.");
         }
         setFields(f);
+        const draft = getDraft<Record<string, unknown>>("posevent_draft");
+        if (draft) form.reset(draft);
       })
       .catch((e: Error) => setLoadError(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const hasMounted = useRef(false);
+  const watchedValues = form.watch();
+
+  useEffect(() => {
+    if (!hasMounted.current) {
+      hasMounted.current = true;
+      return;
+    }
+    setDraft("posevent_draft", watchedValues);
+  }, [watchedValues]);
 
   async function onSubmit(values: Record<string, unknown>) {
     const identifierField = fields.find((f) => f.type === "phone" || f.type === "email");
@@ -66,6 +80,8 @@ export default function PostEventPage() {
     try {
       await submitPublicPostEvent(slug, { identifier, answers });
       setDone(true);
+      markSubmitted("posevent_submitted");
+      removeDraft("posevent_draft");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao enviar respostas");
     } finally {

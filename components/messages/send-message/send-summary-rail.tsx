@@ -20,6 +20,7 @@ function SummaryRow({ label, children }: { label: string; children: React.ReactN
 export function SendSummaryRail({
   channel,
   eventTitle,
+  instanceLabel,
   count,
   attachmentCount,
   attachmentsBytes,
@@ -31,6 +32,7 @@ export function SendSummaryRail({
 }: {
   channel: MessageChannel;
   eventTitle?: string;
+  instanceLabel?: string;
   count: number;
   attachmentCount: number;
   attachmentsBytes: number;
@@ -51,6 +53,7 @@ export function SendSummaryRail({
             {channel === "email" ? "E-mail" : "WhatsApp"}
           </SummaryRow>
           <SummaryRow label="Evento">{eventTitle ?? "—"}</SummaryRow>
+          <SummaryRow label="Instância">{instanceLabel ?? "—"}</SummaryRow>
           <SummaryRow label="Destinatários">
             <span className="font-medium">{count}</span>
           </SummaryRow>

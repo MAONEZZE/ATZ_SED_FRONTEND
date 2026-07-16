@@ -7,6 +7,9 @@ export const NO_TEMPLATE = "__none__";
 /** Valor sentinela do Select de evento quando nenhum está vinculado. */
 export const NO_EVENT = "__none_event__";
 
+/** Valor sentinela do Select de instância quando nenhuma está selecionada. */
+export const NO_INSTANCE = "__none_instance__";
+
 /** Altura mínima do iframe de preview de e-mail antes do autosize. */
 export const EMAIL_PREVIEW_MIN_HEIGHT = "300px";
 

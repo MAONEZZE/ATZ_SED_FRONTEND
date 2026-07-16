@@ -41,6 +41,7 @@ function toFormValues(event: EventObject): EventFormValues {
     recurrenceUntil: event.recurrenceUntil
       ? utcIsoToLocalInput(event.recurrenceUntil)
       : "",
+    evolutionInstanceId: event.evolutionInstanceId ?? "",
   };
 }
 
