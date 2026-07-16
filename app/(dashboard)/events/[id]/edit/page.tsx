@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Rocket, Square } from "lucide-react";
 import { useEvent, useUpdateEvent, useUpdateEventStatus } from "@/lib/api/events";
+import { useEvolutionInstances } from "@/lib/api/evolution-instances";
 import {
   eventSchema,
   toEventInput,
@@ -48,6 +49,7 @@ function toFormValues(event: EventObject): EventFormValues {
 export default function EditEventPage() {
   const params = useParams<{ id: string }>();
   const { data: event, isLoading } = useEvent(params.id);
+  const { data: evolutionInstances } = useEvolutionInstances();
   const updateEvent = useUpdateEvent(params.id);
   const updateStatus = useUpdateEventStatus(params.id);
 
@@ -59,6 +61,20 @@ export default function EditEventPage() {
   useEffect(() => {
     if (event) form.reset(toFormValues(event));
   }, [event, form]);
+
+  // A instância selecionada só é aplicada depois que a lista de instâncias já
+  // carregou numa render anterior: setar junto com o carregamento da lista faz
+  // o <Select> do Radix perder o valor (corrida interna ao registrar as options).
+  const [instancesReady, setInstancesReady] = useState(false);
+  useEffect(() => {
+    if (evolutionInstances) setInstancesReady(true);
+  }, [evolutionInstances]);
+
+  useEffect(() => {
+    if (event && instancesReady) {
+      form.setValue("evolutionInstanceId", event.evolutionInstanceId ?? "");
+    }
+  }, [event, instancesReady, form]);
 
   const readonly = useMemo(
     () => event?.status === "cancelled" || event?.status === "ended",

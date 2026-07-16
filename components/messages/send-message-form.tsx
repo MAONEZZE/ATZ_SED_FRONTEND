@@ -364,6 +364,7 @@ export function SendMessageForm({
                 <Select
                   value={localEventId || NO_EVENT}
                   onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
+                  disabled={Boolean(instanceId)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o evento (opcional)" />
@@ -385,6 +386,7 @@ export function SendMessageForm({
               <Select
                 value={instanceId || NO_INSTANCE}
                 onValueChange={(v) => setInstanceId(v === NO_INSTANCE ? "" : v)}
+                disabled={Boolean(effectiveEventId)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a instância (opcional)" />

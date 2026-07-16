@@ -134,25 +134,32 @@ export function EventFormFields({
         <Controller
           control={form.control}
           name="evolutionInstanceId"
-          render={({ field }) => (
-            <Select
-              disabled={disabled}
-              value={field.value || NO_INSTANCE}
-              onValueChange={(v) => field.onChange(v === NO_INSTANCE ? "" : v)}
-            >
-              <SelectTrigger id="evolutionInstanceId">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                {evolutionInstances?.map((instance) => (
-                  <SelectItem key={instance.id} value={instance.id}>
-                    {instance.nickname}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          render={({ field }) => {
+            const [selectedInstance] = evolutionInstances?.filter(
+              (instance) => instance.id === field.value,
+            ) ?? [];
+            return (
+              <Select
+                disabled={disabled}
+                value={field.value || NO_INSTANCE}
+                onValueChange={(v) => field.onChange(v === NO_INSTANCE ? "" : v)}
+              >
+                <SelectTrigger id="evolutionInstanceId">
+                  <SelectValue>
+                    {field.value ? selectedInstance?.nickname : "Sem instância"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
+                  {evolutionInstances?.map((instance) => (
+                    <SelectItem key={instance.id} value={instance.id}>
+                      {instance.nickname}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            );
+          }}
         />
       </div>
 

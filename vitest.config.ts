@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 export default defineConfig({
+  // componentes do app usam o automatic JSX runtime do Next (sem "import React"),
+  // então o esbuild do Vite precisa injetar isso pra montar em testes
+  esbuild: { jsxInject: `import React from 'react'` },
   plugins: [react()],
   test: {
     environment: "jsdom",

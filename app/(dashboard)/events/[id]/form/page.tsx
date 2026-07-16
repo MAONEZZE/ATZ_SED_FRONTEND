@@ -260,7 +260,7 @@ function FormMetaEditor({
         <CardTitle className="text-base">Mensagem</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-md border">
           <div className="flex gap-1 border-b p-1">
             <Button
               type="button"
@@ -290,7 +290,7 @@ function FormMetaEditor({
             }
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="rounded-t-none border-0 focus-visible:ring-0"
+            className="rounded-t-none border-t-0 focus-visible:ring-offset-0"
           />
         </div>
         <div className="flex justify-end">
