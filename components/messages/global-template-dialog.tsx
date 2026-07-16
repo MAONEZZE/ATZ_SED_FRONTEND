@@ -160,7 +160,6 @@ export function GlobalTemplateDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* 1 · Configuração */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
@@ -215,7 +214,6 @@ export function GlobalTemplateDialog({
             </CardContent>
           </Card>
 
-          {/* 2 · Conteúdo */}
           <Card>
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
@@ -243,7 +241,6 @@ export function GlobalTemplateDialog({
               <div className="space-y-2">
                 <Label htmlFor="gtpl-body">Mensagem *</Label>
                 <div className="overflow-hidden rounded-md border">
-                  {/* Toolbar */}
                   <div className="flex items-center gap-1 border-b bg-muted/40 px-1.5 py-1">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

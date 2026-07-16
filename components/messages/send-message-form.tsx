@@ -350,9 +350,7 @@ export function SendMessageForm({
 
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-      {/* Coluna principal */}
       <div className="space-y-4">
-        {/* 1 · Configuração */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
@@ -441,7 +439,6 @@ export function SendMessageForm({
           </CardContent>
         </Card>
 
-        {/* 2 · Conteúdo */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>2 · Conteúdo</CardTitle>
@@ -487,7 +484,6 @@ export function SendMessageForm({
           </CardContent>
         </Card>
 
-        {/* 3 · Destinatários */}
         <Card>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle className={STEP_LABEL_CLASS}>3 · Destinatários</CardTitle>
@@ -558,7 +554,6 @@ export function SendMessageForm({
         </Card>
       </div>
 
-      {/* Rail direito — Resumo do envio */}
       <SendSummaryRail
         channel={channel}
         eventTitle={selectedEvent?.title}
