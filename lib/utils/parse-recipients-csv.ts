@@ -1,4 +1,5 @@
 import type { ManualRecipient } from "@/lib/api/types";
+import { normalizeBrPhone } from "@/lib/utils/normalize-phone";
 
 export interface ParseCsvResult {
   recipients: ManualRecipient[];
@@ -69,7 +70,8 @@ export function parseRecipientsCsv(text: string): ParseCsvResult {
     const cells = splitLine(line, delimiter);
     const name = cols.name >= 0 ? (cells[cols.name] ?? "").trim() : "";
     const email = cols.email >= 0 ? (cells[cols.email] ?? "").trim() : "";
-    const phone = cols.phone >= 0 ? (cells[cols.phone] ?? "").trim() : "";
+    const phoneRaw = cols.phone >= 0 ? (cells[cols.phone] ?? "").trim() : "";
+    const phone = phoneRaw ? normalizeBrPhone(phoneRaw) : "";
 
     if (!name) {
       skipped++;

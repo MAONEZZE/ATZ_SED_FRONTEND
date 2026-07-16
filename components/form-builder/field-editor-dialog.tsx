@@ -124,7 +124,7 @@ export function FieldEditorDialog({
 
     if (field) {
       update.mutate(
-        { id: field.id, input: { label: label.trim(), required, options } },
+        { id: field.id, input: { label: label.trim(), type, required, options } },
         onDone,
       );
     } else {
@@ -152,23 +152,21 @@ export function FieldEditorDialog({
             />
           </div>
 
-          {!field && (
-            <div className="space-y-2">
-              <Label>Tipo</Label>
-              <Select value={type} onValueChange={(v) => setType(v as FieldType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {creatableTypes.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {fieldTypeLabels[t]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div className="space-y-2">
+            <Label>Tipo</Label>
+            <Select value={type} onValueChange={(v) => setType(v as FieldType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {creatableTypes.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {fieldTypeLabels[t]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {needsOptions && (
             <div className="space-y-2">

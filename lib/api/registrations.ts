@@ -44,6 +44,31 @@ export function useRegistrations(
   });
 }
 
+export interface ImportRegistrationsInput {
+  nome: string;
+  telefone?: string;
+  email?: string;
+}
+
+export interface ImportRegistrationsResult {
+  created: number;
+  skipped: number;
+}
+
+export function useImportRegistrations(eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (registrations: ImportRegistrationsInput[]) =>
+      api.post<ImportRegistrationsResult>(`/events/${eventId}/registrations/import`, {
+        registrations,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["events", eventId, "registrations"],
+      }),
+  });
+}
+
 export function useUpdateRegistration(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({

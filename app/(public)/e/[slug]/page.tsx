@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
@@ -6,6 +5,7 @@ import { CalendarDays, MapPin, Shirt, Users } from "lucide-react";
 import { getPublicEvent, getPublicFormFields } from "@/lib/api/public";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { EventCoverHero } from "@/components/forms/event-cover-hero";
 import { RegistrationForm } from "./registration-form";
 import { renderRichText } from "@/components/ui/rich-text";
 import { FaInstagram, FaYoutube } from "react-icons/fa";
@@ -122,19 +122,7 @@ export default async function PublicEventPage({ params }: PageProps) {
   return (
     <main className="force-light flex min-h-screen flex-col bg-background text-foreground">
       <div className="flex-1">
-      {coverSrc && (
-        <div className="relative h-64 w-full sm:h-80 md:h-96">
-          <Image
-            src={coverSrc}
-            alt={event.title}
-            fill
-            className="object-cover"
-            priority
-            sizes="100vw"
-          />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/60 to-transparent" />
-        </div>
-      )}
+      <EventCoverHero coverUrl={coverSrc} title={event.title} />
 
       <div
         className={`mx-auto max-w-2xl space-y-6 px-4 pb-10 ${

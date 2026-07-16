@@ -24,6 +24,7 @@ import type {
   MessageChannel,
 } from "@/lib/api/types";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
+import { CsvImportModal } from "@/components/common/csv-import-modal";
 import { EmailLayoutEditorModal } from "@/components/messages/email-layout-editor/email-layout-editor-modal";
 import { ToneSegmentedControl } from "@/components/messages/tone-segmented-control";
 import { WhatsAppGroupsPopover } from "@/components/messages/send-message/whatsapp-groups-popover";
@@ -139,7 +140,7 @@ export function SendMessageForm({
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [sendingTest, setSendingTest] = useState(false);
 
-  const csvInputRef = useRef<HTMLInputElement>(null);
+  const [csvModalOpen, setCsvModalOpen] = useState(false);
   const attachInputRef = useRef<HTMLInputElement>(null);
 
   const appliedInitial = useRef(false);
@@ -238,9 +239,7 @@ export function SendMessageForm({
     setManualOpen(false);
   }
 
-  function importCsv(file: File | undefined) {
-    if (csvInputRef.current) csvInputRef.current.value = "";
-    if (!file) return;
+  function importCsv(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
       const { recipients, skipped } = parseRecipientsCsv(reader.result as string);
@@ -484,7 +483,7 @@ export function SendMessageForm({
                 variant="outline"
                 size="sm"
                 className="h-7 gap-1.5 text-xs"
-                onClick={() => csvInputRef.current?.click()}
+                onClick={() => setCsvModalOpen(true)}
               >
                 <Download className="h-3.5 w-3.5" />
                 Importar CSV
@@ -502,14 +501,6 @@ export function SendMessageForm({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <input
-              ref={csvInputRef}
-              type="file"
-              accept=".csv,text/csv"
-              className="hidden"
-              onChange={(e) => importCsv(e.target.files?.[0])}
-            />
-
             {channel === "whatsapp" && (
               <p
                 className={`text-sm ${count > WHATSAPP_RECIPIENT_LIMIT ? "text-destructive" : "text-muted-foreground"}`}
@@ -552,6 +543,12 @@ export function SendMessageForm({
         isSending={sendMessage.isPending}
         sendingTest={sendingTest}
         bodyEmpty={bodyEmpty}
+      />
+
+      <CsvImportModal
+        open={csvModalOpen}
+        onOpenChange={setCsvModalOpen}
+        onFile={importCsv}
       />
 
       <EmailLayoutEditorModal

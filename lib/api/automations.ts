@@ -4,6 +4,8 @@ export interface AutomationInput {
   templateId: string;
   trigger: AutomationTrigger;
   delayMinutes?: number;
+  cron?: string;
+  timezone?: string;
   active?: boolean;
 }
 
@@ -18,4 +20,5 @@ export const TRIGGER_LABELS: Record<AutomationTrigger, string> = {
   after_approval: "Depois de aprovado (com atraso)",
   before_event: "Antes do evento",
   after_event: "Depois do evento",
+  recurring: "Recorrente (data/hora fixa)",
 };

@@ -14,7 +14,7 @@ export interface FormFieldInput {
   order?: number;
 }
 
-export type FormFieldUpdateInput = Omit<Partial<FormFieldInput>, "type">;
+export type FormFieldUpdateInput = Partial<FormFieldInput>;
 
 export function useFormFields(eventId: string, kind?: FormFieldKind) {
   return useQuery({
