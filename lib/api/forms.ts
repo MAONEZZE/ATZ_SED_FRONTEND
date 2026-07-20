@@ -8,6 +8,7 @@ import type { Form, FormFieldKind } from "@/lib/api/types";
 export interface FormUpdateInput {
   description?: string | null;
   postRegistrationMessage?: string | null;
+  linkPostSubscription?: string | null;
 }
 
 export function useForm(eventId: string, kind: FormFieldKind) {

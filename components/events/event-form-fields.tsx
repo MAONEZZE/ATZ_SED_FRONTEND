@@ -165,7 +165,7 @@ export function EventFormFields({
 
       <div className="space-y-4 rounded-xl border p-4 sm:col-span-2">
         <div>
-          <h3 className="font-semibold">Recorrência</h3>
+          <h3 className="font-semibold">Recorrência - Invite e-mail</h3>
           <p className="text-sm text-muted-foreground">
             Repete o convite de calendário. Ative com o checkbox &quot;Enviar convite do
             evento&quot; ao compor a mensagem. Baseia-se no início do evento.

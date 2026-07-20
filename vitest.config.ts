@@ -10,8 +10,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     include: [
-      "unit_test/**/*.spec.{ts,tsx}",
-      "integration_test/**/*.spec.{ts,tsx}",
+      "tests/unit_test/**/*.spec.{ts,tsx}",
+      "tests/integration_test/**/*.spec.{ts,tsx}",
     ],
     env: {
       NEXT_PUBLIC_API_URL: "http://localhost:3000",

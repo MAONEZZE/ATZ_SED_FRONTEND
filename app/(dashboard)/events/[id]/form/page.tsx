@@ -41,6 +41,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -225,23 +226,40 @@ function FormMetaEditor({
 
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
-  const [activeField, setActiveField] = useState<"description" | "post">("description");
+  const [linkPostSubscription, setLinkPostSubscription] = useState("");
+  const [activeField, setActiveField] = useState<"description" | "post" | "link">("description");
 
   useEffect(() => {
     setDescription(form?.description ?? "");
     setPostRegistrationMessage(form?.postRegistrationMessage ?? "");
+    setLinkPostSubscription(form?.linkPostSubscription ?? "");
   }, [form]);
 
   const dirty =
     description !== (form?.description ?? "") ||
-    postRegistrationMessage !== (form?.postRegistrationMessage ?? "");
+    postRegistrationMessage !== (form?.postRegistrationMessage ?? "") ||
+    linkPostSubscription !== (form?.linkPostSubscription ?? "");
 
-  const value = activeField === "description" ? description : postRegistrationMessage;
-  const setValue = activeField === "description" ? setDescription : setPostRegistrationMessage;
+  const value =
+    activeField === "description"
+      ? description
+      : activeField === "post"
+        ? postRegistrationMessage
+        : linkPostSubscription;
+  const setValue =
+    activeField === "description"
+      ? setDescription
+      : activeField === "post"
+        ? setPostRegistrationMessage
+        : setLinkPostSubscription;
 
   function handleSave() {
     update.mutate(
-      { description: description || null, postRegistrationMessage: postRegistrationMessage || null },
+      {
+        description: description || null,
+        postRegistrationMessage: postRegistrationMessage || null,
+        linkPostSubscription: linkPostSubscription || null,
+      },
       {
         onSuccess: () => {
           toast.success("Formulário atualizado");
@@ -278,20 +296,40 @@ function FormMetaEditor({
             >
               Pós-inscrição
             </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={activeField === "link" ? "secondary" : "ghost"}
+              onClick={() => setActiveField("link")}
+            >
+              Link botão
+            </Button>
           </div>
-          <Textarea
-            id="form-message"
-            rows={4}
-            disabled={readonly}
-            placeholder={
-              activeField === "post"
-                ? "Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
-                : undefined
-            }
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="rounded-t-none border-t-0 focus-visible:ring-offset-0"
-          />
+          {activeField === "link" ? (
+            <Input
+              id="form-message"
+              type="url"
+              disabled={readonly}
+              placeholder="https://..."
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="rounded-t-none border-t-0 focus-visible:ring-offset-0"
+            />
+          ) : (
+            <Textarea
+              id="form-message"
+              rows={4}
+              disabled={readonly}
+              placeholder={
+                activeField === "post"
+                  ? "Ex.: Obrigado pela inscrição! Em breve entraremos em contato."
+                  : undefined
+              }
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="rounded-t-none border-t-0 focus-visible:ring-offset-0"
+            />
+          )}
         </div>
         <div className="flex justify-end">
           <Button

@@ -17,10 +17,12 @@ export function RegistrationForm({
   slug,
   fields,
   successMessage,
+  postSubscriptionLink,
 }: {
   slug: string;
   fields: PublicFormField[];
   successMessage?: string;
+  postSubscriptionLink?: string;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(() => isSubmitted(`reg_submitted_${slug}`));
@@ -85,6 +87,13 @@ export function RegistrationForm({
             ? renderRichText(successMessage)
             : "Recebemos sua inscrição. Você receberá novidades em breve."}
         </p>
+        {postSubscriptionLink && (
+          <Button asChild className="mt-6">
+            <a href={postSubscriptionLink} target="_blank" rel="noopener noreferrer">
+              Acessar link
+            </a>
+          </Button>
+        )}
       </div>
     );
   }

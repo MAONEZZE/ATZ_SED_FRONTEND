@@ -164,6 +164,7 @@ export default async function PublicEventPage({ params }: PageProps) {
               slug={event.slug}
               fields={fields}
               successMessage={event.postRegistrationMessage ?? undefined}
+              postSubscriptionLink={event.linkPostSubscription ?? undefined}
             />
           </CardContent>
         </Card>

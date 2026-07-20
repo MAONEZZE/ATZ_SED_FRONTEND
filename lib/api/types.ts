@@ -75,6 +75,7 @@ export interface Form {
   kind: FormFieldKind;
   description: string | null;
   postRegistrationMessage: string | null;
+  linkPostSubscription: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -210,6 +211,7 @@ export interface PublicEvent {
   eventDate: string | null;
   endDate: string | null;
   postRegistrationMessage: string | null;
+  linkPostSubscription: string | null;
   status: "published";
 }
 
