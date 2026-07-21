@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSchema } from "@/lib/validation/registration-form-schema";
+import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
 import type { PublicFormField } from "@/lib/api/types";
 
 function selectField(overrides: Partial<PublicFormField> = {}): PublicFormField {
@@ -105,5 +105,33 @@ describe("buildSchema — multiselect", () => {
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Selecione ao menos uma opção");
     }
+  });
+});
+
+describe("buildSchema — image_authorization", () => {
+  it("sem a flag, não adiciona o campo de consentimento", () => {
+    const schema = buildSchema([]);
+    expect(schema.safeParse({}).success).toBe(true);
+  });
+
+  it("com a flag, exige image_authorization = true", () => {
+    const schema = buildSchema([], true);
+    const missing = schema.safeParse({});
+    expect(missing.success).toBe(false);
+
+    const unchecked = schema.safeParse({ image_authorization: false });
+    expect(unchecked.success).toBe(false);
+    if (!unchecked.success) {
+      expect(unchecked.error.issues[0].message).toBe(
+        "Autorização de uso de imagem é obrigatória",
+      );
+    }
+
+    expect(schema.safeParse({ image_authorization: true }).success).toBe(true);
+  });
+
+  it("defaultValues com a flag inclui image_authorization = false", () => {
+    expect(defaultValues([], true).image_authorization).toBe(false);
+    expect("image_authorization" in defaultValues([])).toBe(false);
   });
 });

@@ -5,7 +5,10 @@ import { answerKeyForField } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { fieldOptions } from "@/lib/forms/field-types";
 
-export function buildSchema(fields: PublicFormField[]) {
+export function buildSchema(
+  fields: PublicFormField[],
+  requireImageAuthorization = false,
+) {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
     const key = answerKeyForField(field);
@@ -71,10 +74,18 @@ export function buildSchema(fields: PublicFormField[]) {
     }
     shape[key] = schema;
   }
+  if (requireImageAuthorization) {
+    shape["image_authorization"] = z
+      .boolean()
+      .refine((v) => v, "Autorização de uso de imagem é obrigatória");
+  }
   return z.object(shape);
 }
 
-export function defaultValues(fields: PublicFormField[]): Record<string, unknown> {
+export function defaultValues(
+  fields: PublicFormField[],
+  requireImageAuthorization = false,
+): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const field of fields) {
     const key = answerKeyForField(field);
@@ -82,5 +93,6 @@ export function defaultValues(fields: PublicFormField[]): Record<string, unknown
     else if (field.type === "checkbox") values[key] = false;
     else values[key] = "";
   }
+  if (requireImageAuthorization) values["image_authorization"] = false;
   return values;
 }
