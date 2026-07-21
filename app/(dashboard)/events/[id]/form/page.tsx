@@ -226,7 +226,7 @@ function ImageAuthorizationToggle({ eventId, slug }: { eventId: string; slug?: s
   return (
     <Card>
       <CardContent className="flex items-center justify-between gap-4 py-4">
-        <Label htmlFor="require-image-auth">Exigir autorização de uso de imagem</Label>
+        <Label htmlFor="require-image-auth">Autorização de imagem</Label>
         <Switch
           id="require-image-auth"
           checked={checked}
