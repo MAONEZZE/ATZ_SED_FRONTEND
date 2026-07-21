@@ -9,6 +9,7 @@ export interface FormUpdateInput {
   description?: string | null;
   postRegistrationMessage?: string | null;
   linkPostSubscription?: string | null;
+  requireImageAuthorization?: boolean;
 }
 
 export function useForm(eventId: string, kind: FormFieldKind) {

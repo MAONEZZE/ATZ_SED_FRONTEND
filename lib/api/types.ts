@@ -73,6 +73,7 @@ export interface Form {
   description: string | null;
   postRegistrationMessage: string | null;
   linkPostSubscription: string | null;
+  requireImageAuthorization: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -209,6 +210,7 @@ export interface PublicEvent {
   endDate: string | null;
   postRegistrationMessage: string | null;
   linkPostSubscription: string | null;
+  requireImageAuthorization: boolean;
   status: "published";
 }
 
