@@ -227,18 +227,21 @@ function FormMetaEditor({
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
   const [linkPostSubscription, setLinkPostSubscription] = useState("");
+  const [requireImageAuthorization, setRequireImageAuthorization] = useState(false);
   const [activeField, setActiveField] = useState<"description" | "post" | "link">("description");
 
   useEffect(() => {
     setDescription(form?.description ?? "");
     setPostRegistrationMessage(form?.postRegistrationMessage ?? "");
     setLinkPostSubscription(form?.linkPostSubscription ?? "");
+    setRequireImageAuthorization(form?.requireImageAuthorization ?? false);
   }, [form]);
 
   const dirty =
     description !== (form?.description ?? "") ||
     postRegistrationMessage !== (form?.postRegistrationMessage ?? "") ||
-    linkPostSubscription !== (form?.linkPostSubscription ?? "");
+    linkPostSubscription !== (form?.linkPostSubscription ?? "") ||
+    requireImageAuthorization !== (form?.requireImageAuthorization ?? false);
 
   const value =
     activeField === "description"
@@ -259,6 +262,7 @@ function FormMetaEditor({
         description: description || null,
         postRegistrationMessage: postRegistrationMessage || null,
         linkPostSubscription: linkPostSubscription || null,
+        requireImageAuthorization,
       },
       {
         onSuccess: () => {
@@ -331,6 +335,24 @@ function FormMetaEditor({
             />
           )}
         </div>
+        {kind === "registration" && (
+          <div className="flex items-center justify-between gap-4 rounded-md border p-3">
+            <div className="space-y-1">
+              <Label htmlFor="require-image-auth">
+                Exigir autorização de uso de imagem
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                O inscrito precisa aceitar o termo de uso de imagem para concluir a inscrição.
+              </p>
+            </div>
+            <Switch
+              id="require-image-auth"
+              checked={requireImageAuthorization}
+              onCheckedChange={setRequireImageAuthorization}
+              disabled={readonly}
+            />
+          </div>
+        )}
         <div className="flex justify-end">
           <Button
             size="sm"
