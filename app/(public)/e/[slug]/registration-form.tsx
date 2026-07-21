@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { createPublicRegistration } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { renderRichText } from "@/components/ui/rich-text";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
 import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
@@ -18,11 +19,13 @@ export function RegistrationForm({
   fields,
   successMessage,
   postSubscriptionLink,
+  requireImageAuthorization = false,
 }: {
   slug: string;
   fields: PublicFormField[];
   successMessage?: string;
   postSubscriptionLink?: string;
+  requireImageAuthorization?: boolean;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(() => isSubmitted(`reg_submitted_${slug}`));
@@ -31,11 +34,14 @@ export function RegistrationForm({
     () => [...fields].sort((a, b) => a.order - b.order),
     [fields],
   );
-  const schema = useMemo(() => buildSchema(visibleFields), [visibleFields]);
+  const schema = useMemo(
+    () => buildSchema(visibleFields, requireImageAuthorization),
+    [visibleFields, requireImageAuthorization],
+  );
 
   const form = useForm<Record<string, unknown>>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues(visibleFields),
+    defaultValues: defaultValues(visibleFields, requireImageAuthorization),
   });
 
   useEffect(() => {
@@ -106,6 +112,39 @@ export function RegistrationForm({
         </p>
       ) : (
         <FormFieldsRenderer fields={visibleFields} form={form} />
+      )}
+
+      {requireImageAuthorization && (
+        <Controller
+          control={form.control}
+          name="image_authorization"
+          render={({ field, fieldState }) => (
+            <div className="space-y-1">
+              <label className="flex items-start gap-2 text-sm">
+                <Checkbox
+                  checked={field.value === true}
+                  onCheckedChange={(v) => field.onChange(v === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Autorizo o uso da minha imagem conforme o{" "}
+                  <a
+                    href="/autorizacao-imagem.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    termo de uso de imagem
+                  </a>
+                  .
+                </span>
+              </label>
+              {fieldState.error && (
+                <p className="text-sm text-destructive">{fieldState.error.message}</p>
+              )}
+            </div>
+          )}
+        />
       )}
 
       <Button type="submit" className="w-full" size="lg" disabled={submitting}>
