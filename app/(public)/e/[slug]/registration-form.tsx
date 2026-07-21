@@ -119,14 +119,13 @@ export function RegistrationForm({
           control={form.control}
           name="image_authorization"
           render={({ field, fieldState }) => (
-            <div className="space-y-1">
-              <label className="flex items-start gap-2 text-sm">
+            <div className="">
+              <label className="flex items-center gap-2 text-muted-foreground">
                 <Checkbox
                   checked={field.value === true}
                   onCheckedChange={(v) => field.onChange(v === true)}
-                  className="mt-0.5"
                 />
-                <span>
+                <span className="text-xs">
                   Autorizo o uso da minha imagem conforme o{" "}
                   <a
                     href="/autorizacao-imagem.pdf"
