@@ -165,6 +165,7 @@ export default async function PublicEventPage({ params }: PageProps) {
               fields={fields}
               successMessage={event.postRegistrationMessage ?? undefined}
               postSubscriptionLink={event.linkPostSubscription ?? undefined}
+              requireImageAuthorization={event.requireImageAuthorization}
             />
           </CardContent>
         </Card>
