@@ -193,17 +193,45 @@ function PipedriveToggle({ eventId }: { eventId: string }) {
   return (
     <Card>
       <CardContent className="flex items-center justify-between gap-4 py-4">
-        <div className="space-y-1">
-          <Label htmlFor="pipedrive-toggle">Enviar para o Pipedrive</Label>
-          <p className="text-sm text-muted-foreground">
-            Cada inscrição é enviada automaticamente ao Pipedrive.
-          </p>
-        </div>
+        <Label htmlFor="pipedrive-toggle">Enviar para o Pipedrive</Label>
         <Switch
           id="pipedrive-toggle"
           checked={checked}
           onCheckedChange={handleChange}
           disabled={!event || update.isPending}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ImageAuthorizationToggle({ eventId, slug }: { eventId: string; slug?: string }) {
+  const { data: form } = useFormMeta(eventId, "registration");
+  const update = useUpdateForm(eventId, "registration");
+  const checked = form?.requireImageAuthorization ?? false;
+
+  function handleChange(value: boolean) {
+    update.mutate(
+      { requireImageAuthorization: value },
+      {
+        onSuccess: () => {
+          toast.success(value ? "Autorização de imagem exigida" : "Autorização de imagem não exigida");
+          if (slug) void revalidatePublicEvent(slug);
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="flex items-center justify-between gap-4 py-4">
+        <Label htmlFor="require-image-auth">Exigir autorização de uso de imagem</Label>
+        <Switch
+          id="require-image-auth"
+          checked={checked}
+          onCheckedChange={handleChange}
+          disabled={!form || update.isPending}
         />
       </CardContent>
     </Card>
@@ -227,21 +255,18 @@ function FormMetaEditor({
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
   const [linkPostSubscription, setLinkPostSubscription] = useState("");
-  const [requireImageAuthorization, setRequireImageAuthorization] = useState(false);
   const [activeField, setActiveField] = useState<"description" | "post" | "link">("description");
 
   useEffect(() => {
     setDescription(form?.description ?? "");
     setPostRegistrationMessage(form?.postRegistrationMessage ?? "");
     setLinkPostSubscription(form?.linkPostSubscription ?? "");
-    setRequireImageAuthorization(form?.requireImageAuthorization ?? false);
   }, [form]);
 
   const dirty =
     description !== (form?.description ?? "") ||
     postRegistrationMessage !== (form?.postRegistrationMessage ?? "") ||
-    linkPostSubscription !== (form?.linkPostSubscription ?? "") ||
-    requireImageAuthorization !== (form?.requireImageAuthorization ?? false);
+    linkPostSubscription !== (form?.linkPostSubscription ?? "");
 
   const value =
     activeField === "description"
@@ -262,7 +287,6 @@ function FormMetaEditor({
         description: description || null,
         postRegistrationMessage: postRegistrationMessage || null,
         linkPostSubscription: linkPostSubscription || null,
-        requireImageAuthorization,
       },
       {
         onSuccess: () => {
@@ -335,24 +359,6 @@ function FormMetaEditor({
             />
           )}
         </div>
-        {kind === "registration" && (
-          <div className="flex items-center justify-between gap-4 rounded-md border p-3">
-            <div className="space-y-1">
-              <Label htmlFor="require-image-auth">
-                Exigir autorização de uso de imagem
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                O inscrito precisa aceitar o termo de uso de imagem para concluir a inscrição.
-              </p>
-            </div>
-            <Switch
-              id="require-image-auth"
-              checked={requireImageAuthorization}
-              onCheckedChange={setRequireImageAuthorization}
-              disabled={readonly}
-            />
-          </div>
-        )}
         <div className="flex justify-end">
           <Button
             size="sm"
@@ -541,7 +547,12 @@ function FormBuilderSection({
 
       <div className="space-y-4">
         {(isRegistration || kind === "post_event") && (
-          <PipedriveToggle eventId={eventId} />
+          <div className={isRegistration ? "grid gap-4 sm:grid-cols-2" : undefined}>
+            {isRegistration && (
+              <ImageAuthorizationToggle eventId={eventId} slug={slug} />
+            )}
+            <PipedriveToggle eventId={eventId} />
+          </div>
         )}
         <FormPreview fields={localFields} submitLabel={submitLabel} />
       </div>
