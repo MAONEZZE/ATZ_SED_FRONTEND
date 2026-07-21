@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Check, Loader2, Pencil, X } from "lucide-react";
@@ -18,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { PhoneField } from "@/components/forms/phone-field";
+import { ImageField } from "@/components/forms/image-field";
 import {
   Select,
   SelectContent,
@@ -92,7 +94,13 @@ function AnswerEditor({
         />
       );
     case "image":
-      return <p className="text-sm text-muted-foreground">{formatAnswer(value)}</p>;
+      return (
+        <ImageField
+          inputId={`attendee-image-${field.id}`}
+          value={strVal}
+          onChange={onChange}
+        />
+      );
     case "linkedin":
     case "instagram":
       return <Input type="url" value={strVal} onChange={(e) => onChange(e.target.value)} />;
@@ -250,12 +258,27 @@ export function AttendeeDetailSheet({
                   </div>
                 </div>
               ) : (
-                Object.entries(currentReg.answers).map(([key, val]) => (
-                  <div key={key}>
-                    <p className="text-muted-foreground">{key}</p>
-                    <p className="whitespace-pre-line font-medium">{formatAnswer(val)}</p>
-                  </div>
-                ))
+                Object.entries(currentReg.answers).map(([key, val]) => {
+                  const isImage = fields.find((f) => f.label === key)?.type === "image";
+                  return (
+                    <div key={key}>
+                      <p className="text-muted-foreground">{key}</p>
+                      {isImage && val ? (
+                        <a href={String(val)} target="_blank" rel="noopener noreferrer">
+                          <img
+                            src={String(val)}
+                            alt={key}
+                            className="mt-1 max-h-48 rounded-lg border object-contain"
+                          />
+                        </a>
+                      ) : (
+                        <p className="whitespace-pre-line font-medium">
+                          {formatAnswer(val)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </>
