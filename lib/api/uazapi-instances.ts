@@ -9,5 +9,7 @@ export function useUazapiInstances() {
   return useQuery({
     queryKey: queryKeys.uazapiInstances,
     queryFn: () => api.get<UazapiInstance[]>("/uazapi-instances"),
+    select: (instances) =>
+      [...instances].sort((a, b) => Number(b.active) - Number(a.active)),
   });
 }

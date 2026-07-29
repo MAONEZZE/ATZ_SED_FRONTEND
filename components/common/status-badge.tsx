@@ -43,3 +43,23 @@ export function MessageLogStatusBadge({ status }: { status: MessageLog["status"]
     </Badge>
   );
 }
+
+/** Tag online/offline de instância Uazapi — reflete se há token configurado (`active`). */
+export function InstanceStatusBadge({ active }: { active: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "gap-1 border-transparent",
+        active
+          ? "bg-status-success-bg text-status-success-fg"
+          : "bg-status-danger-bg text-status-danger-fg",
+      )}
+    >
+      <span
+        className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-green-600" : "bg-red-600")}
+      />
+      {active ? "Online" : "Offline"}
+    </Badge>
+  );
+}

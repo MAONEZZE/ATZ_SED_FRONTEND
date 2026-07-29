@@ -3,6 +3,7 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
 import { useUazapiInstances } from "@/lib/api/uazapi-instances";
+import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -146,14 +147,26 @@ export function EventFormFields({
               >
                 <SelectTrigger id="uazapiInstanceId">
                   <SelectValue>
-                    {field.value ? selectedInstance?.nickname : "Sem instância"}
+                    <span className="flex items-center gap-2">
+                      {field.value ? selectedInstance?.nickname : "Sem instância"}
+                      {field.value && selectedInstance && (
+                        <InstanceStatusBadge active={selectedInstance.active} />
+                      )}
+                    </span>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
                   {uazapiInstances?.map((instance) => (
-                    <SelectItem key={instance.id} value={instance.id}>
-                      {instance.nickname}
+                    <SelectItem
+                      key={instance.id}
+                      value={instance.id}
+                      disabled={!instance.active}
+                    >
+                      <span className="flex items-center gap-2">
+                        {instance.nickname}
+                        <InstanceStatusBadge active={instance.active} />
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

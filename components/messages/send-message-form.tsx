@@ -6,10 +6,11 @@ import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
 import { useUazapiInstances } from "@/lib/api/uazapi-instances";
+import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
-import { useProfile } from "@/lib/api/profile";
+import { useProfile, useWhatsAppGroups } from "@/lib/api/profile";
 import {
   WHATSAPP_RECIPIENT_LIMIT,
   recipientCount,
@@ -34,6 +35,7 @@ import { RecipientTable } from "@/components/messages/send-message/recipient-tab
 import { MessageBodyEditor } from "@/components/messages/send-message/message-body-editor";
 import { ManualRecipientPopover } from "@/components/messages/send-message/manual-recipient-popover";
 import { ManualRecipientList } from "@/components/messages/send-message/manual-recipient-list";
+import { SelectedGroupsList } from "@/components/messages/send-message/selected-groups-list";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
   NO_EVENT,
@@ -47,6 +49,7 @@ import { useEmailComposer } from "@/hooks/use-email-composer";
 import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
 import { useVariableInsertion } from "@/hooks/use-variable-insertion";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -137,6 +140,11 @@ export function SendMessageForm({
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [groupIds, setGroupIds] = useState<Set<string>>(new Set());
+  const { data: whatsappGroups } = useWhatsAppGroups(instanceId || undefined);
+  const selectedGroups = useMemo(
+    () => (whatsappGroups ?? []).filter((g) => groupIds.has(g.id)),
+    [whatsappGroups, groupIds],
+  );
   const [manualRecipients, setManualRecipients] = useState<ManualRecipient[]>([]);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState<ManualRecipient>({
@@ -367,48 +375,64 @@ export function SendMessageForm({
             <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!fixedEventId && (
-              <div className="space-y-2">
-                <Label>Evento</Label>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {!fixedEventId && (
+                <div className="space-y-2">
+                  <Label>Evento</Label>
+                  <Select
+                    value={localEventId || NO_EVENT}
+                    onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
+                    disabled={Boolean(instanceId)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o evento (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_EVENT}>Nenhum</SelectItem>
+                      {events?.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className={cn("space-y-2", fixedEventId && "sm:col-span-2")}>
+                <Label>Instância</Label>
                 <Select
-                  value={localEventId || NO_EVENT}
-                  onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
-                  disabled={Boolean(instanceId)}
+                  value={instanceId || NO_INSTANCE}
+                  onValueChange={(v) => setInstanceId(v === NO_INSTANCE ? "" : v)}
+                  disabled={Boolean(effectiveEventId)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o evento (opcional)" />
+                    <SelectValue placeholder="Selecione a instância (opcional)">
+                      {instanceId && selectedInstance && (
+                        <span className="flex items-center gap-2">
+                          {selectedInstance.nickname}
+                          <InstanceStatusBadge active={selectedInstance.active} />
+                        </span>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={NO_EVENT}>Nenhum</SelectItem>
-                    {events?.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.title}
+                    <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
+                    {uazapiInstances?.map((instance) => (
+                      <SelectItem
+                        key={instance.id}
+                        value={instance.id}
+                        disabled={!instance.active}
+                      >
+                        <span className="flex items-center gap-2">
+                          {instance.nickname}
+                          <InstanceStatusBadge active={instance.active} />
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Instância</Label>
-              <Select
-                value={instanceId || NO_INSTANCE}
-                onValueChange={(v) => setInstanceId(v === NO_INSTANCE ? "" : v)}
-                disabled={Boolean(effectiveEventId)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a instância (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                  {uazapiInstances?.map((instance) => (
-                    <SelectItem key={instance.id} value={instance.id}>
-                      {instance.nickname}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -567,6 +591,10 @@ export function SendMessageForm({
                 setManualRecipients((prev) => prev.filter((_, i) => i !== index))
               }
             />
+
+            {channel === "whatsapp" && (
+              <SelectedGroupsList groups={selectedGroups} onRemove={toggleGroup} />
+            )}
           </CardContent>
         </Card>
       </div>
