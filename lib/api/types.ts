@@ -201,6 +201,7 @@ export interface Profile {
 export interface UazapiInstance {
   id: string;
   nickname: string;
+  active: boolean;
 }
 
 export interface PublicEvent {

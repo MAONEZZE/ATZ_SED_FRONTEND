@@ -37,8 +37,8 @@ vi.mock("@/lib/api/client", () => ({
     get: vi.fn((path: string) => {
       if (path === "/uazapi-instances") {
         return Promise.resolve([
-          { id: "inst-1", nickname: "Instância Principal" },
-          { id: "inst-2", nickname: "Instância Secundária" },
+          { id: "inst-1", nickname: "Instância Principal", active: true },
+          { id: "inst-2", nickname: "Instância Secundária", active: true },
         ]);
       }
       if (path === "/events/event-1") {
