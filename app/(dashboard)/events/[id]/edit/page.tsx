@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Rocket, Square } from "lucide-react";
 import { useEvent, useUpdateEvent, useUpdateEventStatus } from "@/lib/api/events";
-import { useEvolutionInstances } from "@/lib/api/evolution-instances";
+import { useUazapiInstances } from "@/lib/api/uazapi-instances";
 import {
   eventSchema,
   toEventInput,
@@ -42,14 +42,14 @@ function toFormValues(event: EventObject): EventFormValues {
     recurrenceUntil: event.recurrenceUntil
       ? utcIsoToLocalInput(event.recurrenceUntil)
       : "",
-    evolutionInstanceId: event.evolutionInstanceId ?? "",
+    uazapiInstanceId: event.uazapiInstanceId ?? "",
   };
 }
 
 export default function EditEventPage() {
   const params = useParams<{ id: string }>();
   const { data: event, isLoading } = useEvent(params.id);
-  const { data: evolutionInstances } = useEvolutionInstances();
+  const { data: uazapiInstances } = useUazapiInstances();
   const updateEvent = useUpdateEvent(params.id);
   const updateStatus = useUpdateEventStatus(params.id);
 
@@ -67,12 +67,12 @@ export default function EditEventPage() {
   // o <Select> do Radix perder o valor (corrida interna ao registrar as options).
   const [instancesReady, setInstancesReady] = useState(false);
   useEffect(() => {
-    if (evolutionInstances) setInstancesReady(true);
-  }, [evolutionInstances]);
+    if (uazapiInstances) setInstancesReady(true);
+  }, [uazapiInstances]);
 
   useEffect(() => {
     if (event && instancesReady) {
-      form.setValue("evolutionInstanceId", event.evolutionInstanceId ?? "");
+      form.setValue("uazapiInstanceId", event.uazapiInstanceId ?? "");
     }
   }, [event, instancesReady, form]);
 

@@ -20,7 +20,8 @@ export const eventSchema = z
       .optional()
       .refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 1), "Intervalo mínimo: 1"),
     recurrenceUntil: z.string().optional(),
-    evolutionInstanceId: z.string().optional(),
+    uazapiInstanceId: z.string().optional(),
+    uazapiToken: z.string().optional(),
   })
   .refine(
     (v) => !v.eventDate || !v.endDate || new Date(v.endDate) > new Date(v.eventDate),
@@ -57,6 +58,7 @@ export function toEventInput(values: EventFormValues) {
       hasRecurrence && values.recurrenceUntil
         ? new Date(values.recurrenceUntil).toISOString()
         : null,
-    evolutionInstanceId: values.evolutionInstanceId || undefined,
+    uazapiInstanceId: values.uazapiInstanceId || undefined,
+    uazapiToken: values.uazapiToken || undefined,
   };
 }

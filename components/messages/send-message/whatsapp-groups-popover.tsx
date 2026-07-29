@@ -1,19 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
-import { Copy, Loader2, Users } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { useWhatsAppGroups } from "@/lib/api/profile";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
- * Popover de grupos WhatsApp (canal WhatsApp). Auto-contido: busca os grupos da
- * instância Evolution e copia o ID do grupo para a área de transferência.
+ * Popover de grupos WhatsApp (canal WhatsApp): lista grupos da instância Uazapi
+ * selecionada e permite marcar quais recebem o envio (groupIds).
  */
-export function WhatsAppGroupsPopover() {
+export function WhatsAppGroupsPopover({
+  instanceId,
+  selectedGroupIds,
+  onToggleGroup,
+}: {
+  instanceId?: string;
+  selectedGroupIds: Set<string>;
+  onToggleGroup: (id: string) => void;
+}) {
   const [open, setOpen] = useState(false);
-  const { data: groups, isLoading, isError } = useWhatsAppGroups();
+  const { data: groups, isLoading, isError } = useWhatsAppGroups(instanceId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -23,10 +31,10 @@ export function WhatsAppGroupsPopover() {
           variant="outline"
           size="sm"
           className="h-7 gap-1.5 text-xs"
-          disabled
+          disabled={!instanceId}
         >
           <Users className="h-3.5 w-3.5" />
-          Grupos
+          Grupos{selectedGroupIds.size > 0 ? ` (${selectedGroupIds.size})` : ""}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
@@ -39,7 +47,7 @@ export function WhatsAppGroupsPopover() {
           </div>
         ) : isError ? (
           <p className="px-3 py-4 text-sm text-destructive">
-            Erro ao carregar grupos. Verifique a instância Evolution.
+            Erro ao carregar grupos. Verifique a instância Uazapi.
           </p>
         ) : !groups || groups.length === 0 ? (
           <p className="px-3 py-4 text-sm text-muted-foreground">
@@ -48,25 +56,17 @@ export function WhatsAppGroupsPopover() {
         ) : (
           <div className="max-h-64 overflow-y-auto">
             {groups.map((g) => (
-              <div
+              <label
                 key={g.id}
-                className="flex items-center justify-between gap-2 border-b px-3 py-2 last:border-b-0"
+                className="flex cursor-pointer items-center gap-2 border-b px-3 py-2 last:border-b-0 hover:bg-muted"
               >
+                <Checkbox
+                  checked={selectedGroupIds.has(g.id)}
+                  onCheckedChange={() => onToggleGroup(g.id)}
+                  aria-label={`Selecionar grupo ${g.subject}`}
+                />
                 <span className="min-w-0 flex-1 truncate text-sm">{g.subject}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 shrink-0"
-                  aria-label={`Copiar ID do grupo ${g.subject}`}
-                  onClick={() => {
-                    navigator.clipboard.writeText(g.id);
-                    toast.success("ID copiado para a área de transferência");
-                  }}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              </label>
             ))}
           </div>
         )}

@@ -2,7 +2,7 @@
 
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
-import { useEvolutionInstances } from "@/lib/api/evolution-instances";
+import { useUazapiInstances } from "@/lib/api/uazapi-instances";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
@@ -42,7 +42,7 @@ export function EventFormFields({
   const errors = formState.errors;
   const freq = form.watch("recurrenceFreq");
   const isRecurring = Boolean(freq);
-  const { data: evolutionInstances } = useEvolutionInstances();
+  const { data: uazapiInstances } = useUazapiInstances();
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -130,12 +130,12 @@ export function EventFormFields({
       </div>
 
       <div className="space-y-2 sm:col-span-2">
-        <Label htmlFor="evolutionInstanceId">Instância</Label>
+        <Label htmlFor="uazapiInstanceId">Instância</Label>
         <Controller
           control={form.control}
-          name="evolutionInstanceId"
+          name="uazapiInstanceId"
           render={({ field }) => {
-            const [selectedInstance] = evolutionInstances?.filter(
+            const [selectedInstance] = uazapiInstances?.filter(
               (instance) => instance.id === field.value,
             ) ?? [];
             return (
@@ -144,14 +144,14 @@ export function EventFormFields({
                 value={field.value || NO_INSTANCE}
                 onValueChange={(v) => field.onChange(v === NO_INSTANCE ? "" : v)}
               >
-                <SelectTrigger id="evolutionInstanceId">
+                <SelectTrigger id="uazapiInstanceId">
                   <SelectValue>
                     {field.value ? selectedInstance?.nickname : "Sem instância"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                  {evolutionInstances?.map((instance) => (
+                  {uazapiInstances?.map((instance) => (
                     <SelectItem key={instance.id} value={instance.id}>
                       {instance.nickname}
                     </SelectItem>

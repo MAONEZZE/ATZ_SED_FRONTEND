@@ -2,15 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import {
-  CheckCircle2,
-  Mail,
-  MessageCircle,
-  Pencil,
-  Plus,
-  Trash2,
-  XCircle,
-} from "lucide-react";
+import { Mail, MessageCircle, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   useAllMessageLogs,
   useAllTemplates,
@@ -21,8 +13,8 @@ import { formatDateTime } from "@/lib/utils/format-date";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { MessageLogStatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
@@ -304,23 +296,7 @@ function LogsTab() {
                   {log.event?.title ?? "—"}
                 </TableCell>
                 <TableCell>
-                  {log.status === "sent" ? (
-                    <Badge
-                      variant="outline"
-                      className="border-transparent bg-status-success-bg text-status-success-fg"
-                    >
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
-                      Enviada
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="outline"
-                      className="border-transparent bg-status-danger-bg text-status-danger-fg"
-                    >
-                      <XCircle className="mr-1 h-3 w-3" />
-                      Falhou
-                    </Badge>
-                  )}
+                  <MessageLogStatusBadge status={log.status} />
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {formatDateTime(log.sentAt ?? log.createdAt)}

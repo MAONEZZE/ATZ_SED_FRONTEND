@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
-import { useEvolutionInstances } from "@/lib/api/evolution-instances";
+import { useUazapiInstances } from "@/lib/api/uazapi-instances";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
 import { useAllTemplates } from "@/lib/api/global-messaging";
@@ -71,9 +71,9 @@ export function SendMessageForm({
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
 
-  const { data: evolutionInstances } = useEvolutionInstances();
+  const { data: uazapiInstances } = useUazapiInstances();
   const [instanceId, setInstanceId] = useState("");
-  const selectedInstance = evolutionInstances?.find((i) => i.id === instanceId);
+  const selectedInstance = uazapiInstances?.find((i) => i.id === instanceId);
 
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
@@ -136,6 +136,7 @@ export function SendMessageForm({
 
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [groupIds, setGroupIds] = useState<Set<string>>(new Set());
   const [manualRecipients, setManualRecipients] = useState<ManualRecipient[]>([]);
   const [manualOpen, setManualOpen] = useState(false);
   const [manualDraft, setManualDraft] = useState<ManualRecipient>({
@@ -196,6 +197,7 @@ export function SendMessageForm({
     body,
     registrationIds: Array.from(selected),
     manualRecipients,
+    groupIds: Array.from(groupIds),
     instanceId,
     attachments,
   };
@@ -223,6 +225,15 @@ export function SendMessageForm({
 
   function toggleOne(id: string) {
     setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleGroup(id: string) {
+    setGroupIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -391,7 +402,7 @@ export function SendMessageForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                  {evolutionInstances?.map((instance) => (
+                  {uazapiInstances?.map((instance) => (
                     <SelectItem key={instance.id} value={instance.id}>
                       {instance.nickname}
                     </SelectItem>
@@ -500,7 +511,13 @@ export function SendMessageForm({
                   Limpar
                 </Button>
               )}
-              {channel === "whatsapp" && <WhatsAppGroupsPopover />}
+              {channel === "whatsapp" && (
+                <WhatsAppGroupsPopover
+                  instanceId={instanceId || undefined}
+                  selectedGroupIds={groupIds}
+                  onToggleGroup={toggleGroup}
+                />
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -559,6 +576,7 @@ export function SendMessageForm({
         eventTitle={selectedEvent?.title}
         instanceLabel={selectedInstance?.nickname}
         count={count}
+        groupCount={groupIds.size}
         attachmentCount={attachments.length}
         attachmentsBytes={attachmentsBytes}
         onSend={onSend}

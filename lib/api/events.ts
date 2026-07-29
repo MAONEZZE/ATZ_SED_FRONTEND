@@ -22,7 +22,8 @@ export interface EventInput {
   recurrenceInterval?: number | null;
   recurrenceUntil?: string | null;
   sendToPipedrive?: boolean;
-  evolutionInstanceId?: string;
+  uazapiInstanceId?: string;
+  uazapiToken?: string;
 }
 
 export type EventUpdateInput = Partial<EventInput>;
