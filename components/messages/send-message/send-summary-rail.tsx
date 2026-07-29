@@ -22,6 +22,7 @@ export function SendSummaryRail({
   eventTitle,
   instanceLabel,
   count,
+  groupCount,
   attachmentCount,
   attachmentsBytes,
   onSend,
@@ -34,6 +35,7 @@ export function SendSummaryRail({
   eventTitle?: string;
   instanceLabel?: string;
   count: number;
+  groupCount: number;
   attachmentCount: number;
   attachmentsBytes: number;
   onSend: () => void;
@@ -57,6 +59,11 @@ export function SendSummaryRail({
           <SummaryRow label="Destinatários">
             <span className="font-medium">{count}</span>
           </SummaryRow>
+          {channel === "whatsapp" && groupCount > 0 && (
+            <SummaryRow label="Grupos">
+              <span className="font-medium">{groupCount}</span>
+            </SummaryRow>
+          )}
           <SummaryRow label="Anexos">
             {attachmentCount > 0
               ? `${attachmentCount} · ${formatBytes(attachmentsBytes)}`
@@ -67,7 +74,7 @@ export function SendSummaryRail({
           <Button
             className="w-full gap-2"
             onClick={onSend}
-            disabled={count === 0 || bodyEmpty || isSending}
+            disabled={(count === 0 && groupCount === 0) || bodyEmpty || isSending}
           >
             {isSending && !sendingTest ? (
               <Loader2 className="h-4 w-4 animate-spin" />

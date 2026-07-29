@@ -36,11 +36,14 @@ export function useUploadProfilePhoto() {
   });
 }
 
-export function useWhatsAppGroups() {
+export function useWhatsAppGroups(instanceId?: string) {
   return useQuery({
-    queryKey: ["whatsapp-groups"],
-    queryFn: () => api.get<WhatsAppGroup[]>("/whatsapp/groups"),
-    enabled: false,
+    queryKey: ["whatsapp-groups", instanceId],
+    queryFn: () =>
+      api.get<WhatsAppGroup[]>(
+        `/whatsapp/groups?${new URLSearchParams({ instanceId: instanceId! })}`,
+      ),
+    enabled: Boolean(instanceId),
   });
 }
 

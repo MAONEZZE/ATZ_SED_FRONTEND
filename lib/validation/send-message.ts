@@ -12,6 +12,7 @@ export interface SendMessageDraft {
   body: string;
   registrationIds: string[];
   manualRecipients: ManualRecipient[];
+  groupIds: string[];
   instanceId?: string;
 
   attachments?: MessageAttachment[];
@@ -31,7 +32,8 @@ export function validateSendMessage(
 ): string | null {
   if (!opts.hasEventId && !draft.instanceId)
     return "Selecione um evento ou uma instância antes de enviar";
-  if (recipientCount(draft) === 0) return "Selecione ao menos um destinatário";
+  if (recipientCount(draft) === 0 && draft.groupIds.length === 0)
+    return "Selecione ao menos um destinatário";
   if (draft.channel === "whatsapp" && recipientCount(draft) > WHATSAPP_RECIPIENT_LIMIT)
     return `WhatsApp: máximo ${WHATSAPP_RECIPIENT_LIMIT} destinatários por disparo`;
   if (!draft.body.trim()) return "Escreva a mensagem ou selecione um template";
@@ -84,6 +86,10 @@ export function toSendMessageInput(
     body,
     registrationIds: opts.hasEventId ? draft.registrationIds : undefined,
     manualRecipients: draft.manualRecipients,
+    groupIds:
+      draft.channel === "whatsapp" && draft.groupIds.length > 0
+        ? draft.groupIds
+        : undefined,
     instanceId: draft.instanceId || undefined,
     attachments:
       draft.attachments && draft.attachments.length > 0

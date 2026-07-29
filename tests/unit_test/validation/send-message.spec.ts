@@ -14,6 +14,7 @@ const base: SendMessageDraft = {
   body: "Olá!",
   registrationIds: [],
   manualRecipients: [],
+  groupIds: [],
 };
 
 describe("recipientCount", () => {
@@ -24,6 +25,16 @@ describe("recipientCount", () => {
         manualRecipients: [{ name: "Fulano", phone: "+5511" }],
       }),
     ).toBe(3);
+  });
+
+  it("ignora grupos (cap de 30 é só para destinatários individuais)", () => {
+    expect(
+      recipientCount({
+        registrationIds: ["a"],
+        manualRecipients: [],
+        groupIds: ["g1", "g2", "g3"],
+      } as SendMessageDraft),
+    ).toBe(1);
   });
 });
 
@@ -74,6 +85,15 @@ describe("validateSendMessage", () => {
     expect(
       validateSendMessage(
         { ...base, registrationIds: ["a"], instanceId: "inst-1" },
+        { hasEventId: false },
+      ),
+    ).toBeNull();
+  });
+
+  it("aceita apenas grupos selecionados, sem inscritos/avulsos", () => {
+    expect(
+      validateSendMessage(
+        { ...base, instanceId: "inst-1", groupIds: ["g1"] },
         { hasEventId: false },
       ),
     ).toBeNull();
@@ -136,5 +156,26 @@ describe("toSendMessageInput", () => {
       { hasEventId: true },
     );
     expect(input.subject).toBeUndefined();
+  });
+
+  it("inclui groupIds para whatsapp", () => {
+    const input = toSendMessageInput(
+      { ...base, groupIds: ["120363424826018469@g.us"] },
+      { hasEventId: true },
+    );
+    expect(input.groupIds).toEqual(["120363424826018469@g.us"]);
+  });
+
+  it("omite groupIds para email mesmo se preenchido", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        channel: "email",
+        registrationIds: ["a"],
+        groupIds: ["120363424826018469@g.us"],
+      },
+      { hasEventId: true },
+    );
+    expect(input.groupIds).toBeUndefined();
   });
 });

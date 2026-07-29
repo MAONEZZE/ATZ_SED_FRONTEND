@@ -27,7 +27,7 @@ const EVENT = {
   recurrenceFreq: null,
   recurrenceInterval: null,
   recurrenceUntil: null,
-  evolutionInstanceId: "inst-2",
+  uazapiInstanceId: "inst-2",
   coverUrl: null,
   updatedAt: "2026-07-16T00:00:00.000Z",
 };
@@ -35,7 +35,7 @@ const EVENT = {
 vi.mock("@/lib/api/client", () => ({
   api: {
     get: vi.fn((path: string) => {
-      if (path === "/evolution-instances") {
+      if (path === "/uazapi-instances") {
         return Promise.resolve([
           { id: "inst-1", nickname: "Instância Principal" },
           { id: "inst-2", nickname: "Instância Secundária" },

@@ -48,7 +48,8 @@ export interface EventObject {
   recurrenceFreq: RecurrenceFreq | null;
   recurrenceInterval: number | null;
   recurrenceUntil: string | null;
-  evolutionInstanceId: string | null;
+  uazapiInstanceId: string | null;
+  uazapiToken: string | null;
   sendToPipedrive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -176,9 +177,14 @@ export interface MessageLog {
   channel: MessageChannel;
   recipient: string;
   body: string;
-  status: "sent" | "failed";
+  status: "sent" | "delivered" | "read" | "failed";
+  providerMessageId: string | null;
   errorMessage: string | null;
   sentAt: string | null;
+  deliveredAt: string | null;
+  readAt: string | null;
+  delivered: boolean;
+  read: boolean;
   createdAt: string;
 }
 
@@ -192,7 +198,7 @@ export interface Profile {
   updatedAt: string;
 }
 
-export interface EvolutionInstance {
+export interface UazapiInstance {
   id: string;
   nickname: string;
 }
@@ -247,6 +253,7 @@ export interface SendMessageInput {
   body?: string;
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
+  groupIds?: string[];
   attachments?: Omit<MessageAttachment, "size">[];
 }
 
