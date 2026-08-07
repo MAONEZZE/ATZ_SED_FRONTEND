@@ -62,4 +62,106 @@ export function countLogicalLines(source) {
   return lines.size;
 }
 
+const FUNCTION_KINDS = new Set([
+  ts.SyntaxKind.FunctionDeclaration,
+  ts.SyntaxKind.FunctionExpression,
+  ts.SyntaxKind.ArrowFunction,
+  ts.SyntaxKind.MethodDeclaration,
+  ts.SyntaxKind.GetAccessor,
+  ts.SyntaxKind.SetAccessor,
+  ts.SyntaxKind.Constructor,
+]);
+
+const DECISION_KINDS = new Set([
+  ts.SyntaxKind.IfStatement,
+  ts.SyntaxKind.ConditionalExpression,
+  ts.SyntaxKind.CaseClause, // DefaultClause fica de fora de propósito
+  ts.SyntaxKind.ForStatement,
+  ts.SyntaxKind.ForInStatement,
+  ts.SyntaxKind.ForOfStatement,
+  ts.SyntaxKind.WhileStatement,
+  ts.SyntaxKind.DoStatement,
+  ts.SyntaxKind.CatchClause,
+]);
+
+const DECISION_OPERATORS = new Set([
+  ts.SyntaxKind.AmpersandAmpersandToken,
+  ts.SyntaxKind.BarBarToken,
+  ts.SyntaxKind.QuestionQuestionToken,
+]);
+
+function isDecisionPoint(node) {
+  if (DECISION_KINDS.has(node.kind)) return true;
+  return (
+    ts.isBinaryExpression(node) && DECISION_OPERATORS.has(node.operatorToken.kind)
+  );
+}
+
+/**
+ * Deriva um nome legível. Arrow/expression pegam o nome do pai (const X = ..., prop: ...).
+ * Método vira "Classe.metodo". Sem nome possível, "<anônima>@<linha>".
+ */
+function functionName(node, sf) {
+  const line = sf.getLineAndCharacterOfPosition(node.getStart(sf)).line + 1;
+
+  if (node.kind === ts.SyntaxKind.Constructor) {
+    const cls = node.parent?.name?.getText(sf) ?? "<anônima>";
+    return `${cls}.constructor`;
+  }
+  if (
+    ts.isMethodDeclaration(node) ||
+    ts.isGetAccessor(node) ||
+    ts.isSetAccessor(node)
+  ) {
+    const cls = ts.isClassLike(node.parent) ? node.parent.name?.getText(sf) : null;
+    const own = node.name?.getText(sf) ?? `<anônima>@${line}`;
+    return cls ? `${cls}.${own}` : own;
+  }
+  if (node.name) return node.name.getText(sf);
+
+  const parent = node.parent;
+  if (parent && ts.isVariableDeclaration(parent) && parent.name) {
+    return parent.name.getText(sf);
+  }
+  if (parent && ts.isPropertyAssignment(parent) && parent.name) {
+    return parent.name.getText(sf);
+  }
+  return `<anônima>@${line}`;
+}
+
+/**
+ * Complexidade ciclomática por função, exclusiva de funções aninhadas.
+ * @param {string} source
+ * @param {string} [fileName]
+ * @returns {Array<{name: string, line: number, complexity: number}>}
+ */
+export function functionComplexities(source, fileName = "arquivo.tsx") {
+  const sf = parse(source, fileName);
+  const results = [];
+
+  const measure = (fnNode) => {
+    let complexity = 1;
+    const walk = (node) => {
+      // para na fronteira da função aninhada: ela tem entrada própria
+      if (node !== fnNode && FUNCTION_KINDS.has(node.kind)) return;
+      if (node !== fnNode && isDecisionPoint(node)) complexity += 1;
+      node.forEachChild(walk);
+    };
+    walk(fnNode);
+    results.push({
+      name: functionName(fnNode, sf),
+      line: sf.getLineAndCharacterOfPosition(fnNode.getStart(sf)).line + 1,
+      complexity,
+    });
+  };
+
+  const collect = (node) => {
+    if (FUNCTION_KINDS.has(node.kind)) measure(node);
+    node.forEachChild(collect);
+  };
+  sf.forEachChild(collect);
+
+  return results;
+}
+
 export { parse, ts };
