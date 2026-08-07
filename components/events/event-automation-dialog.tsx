@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 import { DELAYED_TRIGGERS, TRIGGER_LABELS } from "@/lib/api/automations";
 import {
   useAllTemplates,
@@ -11,17 +10,11 @@ import {
 } from "@/lib/api/global-messaging";
 import { buildCron, parseCron, type CronFreq } from "@/lib/utils/automation-cron";
 import type { Automation, AutomationTrigger } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
+import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -275,15 +268,11 @@ export function EventAutomationDialog({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
-          </Button>
-        </DialogFooter>
+        <EditDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          isSaving={isPending}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -9,6 +9,11 @@ test.describe("login", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
+  test("/dashboard redireciona para /login", async ({ page }) => {
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
   test("login com credenciais válidas acessa o dashboard", async ({ page }) => {
     test.skip(!email || !password, "E2E_USER_EMAIL/PASSWORD não configurados");
 
@@ -17,8 +22,8 @@ test.describe("login", () => {
     await page.getByLabel("Senha").fill(password!);
     await page.getByRole("button", { name: "Entrar" }).click();
 
-    await expect(page).toHaveURL(/\/events/);
-    await expect(page.getByRole("heading", { name: "Eventos" })).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   });
 
   test("credenciais inválidas mostram erro", async ({ page }) => {

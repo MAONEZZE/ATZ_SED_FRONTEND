@@ -42,7 +42,7 @@ function LoginPageInner() {
   useEffect(() => {
     if (isLoading || !session) return;
     const next = searchParams.get("next");
-    router.replace(next && next.startsWith("/") ? next : "/events");
+    router.replace(next && next.startsWith("/") ? next : "/dashboard");
   }, [isLoading, session, searchParams, router]);
 
   async function onSubmit(values: LoginForm) {
@@ -50,7 +50,7 @@ function LoginPageInner() {
     try {
       await signIn(values.email, values.password);
       const next = searchParams.get("next");
-      router.push(next && next.startsWith("/") ? next : "/events");
+      router.push(next && next.startsWith("/") ? next : "/dashboard");
       router.refresh();
     } catch (error) {
       toast.error(

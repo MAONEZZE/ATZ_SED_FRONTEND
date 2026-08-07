@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Braces, ChevronDown, LayoutTemplate, Loader2 } from "lucide-react";
+import { Braces, ChevronDown, LayoutTemplate } from "lucide-react";
+import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
@@ -34,13 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -339,15 +334,11 @@ export function GlobalTemplateDialog({
           </Card>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
-          </Button>
-        </DialogFooter>
+        <EditDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          isSaving={isPending}
+        />
       </DialogContent>
 
       {layoutEditorOpen && (

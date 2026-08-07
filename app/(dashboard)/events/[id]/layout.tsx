@@ -10,6 +10,7 @@ import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isActive } from "@/lib/utils/nav";
 
 const tabs = [
   { segment: "edit", label: "Detalhes", icon: Pencil },
@@ -53,7 +54,7 @@ export default function EventLayout({ children }: { children: ReactNode }) {
         <div className="flex w-max min-w-full gap-1 border-b">
           {tabs.map(({ segment, label, icon: Icon }) => {
             const href = `/events/${params.id}/${segment}`;
-            const active = pathname.startsWith(href);
+            const active = isActive(pathname, href);
             return (
               <Link
                 key={segment}
