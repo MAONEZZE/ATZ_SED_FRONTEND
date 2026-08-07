@@ -1,0 +1,408 @@
+{
+  "nodes": [
+    {
+      "id": "auth_background_img1_impression_sunrise",
+      "label": "img1.jpg — Monet, Impression, Sunrise (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img1.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img2_annunciation",
+      "label": "img2.jpg — Leonardo, Annunciation (unused 300x132 thumbnail)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img2.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img3_massacre_of_the_innocents",
+      "label": "img3.jpg — Rubens, Massacre of the Innocents (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img3.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img4_haystacks",
+      "label": "img4.jpg — Monet, Haystacks / Grainstacks (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img4.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img5_houses_of_parliament",
+      "label": "img5.jpg — Monet, Houses of Parliament in Fog, 1904 (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img5.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img6_water_lily_pond",
+      "label": "img6.jpg — Monet, Water Lily Pond / Japanese Bridge (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img6.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img7_starry_night",
+      "label": "img7.jpg — Van Gogh, The Starry Night (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img7.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img8_last_supper",
+      "label": "img8.jpg — Leonardo, The Last Supper (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img8.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "auth_background_img9_school_of_athens",
+      "label": "img9.jpg — Raphael, The School of Athens (auth background)",
+      "file_type": "image",
+      "source_file": "public/auth_background/img9.jpg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "hooks_use_login_background_useloginbackground",
+      "label": "useLoginBackground — random background picker",
+      "file_type": "code",
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L16-24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "hooks_use_login_background_backgrounds",
+      "label": "BACKGROUNDS — enumerated rotation array (8 of 9 files)",
+      "file_type": "code",
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L5-14",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_auth_background_authbackground",
+      "label": "AuthBackground — full-bleed next/image renderer for auth screens",
+      "file_type": "code",
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L7-39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_auth_background_radial_scrim",
+      "label": "Radial black scrim (0.25 to 0.85) guaranteeing overlay text contrast",
+      "file_type": "rationale",
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img1_impression_sunrise",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img3_massacre_of_the_innocents",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img4_haystacks",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img5_houses_of_parliament",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img6_water_lily_pond",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img7_starry_night",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img8_last_supper",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_backgrounds",
+      "target": "auth_background_img9_school_of_athens",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "hooks_use_login_background_useloginbackground",
+      "target": "hooks_use_login_background_backgrounds",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L17-20",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_auth_background_authbackground",
+      "target": "hooks_use_login_background_useloginbackground",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_auth_background_radial_scrim",
+      "target": "layout_auth_background_authbackground",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_auth_background_radial_scrim",
+      "target": "auth_background_img4_haystacks",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "weight": 0.85
+    },
+    {
+      "source": "layout_auth_background_radial_scrim",
+      "target": "auth_background_img9_school_of_athens",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "weight": 0.85
+    },
+    {
+      "source": "layout_auth_background_radial_scrim",
+      "target": "auth_background_img1_impression_sunrise",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "weight": 0.85
+    },
+    {
+      "source": "layout_auth_background_radial_scrim",
+      "target": "auth_background_img6_water_lily_pond",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "components/layout/auth-background.tsx",
+      "source_location": "L29-36",
+      "weight": 0.75
+    },
+    {
+      "source": "auth_background_img2_annunciation",
+      "target": "hooks_use_login_background_backgrounds",
+      "relation": "references",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "hooks/use-login-background.ts",
+      "source_location": "L5-14",
+      "weight": 0.2
+    },
+    {
+      "source": "auth_background_img1_impression_sunrise",
+      "target": "auth_background_img5_houses_of_parliament",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/auth_background/img1.jpg",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "auth_background_img8_last_supper",
+      "target": "auth_background_img9_school_of_athens",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/auth_background/img8.jpg",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "auth_background_img4_haystacks",
+      "target": "auth_background_img6_water_lily_pond",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "public/auth_background/img4.jpg",
+      "source_location": null,
+      "weight": 0.75
+    },
+    {
+      "source": "auth_background_img2_annunciation",
+      "target": "auth_background_img8_last_supper",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/auth_background/img2.jpg",
+      "source_location": null,
+      "weight": 0.85
+    },
+    {
+      "source": "auth_background_img3_massacre_of_the_innocents",
+      "target": "layout_auth_background_authbackground",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "public/auth_background/img3.jpg",
+      "source_location": null,
+      "weight": 0.25
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "auth_background_rotation_pool",
+      "label": "Auth background rotation pool (8 paintings, random pick on mount)",
+      "nodes": [
+        "auth_background_img1_impression_sunrise",
+        "auth_background_img3_massacre_of_the_innocents",
+        "auth_background_img4_haystacks",
+        "auth_background_img5_houses_of_parliament",
+        "auth_background_img6_water_lily_pond",
+        "auth_background_img7_starry_night",
+        "auth_background_img8_last_supper",
+        "auth_background_img9_school_of_athens"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "hooks/use-login-background.ts"
+    },
+    {
+      "id": "auth_background_monet_impressionist_subset",
+      "label": "Monet impressionist subset — soft-focus, mid-to-light luminance, low text contrast unaided",
+      "nodes": [
+        "auth_background_img1_impression_sunrise",
+        "auth_background_img4_haystacks",
+        "auth_background_img5_houses_of_parliament",
+        "auth_background_img6_water_lily_pond"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/auth_background/img1.jpg"
+    },
+    {
+      "id": "auth_background_dark_toned_subset",
+      "label": "Dark-toned subset — white overlay text legible even before the scrim",
+      "nodes": [
+        "auth_background_img3_massacre_of_the_innocents",
+        "auth_background_img7_starry_night",
+        "auth_background_img8_last_supper"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "public/auth_background/img7.jpg"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

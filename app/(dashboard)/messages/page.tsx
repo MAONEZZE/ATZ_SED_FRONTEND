@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Mail, MessageCircle, Pencil, Plus, Trash2 } from "lucide-react";
+import { Mail, MessageCircle, Plus } from "lucide-react";
 import {
   useAllMessageLogs,
   useAllTemplates,
@@ -14,6 +14,7 @@ import { GlobalTemplateDialog } from "@/components/messages/global-template-dial
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { MessageLogStatusBadge } from "@/components/common/status-badge";
+import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -40,7 +41,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 function ChannelBadge({ channel }: { channel: MessageChannel }) {
@@ -77,10 +77,6 @@ function EmptyRow({ cols, text }: { cols: number; text: string }) {
 
 const ACTIONS_HEAD = "w-[96px] text-right";
 
-function RowActions({ children }: { children: ReactNode }) {
-  return <div className="flex justify-end">{children}</div>;
-}
-
 function SendTab() {
   return (
     <div className="space-y-4">
@@ -91,21 +87,38 @@ function SendTab() {
 
 function TemplatesTab() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [channelFilter, setChannelFilter] = useState<MessageChannel | "all">("all");
-  const limit = 10;
   const { data: response, isLoading } = useAllTemplates(
     page,
-    limit,
+    pageSize,
     channelFilter === "all" ? undefined : channelFilter,
   );
 
-  const templates = response?.data;
-  const totalPages = response ? Math.ceil(response.total / limit) : 0;
+  const templates = response?.data ?? [];
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateWithEvent | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  if (isLoading) return <LoadingSpinner />;
+  async function handleBulkDelete() {
+    setBulkDeleting(true);
+    const targets = templates.filter((t) => selected.has(t.id));
+    const results = await Promise.allSettled(
+      targets.map((t) => deleteTemplate.mutateAsync({ eventId: t.eventId, id: t.id })),
+    );
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed > 0) {
+      toast.error(`${failed} de ${targets.length} templates não puderam ser excluídos`);
+    } else {
+      toast.success(`${targets.length} template(s) excluído(s)`);
+    }
+    setSelected(new Set());
+    setBulkDeleting(false);
+    setConfirmBulkDelete(false);
+  }
 
   return (
     <div className="space-y-4">
@@ -128,132 +141,92 @@ function TemplatesTab() {
                 <SelectItem value="email">E-mail</SelectItem>
               </SelectContent>
             </Select>
-            {response ? <span>{response.total} template(s)</span> : null}
           </div>
         }
         right={
-          <Button
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Novo template
-          </Button>
+          <div className="flex items-center gap-2">
+            <DataTableDeleteButton
+              selectedCount={selected.size}
+              isPending={bulkDeleting}
+              onDelete={() => setConfirmBulkDelete(true)}
+            />
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Novo template
+            </Button>
+          </div>
         }
       />
 
-      <div className="overflow-hidden rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Canal</TableHead>
-              <TableHead>Evento</TableHead>
-              <TableHead className={ACTIONS_HEAD} />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {templates?.length === 0 && (
-              <EmptyRow cols={4} text="Nenhum template ainda." />
-            )}
-            {templates?.map((t) => (
-              <TableRow key={t.id}>
-                <TableCell className="font-medium">{t.name}</TableCell>
-                <TableCell>
-                  <ChannelBadge channel={t.channel} />
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {t.event?.title ?? "Global"}
-                </TableCell>
-                <TableCell>
-                  <RowActions>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Editar ${t.name}`}
-                      onClick={() => {
-                        setEditing(t);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Excluir ${t.name}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir template?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Automações que usam &quot;{t.name}&quot; podem parar de
-                            funcionar.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-                            onClick={() =>
-                              deleteTemplate.mutate(
-                                { eventId: t.eventId, id: t.id },
-                                {
-                                  onSuccess: () => toast.success("Template excluído"),
-                                  onError: (e) => toast.error(e.message),
-                                },
-                              )
-                            }
-                          >
-                            Excluir
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </RowActions>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {totalPages > 0 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
+      <DataTable
+        columns={[
+          { key: "name", header: "Nome", align: "left", cell: (t) => t.name },
+          {
+            key: "channel",
+            header: "Canal",
+            cell: (t) => <ChannelBadge channel={t.channel} />,
+          },
+          {
+            key: "event",
+            header: "Evento",
+            cell: (t) => t.event?.title ?? "Global",
+          },
+        ]}
+        data={templates}
+        getRowId={(t) => t.id}
+        isLoading={isLoading}
+        emptyMessage="Nenhum template ainda."
+        onRowClick={(t) => {
+          setEditing(t);
+          setDialogOpen(true);
+        }}
+        selected={selected}
+        onSelectedChange={setSelected}
+        total={response?.total ?? 0}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+      />
 
       <GlobalTemplateDialog
         template={editing}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
       />
+
+      <AlertDialog open={confirmBulkDelete} onOpenChange={setConfirmBulkDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {selected.size} template(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Automações que usam esses templates podem parar de funcionar. Esta ação não
+              pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+              disabled={bulkDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleBulkDelete();
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,0 +1,1173 @@
+{
+  "nodes": [
+    {
+      "id": "e2e_login_spec",
+      "label": "E2E: login e guarda de rota",
+      "file_type": "code",
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:1-38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_login_spec_protected_route_redirect",
+      "label": "Invariante: rota protegida (/events, /dashboard) redireciona para /login",
+      "file_type": "concept",
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:7-15",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_login_spec_landing_after_login",
+      "label": "Invariante: login válido aterrissa em /dashboard com heading Dashboard",
+      "file_type": "concept",
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:17-27",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_login_spec_toast_on_bad_credentials",
+      "label": "Invariante: credenciais inválidas => toast sonner e permanência em /login",
+      "file_type": "concept",
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:29-37",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_public_registration_spec",
+      "label": "E2E: inscrição pública",
+      "file_type": "code",
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:1-42",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_public_registration_spec_ssr_og",
+      "label": "Invariante: landing /e/[slug] renderiza no servidor com og:title no HTML",
+      "file_type": "concept",
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:11-21",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_public_registration_spec_friendly_404",
+      "label": "Invariante: slug inexistente mostra 'Evento não encontrado' em vez de erro cru",
+      "file_type": "concept",
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:6-9",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_status_change_spec",
+      "label": "E2E: mudança de status de inscrito",
+      "file_type": "code",
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:1-34",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_status_change_spec_toast_echoes_label",
+      "label": "Invariante: toast de mudança de status ecoa o rótulo da opção escolhida",
+      "file_type": "concept",
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:26-32",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "e2e_status_change_spec_env_fixture",
+      "label": "Fixture E2E: credenciais e E2E_EVENT_ID via env, testes pulados sem elas",
+      "file_type": "concept",
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:3-11",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client_spec",
+      "label": "Unit: apiFetch / cliente HTTP",
+      "file_type": "code",
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:1-124",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client",
+      "label": "lib/api/client — api, apiFetchBlob, ApiError, setTokenProvider",
+      "file_type": "code",
+      "source_file": "lib/api/client.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client_spec_auth_header_injection",
+      "label": "Invariante: toda requisição injeta Authorization Bearer e x-request-id",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:27-38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client_spec_refresh_retry",
+      "label": "Invariante: 401 dispara refreshAccessToken e repete a requisição com o novo token",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:40-53",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client_spec_error_normalization",
+      "label": "Invariante: erro do backend vira ApiError com message array juntada por '; ' e requestId",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:55-73",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_client_spec_blob_and_204",
+      "label": "Invariante: apiFetchBlob não parseia JSON e 204 resolve undefined",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:75-123",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_public_spec",
+      "label": "Unit: submitPublicPostEvent / submitPublicNps",
+      "file_type": "code",
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:1-70",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_public",
+      "label": "lib/api/public — endpoints públicos sem auth",
+      "file_type": "code",
+      "source_file": "lib/api/public.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_public_spec_404_identifier_message",
+      "label": "Invariante: 404 de pós-evento troca 'Not Found' por mensagem humana sobre e-mail/telefone",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:22-31",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "api_public_spec_anonymous_nps",
+      "label": "Invariante: NPS envia só answers, nunca identifier (anonimato)",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:50-58",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "date_time_date_time_picker_component_spec",
+      "label": "Unit: componente DateTimePicker",
+      "file_type": "code",
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:1-40",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "ui_date_time_picker",
+      "label": "components/ui/date-time-picker — DateTimePicker",
+      "file_type": "code",
+      "source_file": "components/ui/date-time-picker.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "date_time_date_time_picker_component_spec_mode_contract",
+      "label": "Invariante: mode='date' não renderiza input[type=time]; datetime exibe dd/MM/yyyy + HH:mm",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:9-39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "date_time_date_time_picker_spec",
+      "label": "Unit: parseValue / formatValue",
+      "file_type": "code",
+      "source_file": "tests/unit_test/date-time/date-time-picker.spec.ts",
+      "source_location": "tests/unit_test/date-time/date-time-picker.spec.ts:1-55",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "utils_date_time_picker",
+      "label": "lib/utils/date-time-picker — parseValue, formatValue",
+      "file_type": "code",
+      "source_file": "lib/utils/date-time-picker.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "date_time_date_time_picker_spec_roundtrip",
+      "label": "Invariante: round-trip 'YYYY-MM-DDTHH:mm' com padding e fallback 00:00; entrada inválida vira date null",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/date-time/date-time-picker.spec.ts",
+      "source_location": "tests/unit_test/date-time/date-time-picker.spec.ts:5-55",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_build_email_spec",
+      "label": "Unit: buildEmail",
+      "file_type": "code",
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:1-168",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_build_email",
+      "label": "lib/email/build-email — buildEmail",
+      "file_type": "code",
+      "source_file": "lib/email/build-email.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_email_layout_config",
+      "label": "lib/email/email-layout-config — DEFAULTS, EmailLayoutConfig",
+      "file_type": "code",
+      "source_file": "lib/email/email-layout-config.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_build_email_spec_escaping_policy",
+      "label": "Invariante: rótulos/valores escapam HTML, parágrafos e título aceitam HTML cru",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:157-168",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_build_email_spec_table_compat",
+      "label": "Invariante: markup de e-mail usa tabelas cellpadding/cellspacing/border=0 e estilos inline",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:38-65",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "email_build_email_spec_toggle_omission",
+      "label": "Invariante: toggles desligados omitem o markup por completo (sombra, social, bordas)",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:67-141",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_answer_key_spec",
+      "label": "Unit: answerKeyForField",
+      "file_type": "code",
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:1-24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_answer_key_spec_literal_label_key",
+      "label": "Invariante: chave da resposta é a label literal, nunca um alias por tipo",
+      "file_type": "rationale",
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:13-23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_edit_event_instance_select_spec",
+      "label": "Unit: EditEventPage — seleção de instância uazapi",
+      "file_type": "code",
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:1-78",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "edit_page",
+      "label": "app/(dashboard)/events/[id]/edit/page — EditEventPage",
+      "file_type": "code",
+      "source_file": "app/(dashboard)/events/[id]/edit/page.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_edit_event_instance_select_spec_radix_regression",
+      "label": "Regressão: Radix Select perdia o value controlado quando evento e instâncias resolvem no mesmo tick",
+      "file_type": "rationale",
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:58-60",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_field_types_spec",
+      "label": "Unit: registry de field-types",
+      "file_type": "code",
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:1-38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_field_types",
+      "label": "lib/forms/field-types — registry de tipos de campo",
+      "file_type": "code",
+      "source_file": "lib/forms/field-types.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_field_types_spec_radio_threshold",
+      "label": "Invariante: até SELECT_RADIO_MAX opções renderiza radio, acima disso dropdown",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:25-28",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "forms_field_types_spec_answer_formatting",
+      "label": "Invariante: formatAnswer mapeia array→'a, b', boolean→Sim/Não, vazio/null→'—'",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:30-37",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_app_sidebar_spec",
+      "label": "Unit: AppSidebar",
+      "file_type": "code",
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:1-39",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_app_sidebar",
+      "label": "components/layout/app-sidebar — AppSidebar",
+      "file_type": "code",
+      "source_file": "components/layout/app-sidebar.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "hooks_use_sidebar_state",
+      "label": "hooks/use-sidebar-state — persistência do colapso",
+      "file_type": "code",
+      "source_file": "hooks/use-sidebar-state.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_app_sidebar_spec_collapsed_a11y",
+      "label": "Invariante: colapso esconde o label com sr-only, preservando o accessible name do link",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:17-27",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_app_sidebar_spec_persisted_collapse",
+      "label": "Invariante: estado de colapso persiste em localStorage e sobrevive a remount (aria-expanded=false)",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:29-38",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_sidebar_active_spec",
+      "label": "Unit: isActive (highlight de nav)",
+      "file_type": "code",
+      "source_file": "tests/unit_test/layout/sidebar-active.spec.ts",
+      "source_location": "tests/unit_test/layout/sidebar-active.spec.ts:1-24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "utils_nav",
+      "label": "lib/utils/nav — isActive",
+      "file_type": "code",
+      "source_file": "lib/utils/nav.ts",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "layout_sidebar_active_spec_boundary_prefix",
+      "label": "Invariante: match de prefixo só na fronteira de '/' — '/events-arquivados' não ativa '/events'",
+      "file_type": "concept",
+      "source_file": "tests/unit_test/layout/sidebar-active.spec.ts",
+      "source_location": "tests/unit_test/layout/sidebar-active.spec.ts:13-23",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "e2e_login_spec",
+      "target": "e2e_login_spec_protected_route_redirect",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:7-15",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_login_spec",
+      "target": "e2e_login_spec_landing_after_login",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:17-27",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_login_spec",
+      "target": "e2e_login_spec_toast_on_bad_credentials",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:29-37",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_login_spec",
+      "target": "e2e_status_change_spec",
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:3-4",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_status_change_spec",
+      "target": "e2e_status_change_spec_env_fixture",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:3-11",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_status_change_spec",
+      "target": "e2e_status_change_spec_toast_echoes_label",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:26-32",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_status_change_spec",
+      "target": "e2e_login_spec_landing_after_login",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:18",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_public_registration_spec",
+      "target": "e2e_public_registration_spec_ssr_og",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:11-21",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_public_registration_spec",
+      "target": "e2e_public_registration_spec_friendly_404",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:6-9",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_public_registration_spec",
+      "target": "api_public",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:23-41",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_public_registration_spec",
+      "target": "forms_answer_key_spec_literal_label_key",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "tests/e2e/public-registration.spec.ts",
+      "source_location": "tests/e2e/public-registration.spec.ts:29-39",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec",
+      "target": "api_client",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:2",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec",
+      "target": "api_client_spec_auth_header_injection",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:27-38",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec",
+      "target": "api_client_spec_refresh_retry",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:40-53",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec",
+      "target": "api_client_spec_error_normalization",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:55-73",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec",
+      "target": "api_client_spec_blob_and_204",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:75-123",
+      "weight": 1.0
+    },
+    {
+      "source": "api_client_spec_refresh_retry",
+      "target": "e2e_login_spec_protected_route_redirect",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "tests/unit_test/api/client.spec.ts",
+      "source_location": "tests/unit_test/api/client.spec.ts:40-53",
+      "weight": 1.0
+    },
+    {
+      "source": "api_public_spec",
+      "target": "api_public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:2",
+      "weight": 1.0
+    },
+    {
+      "source": "api_public_spec",
+      "target": "api_public_spec_404_identifier_message",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:22-31",
+      "weight": 1.0
+    },
+    {
+      "source": "api_public_spec",
+      "target": "api_public_spec_anonymous_nps",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:50-58",
+      "weight": 1.0
+    },
+    {
+      "source": "api_public_spec",
+      "target": "api_client_spec",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:4-12",
+      "weight": 1.0
+    },
+    {
+      "source": "api_public_spec_404_identifier_message",
+      "target": "api_client_spec_error_normalization",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "tests/unit_test/api/public.spec.ts",
+      "source_location": "tests/unit_test/api/public.spec.ts:14-42",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_component_spec",
+      "target": "ui_date_time_picker",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:4",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_component_spec",
+      "target": "date_time_date_time_picker_component_spec_mode_contract",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:9-39",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_component_spec",
+      "target": "utils_date_time_picker",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:23-32",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_spec",
+      "target": "utils_date_time_picker",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/date-time/date-time-picker.spec.ts",
+      "source_location": "tests/unit_test/date-time/date-time-picker.spec.ts:3",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_spec",
+      "target": "date_time_date_time_picker_spec_roundtrip",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/date-time/date-time-picker.spec.ts",
+      "source_location": "tests/unit_test/date-time/date-time-picker.spec.ts:5-55",
+      "weight": 1.0
+    },
+    {
+      "source": "date_time_date_time_picker_component_spec",
+      "target": "date_time_date_time_picker_spec",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:23-32",
+      "weight": 1.0
+    },
+    {
+      "source": "ui_date_time_picker",
+      "target": "utils_date_time_picker",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/date-time/date-time-picker-component.spec.tsx",
+      "source_location": "tests/unit_test/date-time/date-time-picker-component.spec.tsx:30-31",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email_spec",
+      "target": "email_build_email",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:2",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email_spec",
+      "target": "email_email_layout_config",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:3",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email",
+      "target": "email_email_layout_config",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:5-7",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email_spec",
+      "target": "email_build_email_spec_escaping_policy",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:157-168",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email_spec",
+      "target": "email_build_email_spec_table_compat",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:38-65",
+      "weight": 1.0
+    },
+    {
+      "source": "email_build_email_spec",
+      "target": "email_build_email_spec_toggle_omission",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/email/build-email.spec.ts",
+      "source_location": "tests/unit_test/email/build-email.spec.ts:67-141",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_answer_key_spec",
+      "target": "api_public",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:2",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_answer_key_spec",
+      "target": "forms_answer_key_spec_literal_label_key",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:13-23",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_answer_key_spec_literal_label_key",
+      "target": "api_public",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:14-16",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_answer_key_spec",
+      "target": "forms_field_types",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "tests/unit_test/forms/answer-key.spec.ts",
+      "source_location": "tests/unit_test/forms/answer-key.spec.ts:6-10",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_edit_event_instance_select_spec",
+      "target": "edit_page",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:56",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_edit_event_instance_select_spec",
+      "target": "forms_edit_event_instance_select_spec_radix_regression",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:58-77",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_edit_event_instance_select_spec_radix_regression",
+      "target": "edit_page",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:58-60",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_edit_event_instance_select_spec",
+      "target": "api_client",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:35-54",
+      "weight": 1.0
+    },
+    {
+      "source": "edit_page",
+      "target": "api_client",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "tests/unit_test/forms/edit-event-instance-select.spec.tsx",
+      "source_location": "tests/unit_test/forms/edit-event-instance-select.spec.tsx:37-47",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_field_types_spec",
+      "target": "forms_field_types",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:2-8",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_field_types_spec",
+      "target": "forms_field_types_spec_radio_threshold",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:25-28",
+      "weight": 1.0
+    },
+    {
+      "source": "forms_field_types_spec",
+      "target": "forms_field_types_spec_answer_formatting",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/forms/field-types.spec.ts",
+      "source_location": "tests/unit_test/forms/field-types.spec.ts:30-37",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar_spec",
+      "target": "layout_app_sidebar",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:4",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar_spec",
+      "target": "hooks_use_sidebar_state",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:10-38",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar_spec",
+      "target": "layout_app_sidebar_spec_collapsed_a11y",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:17-27",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar_spec",
+      "target": "layout_app_sidebar_spec_persisted_collapse",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:29-38",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar",
+      "target": "hooks_use_sidebar_state",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:29-38",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_app_sidebar",
+      "target": "utils_nav",
+      "relation": "calls",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx",
+      "source_location": "tests/unit_test/layout/app-sidebar.spec.tsx:6-8",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_sidebar_active_spec",
+      "target": "utils_nav",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/layout/sidebar-active.spec.ts",
+      "source_location": "tests/unit_test/layout/sidebar-active.spec.ts:2",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_sidebar_active_spec",
+      "target": "layout_sidebar_active_spec_boundary_prefix",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/layout/sidebar-active.spec.ts",
+      "source_location": "tests/unit_test/layout/sidebar-active.spec.ts:13-23",
+      "weight": 1.0
+    },
+    {
+      "source": "layout_sidebar_active_spec",
+      "target": "layout_app_sidebar_spec",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/layout/sidebar-active.spec.ts",
+      "source_location": "tests/unit_test/layout/sidebar-active.spec.ts:5-11",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_login_spec_landing_after_login",
+      "target": "layout_app_sidebar",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "tests/e2e/login.spec.ts",
+      "source_location": "tests/e2e/login.spec.ts:25-26",
+      "weight": 1.0
+    },
+    {
+      "source": "e2e_status_change_spec_toast_echoes_label",
+      "target": "e2e_login_spec_toast_on_bad_credentials",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "tests/e2e/status-change.spec.ts",
+      "source_location": "tests/e2e/status-change.spec.ts:30-32",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "auth_gate_journey_guards",
+      "label": "Testes que guardam o portão de autenticação (redirect, login, sessão em fluxo autenticado)",
+      "nodes": [
+        "e2e_login_spec",
+        "e2e_status_change_spec",
+        "api_client_spec",
+        "e2e_login_spec_protected_route_redirect",
+        "api_client_spec_refresh_retry"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/e2e/login.spec.ts"
+    },
+    {
+      "id": "backend_error_to_human_message",
+      "label": "Normalização de erro do backend em mensagem exibível ao usuário",
+      "nodes": [
+        "api_client_spec_error_normalization",
+        "api_public_spec_404_identifier_message",
+        "e2e_login_spec_toast_on_bad_credentials",
+        "e2e_public_registration_spec_friendly_404"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "tests/unit_test/api/public.spec.ts"
+    },
+    {
+      "id": "sidebar_navigation_contract",
+      "label": "Contrato da sidebar: highlight de rota ativa, colapso persistido e acessibilidade",
+      "nodes": [
+        "layout_app_sidebar_spec",
+        "layout_sidebar_active_spec",
+        "layout_app_sidebar",
+        "utils_nav",
+        "hooks_use_sidebar_state"
+      ],
+      "relation": "implement",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/layout/app-sidebar.spec.tsx"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

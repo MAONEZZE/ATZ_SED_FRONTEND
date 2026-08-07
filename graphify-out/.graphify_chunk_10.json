@@ -1,0 +1,473 @@
+{
+  "nodes": [
+    {
+      "id": "normal_logo_azul_svg",
+      "label": "Logo Akeel completo, colorway azul (#112429) — SVG 420x116",
+      "file_type": "image",
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "viewBox 0 0 420 116; 6 paths, all fill=#112429; clipPath clip0_2029_24",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "normal_logo_preto_svg",
+      "label": "Logo Akeel completo, colorway preto (fill=black / #000000) — SVG 420x116",
+      "file_type": "image",
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "viewBox 0 0 420 116; 6 paths, all fill=black; clipPath clip0_2029_40",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "normal_logo_verde_svg",
+      "label": "Logo Akeel completo, colorway verde (#8EDD65) — SVG 420x116",
+      "file_type": "image",
+      "source_file": "public/logos/normal/logo-verde.svg",
+      "source_location": "viewBox 0 0 420 116; 6 paths, all fill=#8EDD65; clipPath clip0_2029_10",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "reduzido_logo_azul_svg",
+      "label": "Logo Akeel reduzido, colorway azul (#112429) — SVG 194x116",
+      "file_type": "image",
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "viewBox 0 0 194 116; 3 paths, all fill=#112429; sem clipPath",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "reduzido_logo_preto_svg",
+      "label": "Logo Akeel reduzido, colorway preto (fill=black / #000000) — SVG 194x116",
+      "file_type": "image",
+      "source_file": "public/logos/reduzido/logo-preto.svg",
+      "source_location": "viewBox 0 0 194 116; 3 paths, all fill=black; sem clipPath",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "reduzido_logo_verde_svg",
+      "label": "Logo Akeel reduzido, colorway verde (#8EDD65) — SVG 194x116",
+      "file_type": "image",
+      "source_file": "public/logos/reduzido/logo-verde.svg",
+      "source_location": "viewBox 0 0 194 116; 3 paths, all fill=#8EDD65; sem clipPath",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "logos_brand_mark_akeel",
+      "label": "Marca Akeel — wordmark com glifo 'a' arredondado + haste tipo 'k' e marca ® circular",
+      "file_type": "concept",
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "geometria de path identica em todos os 6 SVGs, variando apenas o fill",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "normal_logo_verde_hex_8edd65",
+      "label": "Hex de marca #8EDD65 — identico ao token --color-accent (grafismo sobre bg-dark, ~9.73:1; falha sobre offwhite)",
+      "file_type": "concept",
+      "source_file": "public/logos/normal/logo-verde.svg",
+      "source_location": "fill=\"#8EDD65\" em todos os paths",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "normal_logo_azul_hex_112429",
+      "label": "Hex de marca #112429 — azul-petroleo escuro, vizinho (nao identico) de --color-bg-dark #13232a",
+      "file_type": "concept",
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "fill=\"#112429\" em todos os paths",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "normal_logo_preto_hex_black",
+      "label": "Fill keyword 'black' (#000000) — colorway preto, unico arquivo sem hex literal",
+      "file_type": "concept",
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "fill=\"black\" em todos os paths",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "app_icon_favicon",
+      "label": "Favicon do app (app/icon.jpeg) — monograma 'A' angular branco sobre gradiente taupe/caqui, 640x640",
+      "file_type": "image",
+      "source_file": "app/icon.jpeg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "normal_logo_verde_svg",
+      "target": "normal_logo_verde_hex_8edd65",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-verde.svg",
+      "source_location": "fill=\"#8EDD65\"",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_verde_svg",
+      "target": "normal_logo_verde_hex_8edd65",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-verde.svg",
+      "source_location": "fill=\"#8EDD65\"",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "normal_logo_azul_hex_112429",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "fill=\"#112429\"",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "normal_logo_azul_hex_112429",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "fill=\"#112429\"",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_preto_svg",
+      "target": "normal_logo_preto_hex_black",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "fill=\"black\"",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_preto_svg",
+      "target": "normal_logo_preto_hex_black",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-preto.svg",
+      "source_location": "fill=\"black\"",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "normal_logo_preto_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "mesmo viewBox 0 0 420 116 e mesmos 6 path d=",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "normal_logo_verde_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "mesmo viewBox 0 0 420 116",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_preto_svg",
+      "target": "normal_logo_verde_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "mesmo viewBox 0 0 420 116",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "reduzido_logo_preto_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "mesmo viewBox 0 0 194 116 e mesmos 3 path d=",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "reduzido_logo_verde_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "mesmo viewBox 0 0 194 116",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_preto_svg",
+      "target": "reduzido_logo_verde_svg",
+      "relation": "shares_data_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido/logo-preto.svg",
+      "source_location": "mesmo viewBox 0 0 194 116",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "reduzido_logo_azul_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "mesmo colorway #112429, mesma altura 116, largura 420 vs 194",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_preto_svg",
+      "target": "reduzido_logo_preto_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "mesmo colorway black, mesma altura 116",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_verde_svg",
+      "target": "reduzido_logo_verde_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "public/logos/normal/logo-verde.svg",
+      "source_location": "mesmo colorway #8EDD65, mesma altura 116",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "normal_logo_preto_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "mesma marca, colorway diferente (azul vs preto)",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "normal_logo_verde_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": "mesma marca, colorway diferente (azul vs verde)",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_preto_svg",
+      "target": "normal_logo_verde_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": "mesma marca, colorway diferente (preto vs verde)",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "reduzido_logo_preto_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "mesma marca reduzida, colorway diferente",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "reduzido_logo_verde_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "mesma marca reduzida, colorway diferente",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_preto_svg",
+      "target": "reduzido_logo_verde_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-preto.svg",
+      "source_location": "mesma marca reduzida, colorway diferente",
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "normal_logo_azul_svg",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": "reduzido = subconjunto do wordmark (3 paths: glifo inicial + glifo final + marca ®) contra 6 paths do completo, mesma altura 116",
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_azul_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-azul.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_preto_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-preto.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "normal_logo_verde_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/normal/logo-verde.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_azul_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-azul.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_preto_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-preto.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "reduzido_logo_verde_svg",
+      "target": "logos_brand_mark_akeel",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "public/logos/reduzido/logo-verde.svg",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "app_icon_favicon",
+      "target": "logos_brand_mark_akeel",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.25,
+      "source_file": "app/icon.jpeg",
+      "source_location": "o favicon e um 'A' angular branco sobre gradiente taupe; nenhum SVG do set usa esse glifo nem essa paleta — pode ser marca legada de outra empresa (Atlaz) e nao a marca dos logos",
+      "weight": 1.0
+    },
+    {
+      "source": "app_icon_favicon",
+      "target": "reduzido_logo_azul_svg",
+      "relation": "semantically_similar_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "app/icon.jpeg",
+      "source_location": "ambos sao a versao compacta da identidade, mas o desenho do glifo e a paleta (taupe/branco vs #112429) divergem — revisar se o favicon deveria ser substituido pelo logo reduzido",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "akeel_brand_asset_system",
+      "label": "Sistema de assets de marca Akeel (2 tamanhos x 3 colorways)",
+      "nodes": [
+        "normal_logo_azul_svg",
+        "normal_logo_preto_svg",
+        "normal_logo_verde_svg",
+        "reduzido_logo_azul_svg",
+        "reduzido_logo_preto_svg",
+        "reduzido_logo_verde_svg"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos"
+    },
+    {
+      "id": "logo_normal_size_family",
+      "label": "Familia 'normal' — wordmark completo, viewBox 0 0 420 116",
+      "nodes": [
+        "normal_logo_azul_svg",
+        "normal_logo_preto_svg",
+        "normal_logo_verde_svg"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/normal"
+    },
+    {
+      "id": "logo_reduzido_size_family",
+      "label": "Familia 'reduzido' — marca compacta, viewBox 0 0 194 116",
+      "nodes": [
+        "reduzido_logo_azul_svg",
+        "reduzido_logo_preto_svg",
+        "reduzido_logo_verde_svg"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "public/logos/reduzido"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

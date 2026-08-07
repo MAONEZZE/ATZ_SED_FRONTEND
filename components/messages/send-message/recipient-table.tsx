@@ -42,7 +42,7 @@ export function RecipientTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-10">
+            <TableHead className="w-10 pl-4 pr-0">
               <Checkbox
                 checked={allSelected}
                 onCheckedChange={onToggleAll}
@@ -113,7 +113,7 @@ export function RecipientTable({
                 className="cursor-pointer"
                 onClick={() => onToggleOne(r.id)}
               >
-                <TableCell onClick={(e) => e.stopPropagation()}>
+                <TableCell className="pl-4 pr-0" onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selected.has(r.id)}
                     onCheckedChange={() => onToggleOne(r.id)}
