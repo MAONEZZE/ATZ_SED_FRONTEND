@@ -164,4 +164,37 @@ export function functionComplexities(source, fileName = "arquivo.tsx") {
   return results;
 }
 
+// Limiares do spec: CC > 15 OU linhas lógicas > 200.
+export const DEFAULT_THRESHOLDS = { complexity: 15, lines: 200 };
+
+/**
+ * @param {string} file caminho relativo à raiz do projeto
+ * @param {string} source
+ * @param {{complexity: number, lines: number}} [thresholds]
+ */
+export function analyzeFile(file, source, thresholds = DEFAULT_THRESHOLDS) {
+  const functions = functionComplexities(source, file).sort(
+    (a, b) => b.complexity - a.complexity,
+  );
+  const logicalLines = countLogicalLines(source);
+  const maxComplexity = functions.length
+    ? Math.max(...functions.map((f) => f.complexity))
+    : 0;
+  const totalComplexity = functions.reduce((sum, f) => sum + f.complexity, 0);
+
+  const reasons = [];
+  if (maxComplexity > thresholds.complexity) reasons.push("complexity");
+  if (logicalLines > thresholds.lines) reasons.push("size");
+
+  return {
+    file,
+    logicalLines,
+    maxComplexity,
+    totalComplexity,
+    functions,
+    candidate: reasons.length > 0,
+    reasons,
+  };
+}
+
 export { parse, ts };
