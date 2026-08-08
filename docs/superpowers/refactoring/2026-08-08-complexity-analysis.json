@@ -1,0 +1,214 @@
+{
+  "metricsFile": "docs/superpowers/refactoring/2026-08-08-metrics.json",
+  "refactorings": [
+    {
+      "id": "ref-001",
+      "file": "lib/validation/registration-form-schema.ts",
+      "metrics": { "maxComplexity": 20, "logicalLines": 96, "totalComplexity": 36 },
+      "issues": [
+        "buildSchema (line 8, CC 20) is one big switch over field.type, and almost every case re-implements the same 'required vs optional' branching by hand (email, phone, select, multiselect, checkbox, date, linkedin, instagram, default) — that repetition, not inherent domain complexity, is what drives the score up.",
+        "The post-switch 'if not required and not checkbox/multiselect, wrap in .optional().or(z.literal(\"\"))' step is a second, separate conditional axis bolted onto the first, making the function do two jobs at once."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "Extract one small builder per field.type (buildEmailFieldSchema, buildPhoneFieldSchema, buildSelectFieldSchema, buildMultiselectFieldSchema, buildCheckboxFieldSchema, buildDateFieldSchema, buildLinkedinFieldSchema, buildInstagramFieldSchema, buildDefaultFieldSchema), each taking (field, opts) and returning the ZodTypeAny for that case — behavior identical to the current case body.",
+          "Keep the switch in buildSchema but make each case a one-line call to the extracted function, so the loop body's only job is dispatch + key assignment.",
+          "Leave the 'optional wrap' step exactly where it is (it's a genuine second concern shared across cases, not something to fold into each builder) — do not move it inside the per-type builders, since that would duplicate it 8 times.",
+          "Run the existing spec after each extraction; it should stay green with zero diffs to assertions."
+        ]
+      },
+      "effort": "low",
+      "priority": 1,
+      "testFile": "tests/unit_test/validation/registration-form-schema.spec.ts",
+      "testExists": true,
+      "testStrategy": [
+        "Existing spec already exercises buildSchema/defaultValues per field type — rerun it after every extraction step, no new tests required before starting."
+      ]
+    },
+    {
+      "id": "ref-002",
+      "file": "lib/email/build-email.ts",
+      "metrics": { "maxComplexity": 16, "logicalLines": 188, "totalComplexity": 23 },
+      "issues": [
+        "buildEmail (line 33, CC 16) computes ~15 independent conditional style fragments (containerShadow, headerBg, headerBorder, titleStyle, subtitle, headerDecor, greetingStyle, cardBorder, socialCells, footerBg, labelStyle, valueStyle) and then interpolates all of them into one 90-line template literal — the function is doing 'compute all fragments' and 'assemble whole document' at once.",
+        "The social icons array (showInstagram / showYoutube) duplicates the same anchor+img markup shape twice inline (lines 79-100)."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "Extract buildHeaderHtml(c), buildBodyHtml(c), buildInfoCardHtml(c), buildFooterHtml(c) — each takes the config and returns its HTML fragment string, using the same escapeHtml/nl2br/fontStack/socialIcon helpers already in the file.",
+          "Extract a single buildSocialCell(url, iconName, color, alt) helper and call it twice instead of duplicating the <td> markup for Instagram/YouTube.",
+          "buildEmail keeps computing font/docTitle and then concatenates the four fragment functions into the outer <html> skeleton — no change to the final string.",
+          "Diff the output of buildEmail against a fixed EmailLayoutConfig before/after each extraction (byte-for-byte) in addition to running the existing spec, since this function's whole contract is its exact HTML string."
+        ]
+      },
+      "effort": "medium",
+      "priority": 2,
+      "testFile": "tests/unit_test/email/build-email.spec.ts",
+      "testExists": true,
+      "testStrategy": [
+        "Existing spec covers buildEmail — rerun after each extraction.",
+        "Because output is a long HTML string, add a one-off snapshot of buildEmail(fixtureConfig) before starting, and diff against it after each step to catch accidental whitespace/order changes the existing assertions might not pinpoint."
+      ]
+    },
+    {
+      "id": "ref-003",
+      "file": "lib/utils/parse-recipients-csv.ts",
+      "metrics": { "maxComplexity": 18, "logicalLines": 74, "totalComplexity": 35 },
+      "issues": [
+        "parseRecipientsCsv (line 42, CC 18) mixes four separate concerns in one function body: delimiter sniffing, header detection/column mapping, header-vs-no-header row slicing, and per-row parsing+validation.",
+        "It is called from two different call sites (components/messages/send-message-form.tsx:271 and app/(dashboard)/events/[id]/attendees/page.tsx:58) with no dedicated unit test for either — a regression here silently breaks two independent import flows."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "Extract detectDelimiter(lines[0]) and detectColumns(headerCells) (the nameIdx/emailIdx/phoneIdx lookup + hasHeader decision) into their own named functions.",
+          "Extract parseRow(cells, cols) that returns a ManualRecipient or null (the name-required / normalizeBrPhone logic), so the main loop becomes a filter+map over rows.",
+          "parseRecipientsCsv is left as an orchestrator: split lines, detect delimiter, detect columns, slice rows, parseRow per row, accumulate recipients/skipped.",
+          "splitLine (line 18, CC 7) is already a clean, single-purpose function — leave it as is."
+        ]
+      },
+      "effort": "low",
+      "priority": 3,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "Write a characterization test first: header with comma delimiter, header with semicolon delimiter, no-header 3-column file, quoted fields containing the delimiter, missing name (skipped), phone normalization — cover both call sites' real-world CSV shapes before touching the code.",
+        "Keep the new test file green through every extraction step."
+      ]
+    },
+    {
+      "id": "ref-004",
+      "file": "components/forms/form-fields-renderer.tsx",
+      "metrics": { "maxComplexity": 19, "logicalLines": 219, "totalComplexity": 40 },
+      "issues": [
+        "The map callback at line 34 (CC 19) is a flat sequence of ten `{field.type === \"X\" && <...>}` blocks — effectively an un-indented switch statement expressed as JSX, all inline in a single closure.",
+        "This component is shared by both the live public registration form and the FormPreview used inside the form-builder editor (app/(dashboard)/events/[id]/form/page.tsx:156), so any regression here breaks two surfaces at once, and there is no test for either."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "Extract each `field.type === \"X\" && (...)` block into its own small named component (TextFieldControl, PhoneFieldControl, DateFieldControl, ImageFieldControl, SelectFieldControl, MultiselectFieldControl, CheckboxFieldControl), each receiving (field, form, disabled) — same props already in scope.",
+          "Replace the ten inline conditionals with a lookup by field.type (a Record<PublicFormField['type'], ComponentType<...>>) or an equivalent switch, so FormFieldsRenderer's own body only does key/label/error rendering plus dispatch.",
+          "Keep the Label/error rendering wrapper exactly where it is — it applies uniformly to all field types and should not be duplicated into each extracted control."
+        ]
+      },
+      "effort": "medium",
+      "priority": 4,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "Write a characterization test rendering FormFieldsRenderer with one field of each of the 10 supported types (text, textarea, email, linkedin, instagram, phone, date, image, select, multiselect, checkbox) plus a validation-error case, before extracting anything.",
+        "Re-run against both consumers conceptually: confirm FormPreview (form/page.tsx) and the live public registration form still render identically for a representative field set."
+      ]
+    },
+    {
+      "id": "ref-005",
+      "file": "app/(dashboard)/dashboard/page.tsx",
+      "metrics": { "maxComplexity": 22, "logicalLines": 220, "totalComplexity": 38 },
+      "issues": [
+        "DashboardPage (line 39, CC 22) inlines three independent card sections (upcoming events, recent activity, status distribution), each repeating its own 'incomplete-data-link vs empty-state vs real-content' three-way ternary, on top of the page-level isLoading/isError branching.",
+        "The repeated `!complete ? <Link href=\"/events\">...</Link> : ...` fallback (lines 129-132 and 198-201) is duplicated verbatim between two of the three card sections."
+      ],
+      "approach": {
+        "type": "extract-component",
+        "steps": [
+          "Extract UpcomingEventsCard, RecentActivityCard, and StatusDistributionCard as sibling components in the same file (or a components/dashboard/ folder), each taking the already-computed data (upcoming, logs, statusCounts, complete, eventsTotal) as props.",
+          "Each extracted component owns its own 'incomplete → link' / 'empty' / 'data' branching internally, which drops DashboardPage's own cyclomatic complexity down to just the top-level isLoading/isError/success gate.",
+          "Factor the repeated '!complete' fallback link into a small shared IncompleteDataNotice (or similar) component used by both cards that need it, instead of duplicating the JSX."
+        ]
+      },
+      "effort": "medium",
+      "priority": 5,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "Write a characterization test (or a few) covering: loading state, error state (with retry triggering both refetches), complete data with events/logs present, complete data with zero events, and the '!complete' (paginated/partial) branch for all three cards — before extracting.",
+        "Note: lib/utils/dashboard-metrics.ts (countByStatus, upcomingEvents) already has its own spec (tests/unit_test/utils/dashboard-metrics.spec.ts) and is out of scope here — only the page's own branching is being addressed."
+      ]
+    },
+    {
+      "id": "ref-006",
+      "file": "components/messages/send-message-form.tsx",
+      "metrics": { "maxComplexity": 25, "logicalLines": 590, "totalComplexity": 126 },
+      "issues": [
+        "SendMessageForm (line 65, CC 25) is the highest-complexity function in the codebase: it owns event/instance selection, channel switching, template selection, the email composer wiring, manual-recipient CRUD, CSV import, WhatsApp group selection, attachment upload, and both send and send-test flows, all as sibling useState/handlers in one component body.",
+        "addAttachments (line 288, CC 9) mixes validation (size limit, accepted type) with upload orchestration (Promise.all + error handling) in a single function.",
+        "This is the single largest, most complex, and least-tested file in the project (590 logical lines, no test file) — any change here carries the highest regression risk of anything reviewed, which is why it is not ranked #1 despite having the top raw complexity score."
+      ],
+      "approach": {
+        "type": "extract-hook",
+        "steps": [
+          "Extract a useRecipientSelection-style hook grouping selected/statusFilter/toggleAll/toggleOne/toggleStatusFilter (registration side) and a separate one for groupIds/toggleGroup + manualRecipients/addManualRecipient/importCsv (manual+group side) — these are independent state clusters that don't need to live in the top component.",
+          "Extract a useAttachments hook wrapping attachments state, addAttachments, and the remove-by-index callback, including the existing size/type validation.",
+          "Extract the template/channel wiring (selectTemplate, changeChannel, applyEmailTemplate, channelTemplates/selectedTemplate) into its own hook, since it only depends on the composer object and templates data.",
+          "SendMessageForm is left composing these hooks plus the existing sendMessage/uploadAttachment mutations and the onSend/onSendTest handlers, with JSX unchanged.",
+          "Do each extraction as its own commit, verifying manually (or via characterization test) between steps — this file has no automated safety net today."
+        ]
+      },
+      "effort": "high",
+      "priority": 6,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "This is a testExists:false file with the highest blast radius reviewed — write characterization tests before any extraction: recipient selection/toggle-all, manual recipient add/validation-error/CSV import happy-path, attachment add (size-reject, type-reject, upload success/failure), template selection switching subject/body/layout, and the onSend/onSendTest success/error/toast paths.",
+        "Given the size, consider writing these incrementally — one characterization test per hook being extracted, immediately before extracting it — rather than one large test file upfront."
+      ]
+    },
+    {
+      "id": "ref-007",
+      "file": "app/(dashboard)/events/[id]/form/page.tsx",
+      "metrics": { "maxComplexity": 19, "logicalLines": 584, "totalComplexity": 111 },
+      "issues": [
+        "FormMetaEditor (line 241, CC 19) implements a 3-way tab (description/post/link) by hand with parallel useState variables and two chained ternaries to pick 'value'/'setValue' by activeField — a pattern that scales complexity linearly with each new tab added.",
+        "FormBuilderSection (line 377, CC 12) additionally mixes drag-and-drop reordering, a one-time field-seeding effect, and delete/create field orchestration in the same function as the rest of the layout.",
+        "The file defines 7 components (SortableFieldRow, FormPreview, PipedriveToggle, ImageAuthorizationToggle, FormMetaEditor, FormBuilderSection, FormBuilderPage) in 584 lines — several of these (SortableFieldRow, FormPreview, the two toggles) have no dependency on each other and are candidates to live in their own files under components/form-builder/, independent of the complexity fix."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "Replace FormMetaEditor's three parallel useState + ternary-chain (value/setValue by activeField) with a single small config array/map: [{ key: 'description', value, setValue, label, placeholder }, ...], indexed by activeField — collapses the two ternary chains into one lookup.",
+          "Extract handleDragEnd's reorder-diff computation (the .map/.filter comparing next vs localFields order) into a pure computeReorderChanges(next, previous) helper, testable independently of the DnD wiring.",
+          "As a separate, lower-risk pass, move SortableFieldRow, FormPreview, PipedriveToggle, and ImageAuthorizationToggle out to their own files (e.g. components/form-builder/*.tsx) — this is a pure move (no logic change) and should be its own commit, done before or after the complexity fix but not mixed with it."
+        ]
+      },
+      "effort": "high",
+      "priority": 7,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "Write characterization tests before touching logic: FormMetaEditor tab switching preserves per-tab drafts, dirty-state gating of Save, and the update.mutate payload on save; FormBuilderSection's computeReorderChanges (extract-then-test) and the create-field-when-empty seeding effect for kind='post_event'.",
+        "This file has the second-largest blast radius reviewed (form builder is a core feature); do the file-split (mechanical, low-risk) and the complexity fix (behavioral, higher-risk) as separate commits so a revert of one doesn't require reverting the other."
+      ]
+    },
+    {
+      "id": "ref-008",
+      "file": "app/(dashboard)/events/[id]/attendees/page.tsx",
+      "metrics": { "maxComplexity": 14, "logicalLines": 228, "totalComplexity": 43 },
+      "issues": [
+        "AttendeesPage (line 39, CC 14) is below the default complexity threshold (15) and was only flagged for file size — it is the lowest-impact candidate reviewed, included here for completeness rather than urgency.",
+        "handleExport (line 76, CC 5) and the CSV import handler duplicate the same FileReader-based CSV read pattern already present in components/messages/send-message-form.tsx's importCsv — not an exact clone (scan.mjs reported 0 structural clones), but the same shape by inspection."
+      ],
+      "approach": {
+        "type": "extract-function",
+        "steps": [
+          "If ref-003 (parse-recipients-csv.ts) is done first, consider extracting a shared readCsvFile(file): Promise<ParseCsvResult> helper (wrapping the FileReader boilerplate) for reuse between this file's handleImportFile and send-message-form.tsx's importCsv — optional, do only if it doesn't block ref-003/ref-006.",
+          "No structural change needed to AttendeesPage itself beyond that shared helper — its own complexity is already under threshold."
+        ]
+      },
+      "effort": "low",
+      "priority": 8,
+      "testFile": null,
+      "testExists": false,
+      "testStrategy": [
+        "If the shared readCsvFile helper is extracted, cover it with the same characterization test written for ref-003 (parse-recipients-csv.ts), reused against both call sites."
+      ]
+    }
+  ],
+  "duplications": [
+    {
+      "note": "scan.mjs reported 0 structural clones project-wide. The FileReader-based CSV-read pattern in app/(dashboard)/events/[id]/attendees/page.tsx:56-74 (handleImportFile) and components/messages/send-message-form.tsx:268-286 (importCsv) is similar-but-not-identical by inspection (different success/error messaging), so it is not a tool-detected clone — flagged only as an opinion in ref-008, not asserted as a measured duplication."
+    }
+  ]
+}

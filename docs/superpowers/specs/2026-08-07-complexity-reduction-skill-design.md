@@ -16,11 +16,23 @@ A skill that analyzes the entire ATZ_SED_FRONTEND codebase for high cyclomatic c
 
 ## 2. Problem Statement
 
-Current codebase has several large, complex files:
-- `components/messages/send-message-form.tsx` (632 lines, high CC)
-- `components/attendees/attendee-detail-sheet.tsx` (289 lines)
-- `components/forms/form-fields-renderer.tsx` (233 lines)
-- `lib/email/build-email.ts` (204 lines)
+> **Corrigido em 2026-08-08:** os números da lista abaixo foram medidos com
+> `tools/simplify-code/scan.mjs`. A versão original citava
+> `attendee-detail-sheet.tsx` com 289 linhas; o arquivo tem 128. Os demais
+> números eram de fato próximos do medido, mas nenhum tinha sido verificado
+> por ferramenta — coincidência, não método. Ver também a tabela de
+> desvios em `docs/superpowers/plans/2026-08-07-simplify-code-skill.md`
+> ("Read This First"), que documenta onde a implementação diverge
+> deliberadamente deste spec (fase 1 determinística em vez de agent-driven,
+> sem `similarityScore` fabricado, `/execute-refactor` fora do escopo v1).
+
+Current codebase has several large, complex files (linhas lógicas e CC
+máximo medidos por `scan.mjs` em 2026-08-08, `docs/superpowers/refactoring/2026-08-08-metrics.json`):
+- `components/messages/send-message-form.tsx` (590 linhas lógicas, 632 linhas brutas, CC máx 25)
+- `app/(dashboard)/events/[id]/form/page.tsx` (584 linhas lógicas, CC máx 19)
+- `app/(dashboard)/dashboard/page.tsx` (220 linhas lógicas, CC máx 22)
+- `components/forms/form-fields-renderer.tsx` (219 linhas lógicas, CC máx 19)
+- `components/attendees/attendee-detail-sheet.tsx` (128 linhas — **não** é candidato pelos limiares padrão; a versão original deste spec citava 289, chutado)
 
 These files are difficult to maintain due to:
 1. **Nested conditionals** — hard to follow logic flow

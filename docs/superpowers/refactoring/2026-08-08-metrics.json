@@ -1,0 +1,657 @@
+{
+  "projectRoot": "/home/sanchezz/Desktop/ATZ/SED (save event date)/ATZ_SED_FRONTEND",
+  "thresholds": {
+    "complexity": 15,
+    "lines": 200
+  },
+  "summary": {
+    "totalFiles": 113,
+    "candidates": 18,
+    "clones": 0
+  },
+  "candidates": [
+    {
+      "file": "components/messages/send-message-form.tsx",
+      "logicalLines": 590,
+      "maxComplexity": 25,
+      "totalComplexity": 126,
+      "reasons": [
+        "complexity",
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "SendMessageForm",
+          "line": 65,
+          "complexity": 25
+        },
+        {
+          "name": "addAttachments",
+          "line": 288,
+          "complexity": 9
+        },
+        {
+          "name": "<anônima>@162",
+          "line": 162,
+          "complexity": 5
+        },
+        {
+          "name": "selectTemplate",
+          "line": 181,
+          "complexity": 5
+        },
+        {
+          "name": "addManualRecipient",
+          "line": 252,
+          "complexity": 4
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "app/(dashboard)/dashboard/page.tsx",
+      "logicalLines": 220,
+      "maxComplexity": 22,
+      "totalComplexity": 38,
+      "reasons": [
+        "complexity",
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "DashboardPage",
+          "line": 39,
+          "complexity": 22
+        },
+        {
+          "name": "<anônima>@171",
+          "line": 171,
+          "complexity": 3
+        },
+        {
+          "name": "KpiCard",
+          "line": 19,
+          "complexity": 2
+        },
+        {
+          "name": "derivedValue",
+          "line": 66,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@136",
+          "line": 136,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "lib/validation/registration-form-schema.ts",
+      "logicalLines": 96,
+      "maxComplexity": 20,
+      "totalComplexity": 36,
+      "reasons": [
+        "complexity"
+      ],
+      "hotFunctions": [
+        {
+          "name": "buildSchema",
+          "line": 8,
+          "complexity": 20
+        },
+        {
+          "name": "defaultValues",
+          "line": 85,
+          "complexity": 5
+        },
+        {
+          "name": "<anônima>@29",
+          "line": 29,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@40",
+          "line": 40,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@25",
+          "line": 25,
+          "complexity": 1
+        }
+      ],
+      "testFile": "tests/unit_test/validation/registration-form-schema.spec.ts",
+      "testExists": true
+    },
+    {
+      "file": "app/(dashboard)/events/[id]/form/page.tsx",
+      "logicalLines": 584,
+      "maxComplexity": 19,
+      "totalComplexity": 111,
+      "reasons": [
+        "complexity",
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "FormMetaEditor",
+          "line": 241,
+          "complexity": 19
+        },
+        {
+          "name": "FormBuilderSection",
+          "line": 377,
+          "complexity": 12
+        },
+        {
+          "name": "<anônima>@403",
+          "line": 403,
+          "complexity": 6
+        },
+        {
+          "name": "SortableFieldRow",
+          "line": 71,
+          "complexity": 5
+        },
+        {
+          "name": "handleDragEnd",
+          "line": 427,
+          "complexity": 5
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/forms/form-fields-renderer.tsx",
+      "logicalLines": 219,
+      "maxComplexity": 19,
+      "totalComplexity": 40,
+      "reasons": [
+        "complexity",
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "<anônima>@34",
+          "line": 34,
+          "complexity": 19
+        },
+        {
+          "name": "<anônima>@131",
+          "line": 131,
+          "complexity": 4
+        },
+        {
+          "name": "<anônima>@85",
+          "line": 85,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@100",
+          "line": 100,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@116",
+          "line": 116,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "lib/utils/parse-recipients-csv.ts",
+      "logicalLines": 74,
+      "maxComplexity": 18,
+      "totalComplexity": 35,
+      "reasons": [
+        "complexity"
+      ],
+      "hotFunctions": [
+        {
+          "name": "parseRecipientsCsv",
+          "line": 42,
+          "complexity": 18
+        },
+        {
+          "name": "splitLine",
+          "line": 18,
+          "complexity": 7
+        },
+        {
+          "name": "<anônima>@56",
+          "line": 56,
+          "complexity": 3
+        },
+        {
+          "name": "<anônima>@53",
+          "line": 53,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@54",
+          "line": 54,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "lib/email/build-email.ts",
+      "logicalLines": 188,
+      "maxComplexity": 16,
+      "totalComplexity": 23,
+      "reasons": [
+        "complexity"
+      ],
+      "hotFunctions": [
+        {
+          "name": "buildEmail",
+          "line": 33,
+          "complexity": 16
+        },
+        {
+          "name": "fontStack",
+          "line": 22,
+          "complexity": 2
+        },
+        {
+          "name": "socialIcon",
+          "line": 26,
+          "complexity": 2
+        },
+        {
+          "name": "escapeHtml",
+          "line": 6,
+          "complexity": 1
+        },
+        {
+          "name": "nl2br",
+          "line": 14,
+          "complexity": 1
+        }
+      ],
+      "testFile": "tests/unit_test/email/build-email.spec.ts",
+      "testExists": true
+    },
+    {
+      "file": "app/(dashboard)/events/[id]/attendees/page.tsx",
+      "logicalLines": 228,
+      "maxComplexity": 14,
+      "totalComplexity": 43,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "AttendeesPage",
+          "line": 39,
+          "complexity": 14
+        },
+        {
+          "name": "handleExport",
+          "line": 76,
+          "complexity": 5
+        },
+        {
+          "name": "<anônima>@57",
+          "line": 57,
+          "complexity": 2
+        },
+        {
+          "name": "handleImportFile",
+          "line": 55,
+          "complexity": 1
+        },
+        {
+          "name": "<anônima>@64",
+          "line": 64,
+          "complexity": 1
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/common/data-table.tsx",
+      "logicalLines": 261,
+      "maxComplexity": 12,
+      "totalComplexity": 48,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "DataTable",
+          "line": 51,
+          "complexity": 12
+        },
+        {
+          "name": "DataTableDeleteButton",
+          "line": 235,
+          "complexity": 6
+        },
+        {
+          "name": "<anônima>@142",
+          "line": 142,
+          "complexity": 5
+        },
+        {
+          "name": "toggleAll",
+          "line": 72,
+          "complexity": 4
+        },
+        {
+          "name": "toggleOne",
+          "line": 83,
+          "complexity": 4
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/events/event-automation-dialog.tsx",
+      "logicalLines": 255,
+      "maxComplexity": 11,
+      "totalComplexity": 46,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "<anônima>@82",
+          "line": 82,
+          "complexity": 11
+        },
+        {
+          "name": "handleSave",
+          "line": 104,
+          "complexity": 10
+        },
+        {
+          "name": "EventAutomationDialog",
+          "line": 45,
+          "complexity": 9
+        },
+        {
+          "name": "onSuccess",
+          "line": 125,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@150",
+          "line": 150,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/messages/global-template-dialog.tsx",
+      "logicalLines": 337,
+      "maxComplexity": 11,
+      "totalComplexity": 49,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "GlobalTemplateDialog",
+          "line": 53,
+          "complexity": 11
+        },
+        {
+          "name": "handleSave",
+          "line": 119,
+          "complexity": 11
+        },
+        {
+          "name": "<anônima>@93",
+          "line": 93,
+          "complexity": 9
+        },
+        {
+          "name": "changeChannel",
+          "line": 110,
+          "complexity": 2
+        },
+        {
+          "name": "onSuccess",
+          "line": 138,
+          "complexity": 2
+        }
+      ],
+      "testFile": "tests/unit_test/messages/global-template-dialog.spec.tsx",
+      "testExists": true
+    },
+    {
+      "file": "components/messages/email-layout-editor/editor-fields.tsx",
+      "logicalLines": 238,
+      "maxComplexity": 10,
+      "totalComplexity": 29,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "FieldRenderer",
+          "line": 199,
+          "complexity": 10
+        },
+        {
+          "name": "commitText",
+          "line": 72,
+          "complexity": 3
+        },
+        {
+          "name": "RangeField",
+          "line": 103,
+          "complexity": 3
+        },
+        {
+          "name": "TextField",
+          "line": 19,
+          "complexity": 2
+        },
+        {
+          "name": "ColorField",
+          "line": 55,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "app/(dashboard)/events/page.tsx",
+      "logicalLines": 304,
+      "maxComplexity": 9,
+      "totalComplexity": 33,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "EventCard",
+          "line": 61,
+          "complexity": 9
+        },
+        {
+          "name": "EventsPage",
+          "line": 226,
+          "complexity": 7
+        },
+        {
+          "name": "formatEventDate",
+          "line": 49,
+          "complexity": 2
+        },
+        {
+          "name": "copyLink",
+          "line": 76,
+          "complexity": 1
+        },
+        {
+          "name": "handleDuplicate",
+          "line": 81,
+          "complexity": 1
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/events/event-form-fields.tsx",
+      "logicalLines": 252,
+      "maxComplexity": 8,
+      "totalComplexity": 29,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "EventFormFields",
+          "line": 35,
+          "complexity": 8
+        },
+        {
+          "name": "<anônima>@138",
+          "line": 138,
+          "complexity": 6
+        },
+        {
+          "name": "<anônima>@63",
+          "line": 63,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@80",
+          "line": 80,
+          "complexity": 2
+        },
+        {
+          "name": "<anônima>@146",
+          "line": 146,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/messages/email-layout-editor/email-layout-editor-modal.tsx",
+      "logicalLines": 333,
+      "maxComplexity": 7,
+      "totalComplexity": 64,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "<anônima>@78",
+          "line": 78,
+          "complexity": 7
+        },
+        {
+          "name": "<anônima>@104",
+          "line": 104,
+          "complexity": 5
+        },
+        {
+          "name": "toRows",
+          "line": 39,
+          "complexity": 4
+        },
+        {
+          "name": "clearDraft",
+          "line": 130,
+          "complexity": 4
+        },
+        {
+          "name": "<anônima>@213",
+          "line": 213,
+          "complexity": 4
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "app/(dashboard)/messages/page.tsx",
+      "logicalLines": 313,
+      "maxComplexity": 6,
+      "totalComplexity": 40,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "LogsTab",
+          "line": 234,
+          "complexity": 6
+        },
+        {
+          "name": "TemplatesTab",
+          "line": 88,
+          "complexity": 4
+        },
+        {
+          "name": "ChannelBadge",
+          "line": 46,
+          "complexity": 3
+        },
+        {
+          "name": "<anônima>@262",
+          "line": 262,
+          "complexity": 3
+        },
+        {
+          "name": "handleBulkDelete",
+          "line": 106,
+          "complexity": 2
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "components/messages/email-layout-editor/editor-schema.ts",
+      "logicalLines": 318,
+      "maxComplexity": 1,
+      "totalComplexity": 1,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [
+        {
+          "name": "<anônima>@35",
+          "line": 35,
+          "complexity": 1
+        }
+      ],
+      "testFile": null,
+      "testExists": false
+    },
+    {
+      "file": "lib/api/types.ts",
+      "logicalLines": 257,
+      "maxComplexity": 0,
+      "totalComplexity": 0,
+      "reasons": [
+        "size"
+      ],
+      "hotFunctions": [],
+      "testFile": null,
+      "testExists": false
+    }
+  ],
+  "clones": []
+}
