@@ -11,7 +11,7 @@ export function SidebarBrand({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-14 items-end gap-2 px-4 pb-2">
+    <div className="flex h-14 items-end gap-2 px-6 pb-0">
       <Link
         href="/dashboard"
         onClick={onNavigate}
@@ -21,13 +21,13 @@ export function SidebarBrand({
         <img
           src="/logos/reduzido/logo-verde.svg"
           alt=""
-          width={32}
-          height={32}
+          width={50}
+          height={50}
           className="h-8 w-8 shrink-0 object-contain"
         />
         <span
           className={cn(
-            "truncate text-[10px] font-medium leading-none text-sidebar-foreground/70",
+            "text-warn mb-1 truncate text-[10px] font-medium leading-none text-sidebar-foreground/70 text-brand",
             collapsed && "sr-only",
           )}
         >
