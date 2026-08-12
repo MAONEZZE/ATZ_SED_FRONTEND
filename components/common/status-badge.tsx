@@ -44,7 +44,7 @@ export function MessageLogStatusBadge({ status }: { status: MessageLog["status"]
   );
 }
 
-/** Tag online/offline de instância Uazapi — reflete se há token configurado (`active`). */
+/** Tag online/offline de instância WhatsApp — reflete se há token configurado (`active`). */
 export function InstanceStatusBadge({ active }: { active: boolean }) {
   return (
     <Badge

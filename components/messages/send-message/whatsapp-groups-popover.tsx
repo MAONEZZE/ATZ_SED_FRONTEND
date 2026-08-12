@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
- * Popover de grupos WhatsApp (canal WhatsApp): lista grupos da instância Uazapi
+ * Popover de grupos WhatsApp (canal WhatsApp): lista grupos da instância WhatsApp
  * selecionada e permite marcar quais recebem o envio (groupIds).
  */
 export function WhatsAppGroupsPopover({
@@ -47,7 +47,7 @@ export function WhatsAppGroupsPopover({
           </div>
         ) : isError ? (
           <p className="px-3 py-4 text-sm text-destructive">
-            Erro ao carregar grupos. Verifique a instância Uazapi.
+            Erro ao carregar grupos. Verifique a instância WhatsApp.
           </p>
         ) : !groups || groups.length === 0 ? (
           <p className="px-3 py-4 text-sm text-muted-foreground">
