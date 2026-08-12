@@ -193,7 +193,7 @@ export default async function PublicEventPage({ params }: PageProps) {
             <FaYoutube className="h-5 w-5" />
           </a>
         </div>
-        <p className="mt-4">SED | Atlaz</p>
+        <p className="mt-4">SED | Akeel</p>
       </footer>
     </main>
   );
