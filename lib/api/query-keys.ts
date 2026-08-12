@@ -31,7 +31,7 @@ export const queryKeys = {
       ? (["events", eventId, "message-logs", params] as const)
       : (["events", eventId, "message-logs"] as const),
   profile: ["profile"] as const,
-  uazapiInstances: ["uazapi-instances"] as const,
+  whatsappInstances: ["whatsapp-instances"] as const,
 
   allTemplates: (params?: {
     page?: number;

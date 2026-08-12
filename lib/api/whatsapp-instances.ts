@@ -3,12 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { UazapiInstance } from "@/lib/api/types";
+import type { WhatsAppInstance } from "@/lib/api/types";
 
-export function useUazapiInstances() {
+export function useWhatsAppInstances() {
   return useQuery({
-    queryKey: queryKeys.uazapiInstances,
-    queryFn: () => api.get<UazapiInstance[]>("/uazapi-instances"),
+    queryKey: queryKeys.whatsappInstances,
+    queryFn: () => api.get<WhatsAppInstance[]>("/whatsapp-instances"),
     select: (instances) =>
       [...instances].sort((a, b) => Number(b.active) - Number(a.active)),
   });

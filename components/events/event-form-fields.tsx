@@ -2,7 +2,7 @@
 
 import { Controller, type UseFormReturn } from "react-hook-form";
 import type { EventFormValues } from "@/lib/validation/event-schema";
-import { useUazapiInstances } from "@/lib/api/uazapi-instances";
+import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
 import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +43,7 @@ export function EventFormFields({
   const errors = formState.errors;
   const freq = form.watch("recurrenceFreq");
   const isRecurring = Boolean(freq);
-  const { data: uazapiInstances } = useUazapiInstances();
+  const { data: whatsappInstances } = useWhatsAppInstances();
 
   return (
     <div className="grid gap-5 sm:grid-cols-2">
@@ -131,12 +131,12 @@ export function EventFormFields({
       </div>
 
       <div className="space-y-2 sm:col-span-2">
-        <Label htmlFor="uazapiInstanceId">Instância</Label>
+        <Label htmlFor="whatsappInstanceId">Instância</Label>
         <Controller
           control={form.control}
-          name="uazapiInstanceId"
+          name="whatsappInstanceId"
           render={({ field }) => {
-            const [selectedInstance] = uazapiInstances?.filter(
+            const [selectedInstance] = whatsappInstances?.filter(
               (instance) => instance.id === field.value,
             ) ?? [];
             return (
@@ -145,7 +145,7 @@ export function EventFormFields({
                 value={field.value || NO_INSTANCE}
                 onValueChange={(v) => field.onChange(v === NO_INSTANCE ? "" : v)}
               >
-                <SelectTrigger id="uazapiInstanceId">
+                <SelectTrigger id="whatsappInstanceId">
                   <SelectValue>
                     <span className="flex items-center gap-2">
                       {field.value ? selectedInstance?.nickname : "Sem instância"}
@@ -157,7 +157,7 @@ export function EventFormFields({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                  {uazapiInstances?.map((instance) => (
+                  {whatsappInstances?.map((instance) => (
                     <SelectItem
                       key={instance.id}
                       value={instance.id}

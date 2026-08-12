@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Loader2, Rocket, Square } from "lucide-react";
 import { useEvent, useUpdateEvent, useUpdateEventStatus } from "@/lib/api/events";
-import { useUazapiInstances } from "@/lib/api/uazapi-instances";
+import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
 import {
   eventSchema,
   toEventInput,
@@ -42,14 +42,14 @@ function toFormValues(event: EventObject): EventFormValues {
     recurrenceUntil: event.recurrenceUntil
       ? utcIsoToLocalInput(event.recurrenceUntil)
       : "",
-    uazapiInstanceId: event.uazapiInstanceId ?? "",
+    whatsappInstanceId: event.whatsappInstanceId ?? "",
   };
 }
 
 export default function EditEventPage() {
   const params = useParams<{ id: string }>();
   const { data: event, isLoading } = useEvent(params.id);
-  const { data: uazapiInstances } = useUazapiInstances();
+  const { data: whatsappInstances } = useWhatsAppInstances();
   const updateEvent = useUpdateEvent(params.id);
   const updateStatus = useUpdateEventStatus(params.id);
 
@@ -67,12 +67,12 @@ export default function EditEventPage() {
   // o <Select> do Radix perder o valor (corrida interna ao registrar as options).
   const [instancesReady, setInstancesReady] = useState(false);
   useEffect(() => {
-    if (uazapiInstances) setInstancesReady(true);
-  }, [uazapiInstances]);
+    if (whatsappInstances) setInstancesReady(true);
+  }, [whatsappInstances]);
 
   useEffect(() => {
     if (event && instancesReady) {
-      form.setValue("uazapiInstanceId", event.uazapiInstanceId ?? "");
+      form.setValue("whatsappInstanceId", event.whatsappInstanceId ?? "");
     }
   }, [event, instancesReady, form]);
 

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvents } from "@/lib/api/events";
-import { useUazapiInstances } from "@/lib/api/uazapi-instances";
+import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
 import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { useRegistrations } from "@/lib/api/registrations";
 import { useSendMessage, useUploadAttachment } from "@/lib/api/messaging";
@@ -74,9 +74,9 @@ export function SendMessageForm({
   const [localEventId, setLocalEventId] = useState("");
   const effectiveEventId = fixedEventId ?? localEventId;
 
-  const { data: uazapiInstances } = useUazapiInstances();
+  const { data: whatsappInstances } = useWhatsAppInstances();
   const [instanceId, setInstanceId] = useState("");
-  const selectedInstance = uazapiInstances?.find((i) => i.id === instanceId);
+  const selectedInstance = whatsappInstances?.find((i) => i.id === instanceId);
 
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
@@ -418,7 +418,7 @@ export function SendMessageForm({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NO_INSTANCE}>Sem instância</SelectItem>
-                    {uazapiInstances?.map((instance) => (
+                    {whatsappInstances?.map((instance) => (
                       <SelectItem
                         key={instance.id}
                         value={instance.id}

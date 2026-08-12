@@ -48,8 +48,8 @@ export interface EventObject {
   recurrenceFreq: RecurrenceFreq | null;
   recurrenceInterval: number | null;
   recurrenceUntil: string | null;
-  uazapiInstanceId: string | null;
-  uazapiToken: string | null;
+  whatsappInstanceId: string | null;
+  whatsappToken: string | null;
   sendToPipedrive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -198,7 +198,7 @@ export interface Profile {
   updatedAt: string;
 }
 
-export interface UazapiInstance {
+export interface WhatsAppInstance {
   id: string;
   nickname: string;
   active: boolean;
