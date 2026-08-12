@@ -47,3 +47,4 @@ CLAUDE.md
 # git worktrees (local dev workspaces)
 .worktrees/
 .Plano/
+graphify-out/
