@@ -4,7 +4,7 @@ import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/comunicacao/ex-eventos",
+  usePathname: () => "/eventos",
 }));
 
 beforeEach(() => {

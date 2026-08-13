@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Loader2, Trash2 } from "lucide-react";
 import {
   Table,
@@ -13,12 +13,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  RESERVED_BELOW,
+  TABLE_ROW_HEIGHT,
+  useFitPageSize,
+} from "@/components/common/use-fit-page-size";
 import { cn } from "@/lib/utils";
 
 export interface DataTableColumn<T> {
@@ -28,8 +26,6 @@ export interface DataTableColumn<T> {
   align?: "left" | "center" | "right";
   className?: string;
 }
-
-const PAGE_SIZE_OPTIONS = [10, 50, 100] as const;
 
 export interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
@@ -43,8 +39,10 @@ export interface DataTableProps<T> {
   onSelectedChange?: (selected: Set<string>) => void;
   total: number;
   page: number;
-  pageSize: number;
+  /** `null` enquanto a tabela ainda não mediu quantas linhas cabem na tela. */
+  pageSize: number | null;
   onPageChange: (page: number) => void;
+  /** A tabela mede a si mesma e informa quantas linhas cabem sem gerar scroll. */
   onPageSizeChange: (pageSize: number) => void;
 }
 
@@ -63,7 +61,19 @@ export function DataTable<T>({
   onPageChange,
   onPageSizeChange,
 }: DataTableProps<T>) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const { ref: bodyRef, pageSize: fittedPageSize } =
+    useFitPageSize<HTMLTableSectionElement>({
+      itemHeight: TABLE_ROW_HEIGHT,
+      reserved: RESERVED_BELOW,
+    });
+
+  useEffect(() => {
+    if (fittedPageSize !== null && fittedPageSize !== pageSize) {
+      onPageSizeChange(fittedPageSize);
+    }
+  }, [fittedPageSize, pageSize, onPageSizeChange]);
+
+  const totalPages = pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   const selectable = Boolean(selected && onSelectedChange);
   const ids = data.map(getRowId);
   const allChecked = ids.length > 0 && ids.every((id) => selected?.has(id));
@@ -89,142 +99,142 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {selectable && (
-              <TableHead className="w-10 pl-4 pr-0 text-center">
-                <Checkbox
-                  checked={allChecked ? true : someChecked ? "indeterminate" : false}
-                  onCheckedChange={toggleAll}
-                  aria-label="Selecionar todos os registros desta página"
-                />
-              </TableHead>
-            )}
-            {columns.map((col) => (
-              <TableHead
-                key={col.key}
-                className={cn(
-                  col.align === "left"
-                    ? "text-left"
-                    : col.align === "right"
-                      ? "text-right"
-                      : "text-center",
-                  col.className,
-                )}
-              >
-                {col.header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
+    <div>
+      <div className="overflow-hidden rounded-lg border border-border">
+        <Table className="table-fixed">
+          <TableHeader>
             <TableRow>
-              <TableCell
-                colSpan={columns.length + (selectable ? 1 : 0)}
-                className="h-24 text-center"
-              >
-                <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
-              </TableCell>
-            </TableRow>
-          ) : data.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length + (selectable ? 1 : 0)}
-                className="h-24 text-center text-sm text-muted-foreground"
-              >
-                {emptyMessage}
-              </TableCell>
-            </TableRow>
-          ) : (
-            data.map((row) => {
-              const id = getRowId(row);
-              return (
-                <TableRow
-                  key={id}
-                  data-state={selected?.has(id) ? "selected" : undefined}
-                  className={cn(onRowClick && "cursor-pointer")}
-                  onClick={() => onRowClick?.(row)}
-                >
-                  {selectable && (
-                    <TableCell
-                      className="w-10 pl-4 pr-0 text-center"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <Checkbox
-                        checked={selected?.has(id) ?? false}
-                        onCheckedChange={() => toggleOne(id)}
-                        aria-label="Selecionar registro"
-                      />
-                    </TableCell>
+              {selectable && (
+                <TableHead className="w-10 pl-4 pr-0 text-center">
+                  <Checkbox
+                    checked={allChecked ? true : someChecked ? "indeterminate" : false}
+                    onCheckedChange={toggleAll}
+                    aria-label="Selecionar todos os registros desta página"
+                  />
+                </TableHead>
+              )}
+              {columns.map((col) => (
+                <TableHead
+                  key={col.key}
+                  className={cn(
+                    col.align === "left"
+                      ? "text-left"
+                      : col.align === "right"
+                        ? "text-right"
+                        : "text-center",
+                    col.className,
                   )}
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col.key}
-                      className={cn(
-                        col.align === "left"
-                          ? "text-left"
-                          : col.align === "right"
-                            ? "text-right"
-                            : "text-center",
-                        col.className,
-                      )}
-                    >
-                      {col.cell(row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
-
-      <div className="flex flex-col gap-3 border-t border-border bg-ink-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-end">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Mostrar</span>
-            <Select
-              value={String(pageSize)}
-              onValueChange={(value) => onPageSizeChange(Number(value))}
-            >
-              <SelectTrigger className="h-8 w-[72px]" aria-label="Registros por página">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZE_OPTIONS.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-            >
-              Anterior
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-            >
-              Próxima
-            </Button>
-          </div>
-        </div>
+                >
+                  {col.header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody ref={bodyRef}>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  className="h-24 text-center"
+                >
+                  <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
+                </TableCell>
+              </TableRow>
+            ) : data.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  className="h-24 text-center text-sm text-muted-foreground"
+                >
+                  {emptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.map((row) => {
+                const id = getRowId(row);
+                return (
+                  <TableRow
+                    key={id}
+                    data-state={selected?.has(id) ? "selected" : undefined}
+                    className={cn("h-12", onRowClick && "cursor-pointer")}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {selectable && (
+                      <TableCell
+                        className="w-10 pl-4 pr-0 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Checkbox
+                          checked={selected?.has(id) ?? false}
+                          onCheckedChange={() => toggleOne(id)}
+                          aria-label="Selecionar registro"
+                        />
+                      </TableCell>
+                    )}
+                    {columns.map((col) => (
+                      <TableCell
+                        key={col.key}
+                        className={cn(
+                          // A linha tem altura fixa (TABLE_ROW_HEIGHT); conteúdo longo é
+                          // cortado em vez de quebrar linha e estourar a medida.
+                          "truncate",
+                          col.align === "left"
+                            ? "text-left"
+                            : col.align === "right"
+                              ? "text-right"
+                              : "text-center",
+                          col.className,
+                        )}
+                      >
+                        {col.cell(row)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
+    </div>
+  );
+}
+
+/** Anterior/Próxima abaixo da lista. Só aparece quando há mais de uma página. */
+export function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="mt-4 flex items-center justify-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        Anterior
+      </Button>
+      <span className="text-sm text-muted-foreground">
+        {page} / {totalPages}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={page >= totalPages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Próxima
+      </Button>
     </div>
   );
 }

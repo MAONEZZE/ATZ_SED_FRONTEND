@@ -47,7 +47,8 @@ export function FormResponsesTab({
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  // null até a tabela medir quantas linhas cabem sem gerar scroll.
+  const [limit, setLimit] = useState<number | null>(null);
   const [viewing, setViewing] = useState<UserSubscription | null>(null);
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -75,7 +76,7 @@ export function FormResponsesTab({
   const { data: response, isLoading } = useUserSubscriptions(eventId, {
     search: search.trim() || undefined,
     page,
-    limit,
+    limit: limit ?? 0,
   });
 
   // Só quem enviou o formulário desta aba.

@@ -17,7 +17,7 @@ test.describe("mudança de status de inscrito", () => {
     await page.getByRole("button", { name: "Entrar" }).click();
     await expect(page).toHaveURL(/\/events/);
 
-    await page.goto(`/comunicacao/ex-eventos/${eventId}/attendees`);
+    await page.goto(`/eventos/${eventId}/attendees`);
 
     const statusSelect = page.getByRole("combobox", { name: /status de/i }).first();
     await expect(statusSelect).toBeVisible();

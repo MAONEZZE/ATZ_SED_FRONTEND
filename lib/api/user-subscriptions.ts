@@ -31,7 +31,8 @@ export function useUserSubscriptions(
       api.get<PaginatedResponse<UserSubscription>>(
         `/events/${eventId}/user-subscriptions?${qs.toString()}`,
       ),
-    enabled: Boolean(eventId),
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: Boolean(eventId) && limit > 0,
     placeholderData: keepPreviousData,
   });
 }

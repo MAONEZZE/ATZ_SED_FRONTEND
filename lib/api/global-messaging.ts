@@ -43,6 +43,8 @@ export function useAllTemplates(
       if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
   });
 }
 
@@ -62,6 +64,8 @@ export function useAllMessageLogs(page = 1, limit = 30) {
       api.get<PaginatedResponse<MessageLogWithEvent>>(
         `/messaging/logs?page=${page}&limit=${limit}`,
       ),
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
   });
 }
 
