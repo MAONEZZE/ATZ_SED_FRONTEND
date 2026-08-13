@@ -25,6 +25,10 @@ import type { EventObject } from "@/lib/api/types";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { FolderGroup } from "@/components/common/folder-group";
+import { Breadcrumb } from "@/components/common/breadcrumb";
+import { FolderCreateButton } from "@/components/common/folder-create-button";
+import { FolderGrid } from "@/components/common/folder-grid";
+import { useFolders } from "@/components/common/use-folders";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -228,6 +232,7 @@ export default function EventsPage() {
   const [page, setPage] = useState(1);
   const limit = 20;
   const { data: profile } = useProfile();
+  const { folders, createFolder, renameFolder, deleteFolder } = useFolders();
   const {
     data: response,
     isLoading,
@@ -240,15 +245,27 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
+      <Breadcrumb items={[{ label: "Comunicação" }, { label: "Externo" }, { label: "Eventos" }]} />
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Eventos</h1>
-        <Button asChild>
-          <Link href="/comunicacao/ex-eventos/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo evento
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <FolderCreateButton onCreate={createFolder} />
+          <Button asChild>
+            <Link href="/comunicacao/ex-eventos/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Novo evento
+            </Link>
+          </Button>
+        </div>
       </div>
+
+      <FolderGrid
+        folders={folders}
+        basePath="/comunicacao/ex-eventos"
+        onRename={renameFolder}
+        onDelete={deleteFolder}
+      />
 
       {isLoading && <LoadingSpinner />}
 

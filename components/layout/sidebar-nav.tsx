@@ -16,8 +16,8 @@ type NavItem = {
 
 export const sidebarNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/", label: "Administração", icon: ChartLine },
-  { href: "/", label: "Juridico", icon: ScrollText },
+  { href: "/administracao", label: "Administração", icon: ChartLine },
+  { href: "/juridico", label: "Juridico", icon: ScrollText },
   {
     label: "Comunicação",
     icon: EthernetPort,
@@ -25,9 +25,7 @@ export const sidebarNavItems: NavItem[] = [
       {
         label: "Externo",
         children: [
-          { href: "/comunicacao/ex-treinamentos", label: "Treinamentos" },
           { href: "/comunicacao/ex-eventos", label: "Eventos" },
-          { href: "/comunicacao/ex-workshop", label: "Workshop" },
           { href: "/comunicacao/ex-mensagens", label: "Mensagens" }
         ],
       },

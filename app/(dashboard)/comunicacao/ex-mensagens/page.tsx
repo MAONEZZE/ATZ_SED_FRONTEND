@@ -12,6 +12,7 @@ import type { MessageChannel, MessageLogWithEvent, TemplateWithEvent } from "@/l
 import { formatDateTime } from "@/lib/utils/format-date";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { SendMessageForm } from "@/components/messages/send-message-form";
+import { Breadcrumb } from "@/components/common/breadcrumb";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { MessageLogStatusBadge } from "@/components/common/status-badge";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
@@ -361,6 +362,7 @@ function MessagesPageContent() {
 
   return (
     <div className="space-y-4">
+      <Breadcrumb items={[{ label: "Comunicação" }, { label: "Externo" }, { label: "Mensagens" }]} />
       <h1 className="text-2xl font-bold tracking-tight">Mensagens</h1>
 
       <Tabs defaultValue="send" className="space-y-4">
