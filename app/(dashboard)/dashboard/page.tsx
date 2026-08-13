@@ -78,7 +78,7 @@ export default function DashboardPage() {
           {displayName ? `Olá, ${displayName}` : "Dashboard"}
         </h1>
         <Button asChild>
-          <Link href="/events/new">
+          <Link href="/comunicacao/ex-eventos/new">
             <Plus className="mr-2 h-4 w-4" />
             Novo evento
           </Link>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {!complete ? (
-                  <Link href="/events" className="text-sm text-primary hover:underline">
+                  <Link href="/comunicacao/ex-eventos" className="text-sm text-primary hover:underline">
                     Ver todos os eventos
                   </Link>
                 ) : upcoming.length === 0 ? (
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                     <div key={event.id} className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <Link
-                          href={`/events/${event.id}/edit`}
+                          href={`/comunicacao/ex-eventos/${event.id}/edit`}
                           className="block truncate text-sm font-medium hover:underline"
                         >
                           {event.title}
@@ -196,7 +196,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {!complete ? (
-                <Link href="/events" className="text-sm text-primary hover:underline">
+                <Link href="/comunicacao/ex-eventos" className="text-sm text-primary hover:underline">
                   Ver todos os eventos
                 </Link>
               ) : eventsTotal === 0 ? (

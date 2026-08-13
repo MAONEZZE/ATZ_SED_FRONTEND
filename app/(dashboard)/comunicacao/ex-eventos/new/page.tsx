@@ -49,7 +49,7 @@ export default function NewEventPage() {
         } else {
           toast.success("Rascunho criado");
         }
-        router.push(`/events/${event.id}/edit`);
+        router.push(`/comunicacao/ex-eventos/${event.id}/edit`);
       },
       onError: (e) => toast.error(e.message),
     });

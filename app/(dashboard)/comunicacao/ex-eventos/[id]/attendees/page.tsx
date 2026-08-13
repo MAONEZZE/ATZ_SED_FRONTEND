@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Loader2, Search, Upload } from "lucide-react";
+import { Download, Filter, Loader2, Search, Upload } from "lucide-react";
 import {
   exportRegistrationsCsv,
   useImportRegistrations,
@@ -19,15 +19,13 @@ import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-shee
 import { FormResponsesTab } from "@/components/attendees/form-responses-tab";
 import { CsvImportModal } from "@/components/common/csv-import-modal";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { useSetRecordCount } from "@/components/common/record-count";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const ALL = "all";
 
@@ -106,6 +104,8 @@ export default function AttendeesPage() {
   });
   const registrations = response?.data ?? [];
 
+  useSetRecordCount(tab === "registration" ? response?.total ?? 0 : null);
+
   function openDetails(registration: Registration) {
     setViewing(registration);
     setSheetOpen(true);
@@ -152,19 +152,6 @@ export default function AttendeesPage() {
             onChange={handleSearch}
           />
         </div>
-        <Select value={statusFilter} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="sm:w-[200px]" aria-label="Filtrar por status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos os status</SelectItem>
-            {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
-              <SelectItem key={status} value={status}>
-                {funnelStatusConfig[status].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Button variant="outline" onClick={() => setCsvModalOpen(true)}>
           <Download className="mr-2 h-4 w-4" />
           Importar CSV
@@ -198,7 +185,44 @@ export default function AttendeesPage() {
           },
           {
             key: "status",
-            header: "Status",
+            header: (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 hover:text-foreground",
+                      statusFilter !== ALL && "text-primary",
+                    )}
+                  >
+                    <Filter
+                      className={cn("h-3.5 w-3.5", statusFilter !== ALL && "fill-current")}
+                    />
+                    {statusFilter === ALL
+                      ? "Status"
+                      : funnelStatusConfig[statusFilter as FunnelStatus].label}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56" align="center">
+                  <RadioGroup value={statusFilter} onValueChange={handleStatusFilter}>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value={ALL} id="status-filter-all" />
+                      <Label htmlFor="status-filter-all" className="font-normal">
+                        Todos os status
+                      </Label>
+                    </div>
+                    {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
+                      <div key={status} className="flex items-center gap-2">
+                        <RadioGroupItem value={status} id={`status-filter-${status}`} />
+                        <Label htmlFor={`status-filter-${status}`} className="font-normal">
+                          {funnelStatusConfig[status].label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </PopoverContent>
+              </Popover>
+            ),
             cell: (r) => (
               <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                 <StatusSelect eventId={eventId} registration={r} />

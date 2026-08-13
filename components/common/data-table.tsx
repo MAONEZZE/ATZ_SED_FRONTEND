@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 export interface DataTableColumn<T> {
   key: string;
-  header: string;
+  header: ReactNode;
   cell: (row: T) => ReactNode;
   align?: "left" | "center" | "right";
   className?: string;
@@ -182,10 +182,7 @@ export function DataTable<T>({
         </TableBody>
       </Table>
 
-      <div className="flex flex-col gap-3 border-t border-border bg-ink-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-muted-foreground">
-          {total} {total === 1 ? "registro" : "registros"}
-        </p>
+      <div className="flex flex-col gap-3 border-t border-border bg-ink-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-end">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Mostrar</span>

@@ -5,7 +5,7 @@ const password = process.env.E2E_USER_PASSWORD;
 
 test.describe("login", () => {
   test("rota protegida redireciona para /login", async ({ page }) => {
-    await page.goto("/events");
+    await page.goto("/comunicacao/ex-eventos");
     await expect(page).toHaveURL(/\/login/);
   });
 

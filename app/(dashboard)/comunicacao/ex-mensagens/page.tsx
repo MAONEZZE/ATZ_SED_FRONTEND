@@ -8,15 +8,21 @@ import {
   useAllTemplates,
   useDeleteTemplateGlobal,
 } from "@/lib/api/global-messaging";
-import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
+import type { MessageChannel, MessageLogWithEvent, TemplateWithEvent } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/utils/format-date";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { MessageLogStatusBadge } from "@/components/common/status-badge";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import {
+  RecordCountProvider,
+  useRecordCount,
+  useSetRecordCount,
+} from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -96,6 +102,7 @@ function TemplatesTab() {
   );
 
   const templates = response?.data ?? [];
+  useSetRecordCount(response?.total ?? 0);
   const deleteTemplate = useDeleteTemplateGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateWithEvent | null>(null);
@@ -237,13 +244,14 @@ function LogsTab() {
   const { data: response, isLoading } = useAllMessageLogs(page, limit);
   const logs = response?.data;
   const totalPages = response ? Math.ceil(response.total / limit) : 0;
+  const [viewing, setViewing] = useState<MessageLogWithEvent | null>(null);
+
+  useSetRecordCount(response?.total ?? 0);
 
   if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="space-y-4">
-      <TabToolbar left={response ? `${response.total} mensagem(ns)` : null} />
-
       <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
@@ -260,7 +268,11 @@ function LogsTab() {
               <EmptyRow cols={5} text="Nenhuma mensagem enviada ainda." />
             )}
             {logs?.map((log) => (
-              <TableRow key={log.id}>
+              <TableRow
+                key={log.id}
+                className="cursor-pointer"
+                onClick={() => setViewing(log)}
+              >
                 <TableCell className="font-medium">{log.recipient}</TableCell>
                 <TableCell>
                   <ChannelBadge channel={log.channel} />
@@ -303,20 +315,64 @@ function LogsTab() {
           </Button>
         </div>
       )}
+
+      <Dialog open={viewing != null} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+          {viewing && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{viewing.recipient}</DialogTitle>
+                <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <ChannelBadge channel={viewing.channel} />
+                  <span>{viewing.event?.title ?? "Sem evento"}</span>
+                  <MessageLogStatusBadge status={viewing.status} />
+                  <span>{formatDateTime(viewing.sentAt ?? viewing.createdAt)}</span>
+                </div>
+              </DialogHeader>
+
+              {viewing.errorMessage && (
+                <p className="text-sm text-destructive">{viewing.errorMessage}</p>
+              )}
+
+              <iframe
+                sandbox=""
+                srcDoc={viewing.body}
+                className="h-64 w-full rounded-md border"
+                title="Mensagem enviada"
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 export default function MessagesPage() {
   return (
+    <RecordCountProvider>
+      <MessagesPageContent />
+    </RecordCountProvider>
+  );
+}
+
+function MessagesPageContent() {
+  const count = useRecordCount();
+
+  return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold tracking-tight">Mensagens</h1>
 
       <Tabs defaultValue="send" className="space-y-4">
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="send">Enviar</TabsTrigger>
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
+          {count != null && (
+            <span className="ml-auto whitespace-nowrap text-sm text-muted-foreground">
+              {count} {count === 1 ? "registro" : "registros"}
+            </span>
+          )}
         </TabsList>
 
         <TabsContent value="send">

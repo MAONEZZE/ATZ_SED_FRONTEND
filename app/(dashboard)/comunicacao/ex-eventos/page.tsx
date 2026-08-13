@@ -24,6 +24,7 @@ import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import type { EventObject } from "@/lib/api/types";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { FolderGroup } from "@/components/common/folder-group";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,7 +83,7 @@ function EventCard({
     duplicate.mutate(event.id, {
       onSuccess: (created) => {
         toast.success("Evento duplicado como rascunho");
-        router.push(`/events/${created.id}/edit`);
+        router.push(`/comunicacao/ex-eventos/${created.id}/edit`);
       },
       onError: (e) => toast.error(e.message),
     });
@@ -179,7 +180,7 @@ function EventCard({
         </div>
 
         <CardContent className="p-4">
-          <Link href={`/events/${event.id}/edit`} className="block">
+          <Link href={`/comunicacao/ex-eventos/${event.id}/edit`} className="block">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate font-semibold">{event.title}</h3>
               <EventStatusBadge status={event.status} />
@@ -242,7 +243,7 @@ export default function EventsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Eventos</h1>
         <Button asChild>
-          <Link href="/events/new">
+          <Link href="/comunicacao/ex-eventos/new">
             <Plus className="mr-2 h-4 w-4" />
             Novo evento
           </Link>
@@ -277,7 +278,7 @@ export default function EventsPage() {
             Crie seu primeiro evento para começar.
           </p>
           <Button asChild className="mt-4">
-            <Link href="/events/new">
+            <Link href="/comunicacao/ex-eventos/new">
               <Plus className="mr-2 h-4 w-4" />
               Criar evento
             </Link>
@@ -285,11 +286,15 @@ export default function EventsPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {events?.map((event) => (
-          <EventCard key={event.id} event={event} ownerId={profile?.id} />
-        ))}
-      </div>
+      {events && events.length > 0 && (
+        <FolderGroup title="Eventos" count={response?.total}>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {events.map((event) => (
+              <EventCard key={event.id} event={event} ownerId={profile?.id} />
+            ))}
+          </div>
+        </FolderGroup>
+      )}
 
       {totalPages > 0 && (
         <div className="flex items-center justify-center gap-2">

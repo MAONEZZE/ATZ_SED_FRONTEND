@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, LayoutDashboard, Settings, ChartLine, ScrollText, EthernetPort } from "lucide-react";
 import { isActive } from "@/lib/utils/nav";
 import { cn } from "@/lib/utils";
-import { FaDochub } from "react-icons/fa";
 
 type NavItem = {
   href?: string;
@@ -17,8 +16,6 @@ type NavItem = {
 
 export const sidebarNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  // { href: "/events", label: "Eventos", icon: CalendarDays },
-  // { href: "/messages", label: "Mensagens", icon: MessageSquare },
   { href: "/", label: "Administração", icon: ChartLine },
   { href: "/", label: "Juridico", icon: ScrollText },
   {
@@ -28,20 +25,20 @@ export const sidebarNavItems: NavItem[] = [
       {
         label: "Externo",
         children: [
-          { href: "/", label: "Treinamentos" },
-          { href: "/events", label: "Eventos" },
-          { href: "/", label: "Workshop" },
-          { href: "/messages", label: "Mensagens" }
+          { href: "/comunicacao/ex-treinamentos", label: "Treinamentos" },
+          { href: "/comunicacao/ex-eventos", label: "Eventos" },
+          { href: "/comunicacao/ex-workshop", label: "Workshop" },
+          { href: "/comunicacao/ex-mensagens", label: "Mensagens" }
         ],
       },
-      { 
-        href: "/", 
+      {
+        href: "/",
         label: "Interno",
         children: [
-          { href: "/", label: "Treinamentos" },
-          { href: "/", label: "Galeria" },
-          { href: "/", label: "AI Chat" },
-          { href: "/", label: "Wiki (Docs)" }
+          { href: "/comunicacao/int-treinamentos", label: "Treinamentos" },
+          { href: "/comunicacao/int-galeria", label: "Galeria" },
+          { href: "/comunicacao/int-ai-chat", label: "AI Chat" },
+          { href: "/comunicacao/int-wiki", label: "Wiki (Docs)" }
         ],
       },
     ],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Download, Loader2, Search } from "lucide-react";
 import {
@@ -14,6 +14,7 @@ import { formatDate } from "@/lib/utils/format-date";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
+import { useSetRecordCount } from "@/components/common/record-count";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ export function FormResponsesTab({
 
   const answersKey = KEY[kind];
   const { data: fields = [] } = useFormFields(eventId, kind);
+  const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
 
   async function handleExport() {
     setExporting(true);
@@ -79,6 +81,8 @@ export function FormResponsesTab({
   // Só quem enviou o formulário desta aba.
   const rows = (response?.data ?? []).filter((s) => s[answersKey] != null);
 
+  useSetRecordCount(response?.total ?? 0);
+
   function openDetails(sub: UserSubscription) {
     setViewing(sub);
     setOpen(true);
@@ -88,11 +92,11 @@ export function FormResponsesTab({
     if (!open || !viewing) return;
     const answers = (viewing[answersKey] ?? {}) as Record<string, unknown>;
     const d: Record<string, unknown> = {};
-    fields.forEach((f) => {
+    sortedFields.forEach((f) => {
       d[f.label] = answers[f.label] ?? "";
     });
     setDraft(d);
-  }, [open, viewing, fields, answersKey]);
+  }, [open, viewing, sortedFields, answersKey]);
 
   return (
     <div className="space-y-4">
@@ -178,7 +182,7 @@ export function FormResponsesTab({
                 <Separator />
 
                 <div className="space-y-4">
-                  {fields.map((field) => (
+                  {sortedFields.map((field) => (
                     <div key={field.id} className="space-y-1.5">
                       <Label>{field.label}</Label>
                       <AnswerEditor

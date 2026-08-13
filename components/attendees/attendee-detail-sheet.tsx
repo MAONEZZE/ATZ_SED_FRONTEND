@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { PipedriveBadge } from "@/components/attendees/pipedrive-badge";
@@ -12,7 +12,6 @@ import type { Registration } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format-date";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function AttendeeDetailSheet({
@@ -29,6 +28,7 @@ export function AttendeeDetailSheet({
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
   const { data: fields = [] } = useFormFields(eventId);
+  const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
   const updateRegistration = useUpdateRegistration(eventId);
 
   // Status do Pipedrive vem da tabela consolidada; cruza por e-mail/telefone.
@@ -46,11 +46,18 @@ export function AttendeeDetailSheet({
   useEffect(() => {
     if (!open || !registration) return;
     const d: Record<string, unknown> = {};
-    fields.forEach((f) => {
-      d[f.label] = registration.answers[f.label] ?? "";
+    sortedFields.forEach((f) => {
+      const fallback = f.isFixed
+        ? f.type === "email"
+          ? registration.email
+          : f.type === "phone"
+            ? registration.phone
+            : registration.name
+        : "";
+      d[f.label] = registration.answers[f.label] ?? fallback;
     });
     setDraft(d);
-  }, [open, registration, fields]);
+  }, [open, registration, sortedFields]);
 
   function save() {
     if (!registration) return;
@@ -81,38 +88,23 @@ export function AttendeeDetailSheet({
             </DialogHeader>
 
             <div className="space-y-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">E-mail</p>
-                <p className="font-medium">{registration.email}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Telefone</p>
-                <p className="font-medium">{registration.phone}</p>
-              </div>
-
-              <Separator />
-
-              <h4 className="font-semibold">Respostas do formulário</h4>
-
-              <div className="space-y-4">
-                {fields.map((field) => (
-                  <div key={field.id} className="space-y-1.5">
-                    <Label>
-                      {field.label}
-                      {field.required && (
-                        <span className="ml-0.5 text-destructive">*</span>
-                      )}
-                    </Label>
-                    <AnswerEditor
-                      field={field}
-                      value={draft[field.label]}
-                      onChange={(v) =>
-                        setDraft((prev) => ({ ...prev, [field.label]: v }))
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
+              {sortedFields.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <Label>
+                    {field.label}
+                    {field.required && (
+                      <span className="ml-0.5 text-destructive">*</span>
+                    )}
+                  </Label>
+                  <AnswerEditor
+                    field={field}
+                    value={draft[field.label]}
+                    onChange={(v) =>
+                      setDraft((prev) => ({ ...prev, [field.label]: v }))
+                    }
+                  />
+                </div>
+              ))}
             </div>
 
             <EditDialogFooter

@@ -9,6 +9,7 @@ import { TRIGGER_LABELS } from "@/lib/api/automations";
 import type { Automation } from "@/lib/api/types";
 import { EventAutomationDialog } from "@/components/events/event-automation-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { useSetRecordCount } from "@/components/common/record-count";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,8 @@ export default function EventAutomationsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const automations = allAutomations.slice((page - 1) * pageSize, page * pageSize);
+
+  useSetRecordCount(allAutomations.length);
 
   async function handleBulkDelete() {
     setBulkDeleting(true);
