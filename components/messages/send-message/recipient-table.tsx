@@ -100,7 +100,7 @@ export function RecipientTable({
                 className="py-8 text-center text-sm text-muted-foreground"
               >
                 {!hasEvent
-                  ? "Vincule um evento para listar os inscritos, ou adicione destinatários manualmente."
+                  ? "Adicione destinatários manualmente ou importe um CSV."
                   : statusFilter.size > 0
                     ? "Nenhum inscrito com esse status."
                     : "Nenhum inscrito ainda — adicione destinatários manualmente."}

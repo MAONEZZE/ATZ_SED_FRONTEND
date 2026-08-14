@@ -53,7 +53,7 @@ vi.mock("@/lib/api/client", () => ({
   },
 }));
 
-import EditEventPage from "@/app/(dashboard)/eventos/[id]/edit/page";
+import EditEventPage from "@/app/(dashboard)/events/[id]/edit/page";
 
 // Regressão: quando o evento e a lista de instâncias resolvem no mesmo tick,
 // o <Select> do Radix perdia o valor selecionado (bug interno do Radix ao

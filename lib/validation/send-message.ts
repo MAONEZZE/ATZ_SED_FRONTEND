@@ -26,12 +26,7 @@ export function recipientCount(
 
 export const WHATSAPP_RECIPIENT_LIMIT = 30;
 
-export function validateSendMessage(
-  draft: SendMessageDraft,
-  opts: { hasEventId: boolean },
-): string | null {
-  if (!opts.hasEventId && !draft.instanceId)
-    return "Selecione um evento ou uma instância antes de enviar";
+export function validateSendMessage(draft: SendMessageDraft): string | null {
   if (recipientCount(draft) === 0 && draft.groupIds.length === 0)
     return "Selecione ao menos um destinatário";
   if (draft.channel === "whatsapp" && recipientCount(draft) > WHATSAPP_RECIPIENT_LIMIT)

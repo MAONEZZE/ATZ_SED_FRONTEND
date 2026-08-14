@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CalendarDays, Mail, MessageCircle } from "lucide-react";
 import { useEvents } from "@/lib/api/events";
-import { useAllMessageLogs } from "@/lib/api/global-messaging";
+import { useMessageLogs } from "@/lib/api/global-messaging";
 import { useProfile } from "@/lib/api/profile";
 import type { EventObject, EventStatus } from "@/lib/api/types";
 import { EventStatusBadge, MessageLogStatusBadge } from "@/components/common/status-badge";
@@ -49,7 +49,7 @@ export default function DashboardPage() {
     isLoading: logsLoading,
     isError: logsError,
     refetch: refetchLogs,
-  } = useAllMessageLogs(1, 10);
+  } = useMessageLogs({ page: 1, limit: 10 });
 
   const isLoading = eventsLoading || logsLoading;
   const isError = eventsError || logsError;
@@ -119,7 +119,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {!complete ? (
-                  <Link href="/eventos" className="text-sm text-primary hover:underline">
+                  <Link href="/events" className="text-sm text-primary hover:underline">
                     Ver todos os eventos
                   </Link>
                 ) : upcoming.length === 0 ? (
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                     <div key={event.id} className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
                         <Link
-                          href={`/eventos/${event.id}/edit`}
+                          href={`/events/${event.id}/edit`}
                           className="block truncate text-sm font-medium hover:underline"
                         >
                           {event.title}
@@ -188,7 +188,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {!complete ? (
-                <Link href="/eventos" className="text-sm text-primary hover:underline">
+                <Link href="/events" className="text-sm text-primary hover:underline">
                   Ver todos os eventos
                 </Link>
               ) : eventsTotal === 0 ? (

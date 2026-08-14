@@ -4,7 +4,7 @@ export default function PastaEventosPage() {
   return (
     <PastaPlaceholder
       breadcrumbItems={[
-        { label: "Eventos", href: "/eventos" },
+        { label: "Eventos", href: "/events" },
       ]}
     />
   );

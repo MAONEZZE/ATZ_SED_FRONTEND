@@ -55,7 +55,21 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     expect(arg.input.layoutConfig).toBeTruthy();
     expect(arg.input.body).toContain("<");
     expect(arg.input.eventId).toBeNull();
-    expect(arg.eventId).toBeNull();
+  });
+
+  it("com fixedEventId, some o campo Evento e o template nasce vinculado", () => {
+    render(
+      <GlobalTemplateDialog
+        template={emailTpl}
+        open
+        onOpenChange={() => {}}
+        fixedEventId="evt-1"
+      />,
+    );
+    expect(screen.queryByText(/global \(sem evento\)/i)).toBeNull();
+    screen.getByRole("button", { name: /^salvar$/i }).click();
+    const arg = updateMutate.mock.calls[0][0];
+    expect(arg.input.eventId).toBe("evt-1");
   });
 
   it("não salva template de e-mail sem assunto", () => {

@@ -88,7 +88,7 @@ function EventCard({
     duplicate.mutate(event.id, {
       onSuccess: (created) => {
         toast.success("Evento duplicado como rascunho");
-        router.push(`/eventos/${created.id}/edit`);
+        router.push(`/events/${created.id}/edit`);
       },
       onError: (e) => toast.error(e.message),
     });
@@ -97,7 +97,7 @@ function EventCard({
   return (
     <>
       <Card className="flex h-[260px] flex-col overflow-hidden transition-shadow hover:shadow-md">
-        <div className="relative h-36 shrink-0 bg-muted">
+        <div className="relative h-[180px] shrink-0 bg-muted">
           {event.coverUrl ? (
             <Image
               src={event.coverUrl}
@@ -187,8 +187,8 @@ function EventCard({
           </div>
         </div>
 
-        <CardContent className="min-h-0 flex-1 overflow-hidden p-4">
-          <Link href={`/eventos/${event.id}/edit`} className="block">
+        <CardContent className="min-h-0 flex-1 overflow-hidden p-3">
+          <Link href={`/events/${event.id}/edit`} className="block">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate font-semibold">{event.title}</h3>
               <EventStatusBadge status={event.status} />
@@ -268,7 +268,7 @@ export default function EventsPage() {
         <div className="flex items-center gap-2">
           <FolderCreateButton onCreate={createFolder} />
           <Button asChild>
-            <Link href="/eventos/new">
+            <Link href="/events/new">
               <Plus className="mr-2 h-4 w-4" />
               Novo evento
             </Link>
@@ -278,7 +278,7 @@ export default function EventsPage() {
 
       <FolderGrid
         folders={folders}
-        basePath="/eventos"
+        basePath="/events"
         onRename={renameFolder}
         onDelete={deleteFolder}
       />
@@ -316,7 +316,7 @@ export default function EventsPage() {
               Crie seu primeiro evento para começar.
             </p>
             <Button asChild className="mt-4">
-              <Link href="/eventos/new">
+              <Link href="/events/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Criar evento
               </Link>

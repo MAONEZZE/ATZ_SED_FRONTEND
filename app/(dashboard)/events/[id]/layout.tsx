@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { ClipboardList, ExternalLink, Pencil, Users, Zap } from "lucide-react";
+import {
+  ClipboardList,
+  ExternalLink,
+  MessageSquare,
+  Pencil,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import { Breadcrumb } from "@/components/common/breadcrumb";
@@ -18,6 +25,7 @@ const tabs = [
   { segment: "edit", label: "Detalhes", icon: Pencil },
   { segment: "form", label: "Formulário", icon: ClipboardList },
   { segment: "attendees", label: "Inscritos", icon: Users },
+  { segment: "messages", label: "Mensagens", icon: MessageSquare },
   { segment: "automations", label: "Automações", icon: Zap },
 ];
 
@@ -39,10 +47,7 @@ function EventLayoutContent({ children }: { children: ReactNode }) {
   return (
     <div className="space-y-4">
       <Breadcrumb
-        items={[
-          { label: "Eventos", href: "/eventos" },
-          { label: event?.title ?? "..." },
-        ]}
+        items={[{ label: "Eventos", href: "/events" }, { label: event?.title ?? "..." }]}
       />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">{event?.title ?? ""}</h1>
@@ -70,7 +75,7 @@ function EventLayoutContent({ children }: { children: ReactNode }) {
       <nav className="-mx-4 overflow-x-auto px-4">
         <div className="flex w-full min-w-full items-center gap-1 border-b">
           {tabs.map(({ segment, label, icon: Icon }) => {
-            const href = `/eventos/${params.id}/${segment}`;
+            const href = `/events/${params.id}/${segment}`;
             const active = isActive(pathname, href);
             return (
               <Link

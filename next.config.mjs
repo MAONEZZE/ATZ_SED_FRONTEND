@@ -12,13 +12,6 @@ const nextConfig = {
     ],
     qualities: [75, 95],
   },
-  async redirects() {
-    return [
-      { source: "/events/:path*", destination: "/comunicacao/ex-eventos/:path*", permanent: false },
-      { source: "/events", destination: "/comunicacao/ex-eventos", permanent: false },
-      { source: "/messages", destination: "/comunicacao/ex-mensagens", permanent: false },
-    ];
-  },
 };
 
 initOpenNextCloudflareForDev();

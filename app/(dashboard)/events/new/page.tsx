@@ -50,7 +50,7 @@ export default function NewEventPage() {
         } else {
           toast.success("Rascunho criado");
         }
-        router.push(`/eventos/${event.id}/edit`);
+        router.push(`/events/${event.id}/edit`);
       },
       onError: (e) => toast.error(e.message),
     });
@@ -62,7 +62,7 @@ export default function NewEventPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <Breadcrumb
         items={[
-          { label: "Eventos", href: "/eventos" },
+          { label: "Eventos", href: "/events" },
           { label: "Novo evento" },
         ]}
       />
@@ -76,7 +76,7 @@ export default function NewEventPage() {
             type="button"
             variant="outline"
             disabled={isPending}
-            onClick={() => router.push("/eventos")}
+            onClick={() => router.push("/events")}
           >
             Cancelar
           </Button>

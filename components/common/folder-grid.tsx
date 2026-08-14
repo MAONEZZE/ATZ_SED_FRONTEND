@@ -48,7 +48,7 @@ export function FolderGrid({
             name={folder.name}
             count={folder.count}
             onOpen={() =>
-              router.push(`${basePath}/pasta/${folder.id}?nome=${encodeURIComponent(folder.name)}`)
+              router.push(`${basePath}/folder/${folder.id}?nome=${encodeURIComponent(folder.name)}`)
             }
             onEdit={() => {
               setEditingId(folder.id);

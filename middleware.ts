@@ -25,8 +25,8 @@ export const config = {
   // Apenas rotas do grupo (dashboard) — públicas ficam fora
   matcher: [
     "/dashboard/:path*",
-    "/eventos/:path*",
-    "/mensagens/:path*",
+    "/events/:path*",
+    "/messages/:path*",
     "/ai-chat/:path*",
     "/s-docs/:path*",
     "/settings/:path*",

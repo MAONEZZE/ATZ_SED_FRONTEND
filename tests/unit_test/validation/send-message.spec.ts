@@ -40,63 +40,41 @@ describe("recipientCount", () => {
 
 describe("validateSendMessage", () => {
   it("exige destinatário", () => {
-    expect(validateSendMessage(base, { hasEventId: true })).toMatch(/destinatário/);
+    expect(validateSendMessage(base)).toMatch(/destinatário/);
   });
 
   it("exige body quando sem template", () => {
     expect(
-      validateSendMessage(
-        { ...base, registrationIds: ["a"], body: "  " },
-        { hasEventId: true },
-      ),
+      validateSendMessage({ ...base, registrationIds: ["a"], body: "  " }),
     ).toMatch(/mensagem|template/);
   });
 
   it("exige body mesmo com template selecionado", () => {
     expect(
-      validateSendMessage(
-        {
-          ...base,
-          registrationIds: ["a"],
-          body: "",
-          templateId: "t1",
-        },
-        { hasEventId: true },
-      ),
+      validateSendMessage({
+        ...base,
+        registrationIds: ["a"],
+        body: "",
+        templateId: "t1",
+      }),
     ).toMatch(/mensagem|template/);
   });
 
   it("aceita body livre com destinatário", () => {
-    expect(
-      validateSendMessage({ ...base, registrationIds: ["a"] }, { hasEventId: true }),
-    ).toBeNull();
+    expect(validateSendMessage({ ...base, registrationIds: ["a"] })).toBeNull();
   });
 
-  it("exige evento ou instância quando ambos ausentes", () => {
+  it("aceita envio avulso sem evento e sem instância", () => {
     expect(
-      validateSendMessage(
-        { ...base, registrationIds: ["a"] },
-        { hasEventId: false },
-      ),
-    ).toMatch(/evento ou uma instância/);
-  });
-
-  it("aceita instância sem evento", () => {
-    expect(
-      validateSendMessage(
-        { ...base, registrationIds: ["a"], instanceId: "inst-1" },
-        { hasEventId: false },
-      ),
+      validateSendMessage({
+        ...base,
+        manualRecipients: [{ name: "Fulano", phone: "+5511" }],
+      }),
     ).toBeNull();
   });
 
   it("aceita apenas grupos selecionados, sem inscritos/avulsos", () => {
-    expect(
-      validateSendMessage(
-        { ...base, instanceId: "inst-1", groupIds: ["g1"] },
-        { hasEventId: false },
-      ),
-    ).toBeNull();
+    expect(validateSendMessage({ ...base, groupIds: ["g1"] })).toBeNull();
   });
 });
 

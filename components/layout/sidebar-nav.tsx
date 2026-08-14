@@ -14,8 +14,8 @@ type NavItem = {
 
 export const sidebarNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/eventos", label: "Eventos", icon: CalendarDays },
-  { href: "/mensagens", label: "Mensagens", icon: MessageSquare },
+  { href: "/events", label: "Eventos", icon: CalendarDays },
+  { href: "/messages", label: "Mensagens", icon: MessageSquare },
   { href: "/ai-chat", label: "AI Chat", icon: Bot },
   { href: "/s-docs", label: "S-Docs", icon: BookText },
 ];
