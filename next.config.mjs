@@ -9,6 +9,11 @@ const nextConfig = {
         hostname: "**.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      {
+        protocol: "https",
+        hostname: "sed-sup.akeel.com.br",
+        pathname: "/storage/v1/object/public/**",
+      },
     ],
     qualities: [75, 95],
   },
