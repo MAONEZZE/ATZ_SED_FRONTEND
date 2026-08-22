@@ -64,16 +64,15 @@ export interface ImportRegistrationsResult {
   skipped: number;
 }
 
+export interface ImportRegistrationsPayload {
+  formId: string;
+  registrations: ImportRegistrationsInput[];
+}
+
 export function useImportRegistrations(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      formId,
-      registrations,
-    }: {
-      formId: string;
-      registrations: ImportRegistrationsInput[];
-    }) =>
+    mutationFn: ({ formId, registrations }: ImportRegistrationsPayload) =>
       api.post<ImportRegistrationsResult>(`/events/${eventId}/registrations/import`, {
         formId,
         registrations,
