@@ -33,7 +33,7 @@ export function useCreateFolder(scope: FolderScope) {
   });
 }
 
-export function useRenameFolder(scope: FolderScope) {
+export function useRenameFolder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
@@ -42,7 +42,7 @@ export function useRenameFolder(scope: FolderScope) {
   });
 }
 
-export function useDeleteFolder(scope: FolderScope) {
+export function useDeleteFolder() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/folders/${id}`),
