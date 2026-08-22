@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DELAYED_TRIGGERS, TRIGGER_LABELS } from "@/lib/api/automations";
 import {
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const MAX_DELAY_MINUTES = 2147483647;
 const RECURRING_TIMEZONE = "America/Sao_Paulo";
@@ -67,23 +69,25 @@ export function EventAutomationDialog({
   const [cronTime, setCronTime] = useState("09:00");
   const [cronDayOfWeek, setCronDayOfWeek] = useState(1);
   const [cronDayOfMonth, setCronDayOfMonth] = useState(1);
+  const [formsOpen, setFormsOpen] = useState(false);
+  const [formSearch, setFormSearch] = useState("");
 
   const { data: forms } = useForms(eventId);
   const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
-
-  const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
-  const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
-  // Dedup defensivo: os dois filtros são exclusivos no backend (globais vs. este
-  // evento), mas se essa garantia mudar/tiver bug, evita templates duplicados
-  // (e keys duplicadas no React) no Select.
-  const templates = Array.from(
-    new Map(
-      [
-        ...(globalTemplatesResponse?.data ?? []),
-        ...(eventTemplatesResponse?.data ?? []),
-      ].map((t) => [t.id, t]),
-    ).values(),
+  const filteredForms = useMemo(
+    () =>
+      sortedForms.filter((form) =>
+        form.name
+          .toLocaleLowerCase("pt-BR")
+          .includes(formSearch.toLocaleLowerCase("pt-BR")),
+      ),
+    [formSearch, sortedForms],
   );
+
+  // O seletor de automação aceita tanto templates deste evento quanto globais.
+  // A lista da página do evento, por sua vez, pede includeGlobal=false.
+  const { data: templatesResponse } = useAllTemplates(1, 100, undefined, eventId, true);
+  const templates = templatesResponse?.data ?? [];
 
   useEffect(() => {
     if (open) {
@@ -203,25 +207,54 @@ export function EventAutomationDialog({
                   ? "Dispara só para quem respondeu um destes formulários."
                   : "Opcional: sem seleção, dispara para inscritos de qualquer formulário."}
               </p>
-              <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-3">
-                {sortedForms.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Este evento ainda não tem formulários.
-                  </p>
-                )}
-                {sortedForms.map((form) => (
-                  <div key={form.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`eauto-form-${form.id}`}
-                      checked={formIds.includes(form.id)}
-                      onCheckedChange={(checked) => toggleForm(form.id, Boolean(checked))}
-                    />
-                    <Label htmlFor={`eauto-form-${form.id}`} className="font-normal">
-                      {form.name}
-                    </Label>
+              <Popover open={formsOpen} onOpenChange={setFormsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between"
+                  >
+                    {formIds.length === 0
+                      ? "Selecionar formulários"
+                      : `${formIds.length} formulário${formIds.length === 1 ? "" : "s"} selecionado${formIds.length === 1 ? "" : "s"}`}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-[var(--radix-popover-trigger-width)] p-2"
+                >
+                  <Input
+                    aria-label="Buscar formulário"
+                    value={formSearch}
+                    onChange={(event) => setFormSearch(event.target.value)}
+                    placeholder="Buscar formulário..."
+                    className="mb-2 h-8"
+                  />
+                  <div role="listbox" className="max-h-52 space-y-1 overflow-y-auto">
+                    {filteredForms.length === 0 && (
+                      <p className="p-2 text-sm text-muted-foreground">
+                        {sortedForms.length === 0
+                          ? "Este evento ainda não tem formulários."
+                          : "Nenhum formulário encontrado."}
+                      </p>
+                    )}
+                    {filteredForms.map((form) => (
+                      <label
+                        key={form.id}
+                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+                      >
+                        <Checkbox
+                          checked={formIds.includes(form.id)}
+                          onCheckedChange={(checked) =>
+                            toggleForm(form.id, Boolean(checked))
+                          }
+                        />
+                        {form.name}
+                      </label>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </PopoverContent>
+              </Popover>
             </div>
           )}
 

@@ -9,11 +9,9 @@ import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
-import { useEvents } from "@/lib/api/events";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import {
   EMAIL_PREVIEW_MIN_HEIGHT,
-  NO_EVENT,
   STEP_LABEL_CLASS,
   TONE_OPTIONS,
 } from "@/lib/messages/composer-constants";
@@ -55,17 +53,18 @@ export function GlobalTemplateDialog({
   open,
   onOpenChange,
   fixedEventId,
+  fixedFolderId,
 }: {
   template: TemplateWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Dentro de um evento: some o campo Evento e o template nasce vinculado a ele. */
   fixedEventId?: string;
+  /** Pasta atual da listagem; só é aplicada na criação. */
+  fixedFolderId?: string | null;
 }) {
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
-  const { data: eventsResponse } = useEvents();
-  const events = eventsResponse?.data;
 
   const composer = useEmailComposer();
   const {
@@ -91,12 +90,10 @@ export function GlobalTemplateDialog({
   const { textareaRef: bodyRef, insertVariable } = useVariableInsertion(body, setBody);
 
   const [name, setName] = useState("");
-  const [eventId, setEventId] = useState("");
 
   useEffect(() => {
     if (open) {
       setName(template?.name ?? "");
-      setEventId(template?.eventId ?? "");
       reset({
         channel: template?.channel ?? "whatsapp",
         subject: template?.subject ?? "",
@@ -135,7 +132,10 @@ export function GlobalTemplateDialog({
       body,
       layoutConfig: channel === "email" ? layoutConfig : null,
       styleKey: channel === "email" ? activeStyle : null,
-      eventId: fixedEventId ?? (eventId || null),
+      // A tela global cria somente templates globais. Dentro de um evento, o
+      // vínculo é fixado pela rota e nunca pode ser alterado neste modal.
+      eventId: fixedEventId ?? null,
+      ...(template ? {} : { folderId: fixedFolderId ?? null }),
     };
     const onDone = {
       onSuccess: () => {
@@ -161,28 +161,6 @@ export function GlobalTemplateDialog({
               <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {!fixedEventId && (
-                <div className="space-y-2">
-                  <Label>Evento</Label>
-                  <Select
-                    value={eventId || NO_EVENT}
-                    onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Global (sem evento)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NO_EVENT}>Global (sem evento)</SelectItem>
-                      {events?.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>
-                          {e.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="gtpl-name">Nome do template *</Label>

@@ -10,10 +10,6 @@ vi.mock("@/lib/api/global-messaging", () => ({
   useUpdateTemplateGlobal: () => ({ mutate: updateMutate, isPending: false }),
 }));
 
-vi.mock("@/lib/api/events", () => ({
-  useEvents: () => ({ data: { data: [{ id: "ev1", title: "Festa" }] } }),
-}));
-
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
@@ -70,6 +66,14 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     screen.getByRole("button", { name: /^salvar$/i }).click();
     const arg = updateMutate.mock.calls[0][0];
     expect(arg.input.eventId).toBe("evt-1");
+  });
+
+  it("na tela global não oferece vínculo com evento e sempre salva como global", () => {
+    render(<GlobalTemplateDialog template={emailTpl} open onOpenChange={() => {}} />);
+    expect(screen.queryByText(/^evento$/i)).toBeNull();
+    screen.getByRole("button", { name: /^salvar$/i }).click();
+    const arg = updateMutate.mock.calls[0][0];
+    expect(arg.input.eventId).toBeNull();
   });
 
   it("não salva template de e-mail sem assunto", () => {

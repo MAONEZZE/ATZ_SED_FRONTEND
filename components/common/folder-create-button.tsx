@@ -13,7 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export function FolderCreateButton({ onCreate }: { onCreate: (name: string) => void }) {
+export function FolderCreateButton({
+  onCreate,
+}: {
+  onCreate: (name: string) => void | Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
 

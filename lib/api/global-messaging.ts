@@ -23,6 +23,7 @@ export interface TemplateInput {
   styleKey?: EmailTemplateKey | null;
   /** Vincula o template a um evento. null = global (sem evento). */
   eventId?: string | null;
+  folderId?: string | null;
 }
 
 // eventId: undefined = sem filtro (todos os templates); null = envia o literal
@@ -34,13 +35,24 @@ export function useAllTemplates(
   limit = 20,
   channel?: MessageChannel,
   eventId?: string | null,
+  includeGlobal?: boolean,
+  folderId?: string | null,
 ) {
   return useQuery({
-    queryKey: queryKeys.allTemplates({ page, limit, channel, eventId }),
+    queryKey: queryKeys.allTemplates({
+      page,
+      limit,
+      channel,
+      eventId,
+      includeGlobal,
+      folderId,
+    }),
     queryFn: () => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (channel) qs.set("channel", channel);
       if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
+      if (includeGlobal !== undefined) qs.set("includeGlobal", String(includeGlobal));
+      if (folderId !== undefined) qs.set("folderId", folderId ?? "null");
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
     // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
@@ -114,6 +126,65 @@ export function useDeleteTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
     mutationFn: ({ id }: { id: string }) => api.delete(`/templates/${id}`),
+    onSuccess: invalidate,
+  });
+}
+
+/** Move um template antes de outro item da mesma pasta; sem `beforeId`, envia ao fim. */
+export function useMoveTemplate() {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidateGlobal();
+  return useMutation({
+    mutationFn: ({
+      id,
+      folderId,
+      beforeId,
+    }: {
+      id: string;
+      folderId: string | null;
+      beforeId?: string;
+    }) =>
+      api.patch<void>(`/templates/${id}/move`, {
+        folderId,
+        ...(beforeId ? { beforeId } : {}),
+      }),
+    onMutate: async ({ id, folderId, beforeId }) => {
+      await queryClient.cancelQueries({ queryKey: ["global", "templates"] });
+      const previous = queryClient.getQueriesData<PaginatedResponse<TemplateWithEvent>>({
+        queryKey: ["global", "templates"],
+      });
+      const moved = previous
+        .flatMap(([, data]) => data?.data ?? [])
+        .find((template) => template.id === id);
+      if (!moved) return { previous };
+
+      for (const [key, data] of previous) {
+        if (!data || !Array.isArray(data.data)) continue;
+        const params = Array.isArray(key)
+          ? (key[2] as { folderId?: string | null } | undefined)
+          : undefined;
+        const isTarget = params?.folderId === folderId;
+        let next = data.data.filter((template) => template.id !== id);
+        if (isTarget) {
+          const nextMoved = { ...moved, folderId };
+          const insertAt = beforeId
+            ? next.findIndex((template) => template.id === beforeId)
+            : -1;
+          next =
+            insertAt >= 0
+              ? [...next.slice(0, insertAt), nextMoved, ...next.slice(insertAt)]
+              : [...next, nextMoved];
+        }
+        queryClient.setQueryData<PaginatedResponse<TemplateWithEvent>>(key, {
+          ...data,
+          data: next,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
     onSuccess: invalidate,
   });
 }

@@ -118,6 +118,7 @@ export interface MessageTemplate {
   id: string;
 
   eventId: string | null;
+  folderId?: string | null;
   name: string;
   channel: MessageChannel;
   subject: string | null;

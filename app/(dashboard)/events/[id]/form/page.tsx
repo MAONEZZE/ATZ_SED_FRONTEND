@@ -44,11 +44,18 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -194,7 +201,10 @@ function FormTogglesCard({
 }) {
   const update = useUpdateForm(eventId, form.id);
 
-  function handleChange(field: "requireImageAuthorization" | "sendToPipedrive", value: boolean) {
+  function handleChange(
+    field: "requireImageAuthorization" | "sendToPipedrive",
+    value: boolean,
+  ) {
     update.mutate(
       { [field]: value },
       {
@@ -230,7 +240,8 @@ function FormTogglesCard({
         </div>
         {form.anonymous && (
           <p className="text-xs text-muted-foreground">
-            Formulário anônimo não pode exigir autorização de imagem nem enviar ao Pipedrive.
+            Formulário anônimo não pode exigir autorização de imagem nem enviar ao
+            Pipedrive.
           </p>
         )}
       </CardContent>
@@ -254,7 +265,9 @@ function FormMetaEditor({
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
   const [linkPostSubscription, setLinkPostSubscription] = useState("");
-  const [activeField, setActiveField] = useState<"description" | "post" | "link">("description");
+  const [activeField, setActiveField] = useState<"description" | "post" | "link">(
+    "description",
+  );
 
   useEffect(() => {
     setDescription(form.description ?? "");
@@ -441,6 +454,13 @@ function FormBuilderSection({
           </p>
         )}
 
+        {form.anonymous && (
+          <p className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-950 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+            Este é um formulário anônimo. Essa configuração foi definida na criação e não
+            pode ser alterada. As respostas não ficam vinculadas a um inscrito.
+          </p>
+        )}
+
         <FormMetaEditor eventId={eventId} form={form} slug={slug} readonly={readonly} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -558,7 +578,11 @@ function SortableFormTab({
         onClick={onSelect}
       >
         {form.name}
-        {form.anonymous && <Badge variant="secondary" className="ml-2">Anônimo</Badge>}
+        {form.anonymous && (
+          <Badge variant="secondary" className="ml-2">
+            Anônimo
+          </Badge>
+        )}
       </Button>
       {active && (
         <>
@@ -588,8 +612,8 @@ function SortableFormTab({
               <AlertDialogHeader>
                 <AlertDialogTitle>Excluir formulário?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  &quot;{form.name}&quot;, seus campos e as respostas recebidas serão removidos
-                  permanentemente.
+                  &quot;{form.name}&quot;, seus campos e as respostas recebidas serão
+                  removidos permanentemente.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -617,6 +641,7 @@ export default function FormBuilderPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newAnonymous, setNewAnonymous] = useState(false);
   const [renaming, setRenaming] = useState<Form | null>(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -650,9 +675,12 @@ export default function FormBuilderPage() {
     const newIndex = sortedForms.findIndex((f) => f.id === over.id);
     const next = arrayMove(sortedForms, oldIndex, newIndex);
 
-    reorderForms.mutate(next.map((f) => f.id), {
-      onError: (e) => toast.error(`Falha ao reordenar: ${e.message}`),
-    });
+    reorderForms.mutate(
+      next.map((f) => f.id),
+      {
+        onError: (e) => toast.error(`Falha ao reordenar: ${e.message}`),
+      },
+    );
   }
 
   function handleCreate() {
@@ -661,13 +689,14 @@ export default function FormBuilderPage() {
       return;
     }
     createForm.mutate(
-      { name: newName.trim() },
+      { name: newName.trim(), anonymous: newAnonymous },
       {
         onSuccess: (created) => {
           toast.success("Formulário criado");
           setSelectedId(created.id);
           setCreateOpen(false);
           setNewName("");
+          setNewAnonymous(false);
         },
         onError: (e) => toast.error(e.message),
       },
@@ -716,8 +745,15 @@ export default function FormBuilderPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTabDragEnd}>
-            <SortableContext items={sortedForms.map((f) => f.id)} strategy={horizontalListSortingStrategy}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleTabDragEnd}
+          >
+            <SortableContext
+              items={sortedForms.map((f) => f.id)}
+              strategy={horizontalListSortingStrategy}
+            >
               <div className="flex flex-wrap items-center gap-2">
                 {sortedForms.map((form) => (
                   <SortableFormTab
@@ -746,6 +782,7 @@ export default function FormBuilderPage() {
             disabled={readonly}
             onClick={() => {
               setNewName("");
+              setNewAnonymous(false);
               setCreateOpen(true);
             }}
           >
@@ -794,6 +831,20 @@ export default function FormBuilderPage() {
               placeholder="Ex.: Inscrição"
             />
           </div>
+          <div className="flex items-start gap-3 rounded-lg border p-3">
+            <Checkbox
+              id="new-form-anonymous"
+              checked={newAnonymous}
+              onCheckedChange={(checked) => setNewAnonymous(Boolean(checked))}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="new-form-anonymous">Formulário anônimo</Label>
+              <p className="text-sm text-muted-foreground">
+                Não associa respostas a inscritos. Essa escolha não pode ser alterada
+                depois.
+              </p>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
               Cancelar
@@ -806,7 +857,10 @@ export default function FormBuilderPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(renaming)} onOpenChange={(open) => !open && setRenaming(null)}>
+      <Dialog
+        open={Boolean(renaming)}
+        onOpenChange={(open) => !open && setRenaming(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Renomear formulário</DialogTitle>

@@ -40,7 +40,7 @@ function MessagesPageContent() {
           <LogsTab />
         </TabsContent>
         <TabsContent value="templates">
-          <TemplatesTab />
+          <TemplatesTab eventId={null} />
         </TabsContent>
       </Tabs>
     </div>
