@@ -71,25 +71,25 @@ export function useDeleteForm(eventId: string) {
 
 export function useReorderForms(eventId: string) {
   const queryClient = useQueryClient();
-  const invalidate = useInvalidateForms(eventId);
+  const key = queryKeys.forms(eventId);
   return useMutation({
     mutationFn: (ids: string[]) =>
       api.patch<void>(`/events/${eventId}/forms/reorder`, { ids }),
     onMutate: async (ids) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.forms(eventId) });
-      const previous = queryClient.getQueryData<Form[]>(queryKeys.forms(eventId));
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<Form[]>(key);
       if (previous) {
         const order = new Map(ids.map((id, index) => [id, index]));
         queryClient.setQueryData<Form[]>(
-          queryKeys.forms(eventId),
+          key,
           previous.map((f) => (order.has(f.id) ? { ...f, order: order.get(f.id)! } : f)),
         );
       }
       return { previous };
     },
     onError: (_err, _ids, context) => {
-      if (context?.previous) queryClient.setQueryData(queryKeys.forms(eventId), context.previous);
+      if (context?.previous) queryClient.setQueryData(key, context.previous);
+      void queryClient.invalidateQueries({ queryKey: key });
     },
-    onSuccess: () => invalidate(),
   });
 }

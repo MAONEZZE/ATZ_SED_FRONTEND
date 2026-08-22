@@ -28,17 +28,67 @@ export interface EventInput {
 
 export type EventUpdateInput = Partial<EventInput>;
 
+export function eventsListPath(
+  page: number,
+  limit: number,
+  folderId?: string | null,
+): string {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  // A raiz é representada pela ausência do filtro. O literal `folderId=null`
+  // não faz parte do contrato da API em uso e é rejeitado pelo backend.
+  if (folderId) params.set("folderId", folderId);
+  return `/events?${params.toString()}`;
+}
+
 export function useEvents(page = 1, limit = 20, folderId?: string | null) {
   return useQuery({
     queryKey: queryKeys.events({ page, limit, folderId }),
-    queryFn: () => {
-      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      // O backend valida `folderId` como UUID quando ele está presente; o
-      // literal "null" resulta em 400. Na raiz o filtro deve ser omitido.
-      if (folderId) params.set("folderId", folderId);
-      return api.get<PaginatedResponse<EventObject>>(`/events?${params.toString()}`);
-    },
+    queryFn: () =>
+      api.get<PaginatedResponse<EventObject>>(eventsListPath(page, limit, folderId)),
     // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
+  });
+}
+
+const EVENTS_FOLDER_FETCH_LIMIT = 100;
+
+export async function fetchEventsByFolder(
+  page: number,
+  limit: number,
+  folderId: string | null,
+): Promise<PaginatedResponse<EventObject>> {
+  // A API implantada rejeita `folderId` na query de GET /events. Carregamos as
+  // páginas sem esse parâmetro e aplicamos o escopo no cliente até o DTO do
+  // backend aceitar o filtro que o controller já implementa.
+  const first = await api.get<PaginatedResponse<EventObject>>(
+    eventsListPath(1, EVENTS_FOLDER_FETCH_LIMIT),
+  );
+  const pageCount = Math.ceil(first.total / EVENTS_FOLDER_FETCH_LIMIT);
+  const remaining = await Promise.all(
+    Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
+      api.get<PaginatedResponse<EventObject>>(
+        eventsListPath(index + 2, EVENTS_FOLDER_FETCH_LIMIT),
+      ),
+    ),
+  );
+  const scoped = [first, ...remaining]
+    .flatMap((response) => response.data)
+    .filter((event) => event.folderId === folderId);
+  const offset = (page - 1) * limit;
+
+  return {
+    data: scoped.slice(offset, offset + limit),
+    total: scoped.length,
+    page,
+    limit,
+  };
+}
+
+/** Lista paginada de uma pasta sem serializar `folderId` na query da API. */
+export function useEventsByFolder(page: number, limit: number, folderId: string | null) {
+  return useQuery({
+    queryKey: queryKeys.events({ page, limit, folderId }),
+    queryFn: () => fetchEventsByFolder(page, limit, folderId),
     enabled: limit > 0,
   });
 }
@@ -160,7 +210,6 @@ export function useDeleteEvent() {
  */
 export function useMoveEvent() {
   const queryClient = useQueryClient();
-  const invalidate = useInvalidateEvents();
   return useMutation({
     mutationFn: ({
       id,
@@ -188,12 +237,21 @@ export function useMoveEvent() {
         .find((event) => event.id === id);
       if (!moved) return { previous };
 
-      const targetFolderId = folderId ?? moved.folderId;
+      const targetFolderId = folderId === undefined ? moved.folderId : folderId;
       for (const [key, data] of previous) {
         if (!data || !Array.isArray(data.data)) continue;
         const params = Array.isArray(key)
           ? (key[1] as { folderId?: string | null } | undefined)
           : undefined;
+        if (params?.folderId === undefined) {
+          queryClient.setQueryData<PaginatedResponse<EventObject>>(key, {
+            ...data,
+            data: data.data.map((event) =>
+              event.id === id ? { ...event, folderId: targetFolderId } : event,
+            ),
+          });
+          continue;
+        }
         const isTarget = params?.folderId === targetFolderId;
         let next = data.data.filter((event) => event.id !== id);
         if (isTarget) {
@@ -215,7 +273,7 @@ export function useMoveEvent() {
     },
     onError: (_error, _input, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
     },
-    onSuccess: () => invalidate(),
   });
 }

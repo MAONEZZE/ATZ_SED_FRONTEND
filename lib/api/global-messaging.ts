@@ -133,7 +133,6 @@ export function useDeleteTemplateGlobal() {
 /** Move um template antes de outro item da mesma pasta; sem `beforeId`, envia ao fim. */
 export function useMoveTemplate() {
   const queryClient = useQueryClient();
-  const invalidate = useInvalidateGlobal();
   return useMutation({
     mutationFn: ({
       id,
@@ -163,6 +162,15 @@ export function useMoveTemplate() {
         const params = Array.isArray(key)
           ? (key[2] as { folderId?: string | null } | undefined)
           : undefined;
+        if (params?.folderId === undefined) {
+          queryClient.setQueryData<PaginatedResponse<TemplateWithEvent>>(key, {
+            ...data,
+            data: data.data.map((template) =>
+              template.id === id ? { ...template, folderId } : template,
+            ),
+          });
+          continue;
+        }
         const isTarget = params?.folderId === folderId;
         let next = data.data.filter((template) => template.id !== id);
         if (isTarget) {
@@ -184,8 +192,8 @@ export function useMoveTemplate() {
     },
     onError: (_error, _input, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+      void queryClient.invalidateQueries({ queryKey: ["global", "templates"] });
     },
-    onSuccess: invalidate,
   });
 }
 
