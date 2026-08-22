@@ -67,8 +67,15 @@ export interface ImportRegistrationsResult {
 export function useImportRegistrations(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (registrations: ImportRegistrationsInput[]) =>
+    mutationFn: ({
+      formId,
+      registrations,
+    }: {
+      formId: string;
+      registrations: ImportRegistrationsInput[];
+    }) =>
       api.post<ImportRegistrationsResult>(`/events/${eventId}/registrations/import`, {
+        formId,
         registrations,
       }),
     onSuccess: () =>

@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { useRegistrations, exportRegistrationsCsv } from "@/lib/api/registrations";
+import {
+  useRegistrations,
+  exportRegistrationsCsv,
+  useImportRegistrations,
+} from "@/lib/api/registrations";
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient({
@@ -70,5 +74,36 @@ describe("exportRegistrationsCsv", () => {
 
     const url = fetchMock.mock.calls[0][0] as string;
     expect(url).toContain("formId=form-9");
+  });
+});
+
+describe("useImportRegistrations", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("manda formId junto com registrations no body", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 201,
+      statusText: "201",
+      headers: new Headers(),
+      json: () => Promise.resolve({ created: 1, skipped: 0 }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() => useImportRegistrations("evt-1"), { wrapper });
+
+    await act(async () => {
+      result.current.mutate({
+        formId: "form-9",
+        registrations: [{ nome: "Ana", telefone: "+5511999998888" }],
+      });
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body).toEqual({
+      formId: "form-9",
+      registrations: [{ nome: "Ana", telefone: "+5511999998888" }],
+    });
   });
 });
