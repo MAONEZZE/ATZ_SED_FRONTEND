@@ -50,12 +50,60 @@ export function useDeleteFolder() {
   });
 }
 
-/** Reordena os irmãos de `parentId`. O backend responde 204, então refetch confirma o estado. */
+/** Reordena os irmãos de `parentId` e mantém a árvore otimista até eventual erro. */
 export function useReorderFolders(scope: FolderScope) {
   const queryClient = useQueryClient();
+  const key = queryKeys.folders(scope);
   return useMutation({
     mutationFn: ({ ids, parentId }: { ids: string[]; parentId: string | null }) =>
       api.patch<void>("/folders/reorder", { ...scope, ids, parentId }),
-    onSuccess: invalidateFolders(queryClient),
+    onMutate: async ({ ids, parentId }) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<Folder[]>(key);
+      if (!previous) return { previous };
+
+      const byId = new Map<string, Folder>();
+      const indexFolders = (folders: Folder[]) => {
+        for (const folder of folders) {
+          byId.set(folder.id, folder);
+          indexFolders(folder.children);
+        }
+      };
+      indexFolders(previous);
+
+      const movedIds = new Set(ids);
+      const removeMoved = (folders: Folder[]): Folder[] =>
+        folders
+          .filter((folder) => !movedIds.has(folder.id))
+          .map((folder) => ({ ...folder, children: removeMoved(folder.children) }));
+      const moved = ids.flatMap((id, order) => {
+        const folder = byId.get(id);
+        return folder ? [{ ...folder, parentId, order }] : [];
+      });
+      let next = removeMoved(previous);
+
+      if (parentId === null) {
+        next = [...moved, ...next];
+      } else {
+        let inserted = false;
+        const insertIntoParent = (folders: Folder[]): Folder[] =>
+          folders.map((folder) => {
+            if (folder.id === parentId) {
+              inserted = true;
+              return { ...folder, children: [...moved, ...folder.children] };
+            }
+            return { ...folder, children: insertIntoParent(folder.children) };
+          });
+        const withMoved = insertIntoParent(next);
+        if (inserted) next = withMoved;
+      }
+
+      queryClient.setQueryData(key, next);
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) queryClient.setQueryData(key, context.previous);
+      void queryClient.invalidateQueries({ queryKey: key });
+    },
   });
 }

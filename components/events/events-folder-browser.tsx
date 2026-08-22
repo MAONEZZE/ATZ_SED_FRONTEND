@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef, type MouseEvent } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronRight, Folder as FolderIcon, Plus } from "lucide-react";
+import { ChevronRight, Folder as FolderIcon, ImageIcon, Plus } from "lucide-react";
 import {
   DndContext,
   PointerSensor,
@@ -19,7 +21,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useEvents, useMoveEvent } from "@/lib/api/events";
+import { useEventsByFolder, useMoveEvent } from "@/lib/api/events";
 import { useProfile } from "@/lib/api/profile";
 import {
   useCreateFolder,
@@ -35,6 +37,7 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventStatusBadge } from "@/components/common/status-badge";
+import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
 
 function flattenFolders(folders: Folder[]): Folder[] {
   return folders.flatMap((folder) => [folder, ...flattenFolders(folder.children ?? [])]);
@@ -47,23 +50,60 @@ function SortableFolderEvent({
   event: EventObject;
   ownerId?: string;
 }) {
+  const suppressClickRef = useRef(false);
   const canMove = event.myRole === "admin" || event.ownerId === ownerId;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: `event:${event.id}`,
       disabled: !canMove,
     });
+
+  useEffect(() => {
+    if (isDragging) {
+      suppressClickRef.current = true;
+      return;
+    }
+    if (!suppressClickRef.current) return;
+    const timeout = window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [isDragging]);
+
+  function handleClickCapture(clickEvent: MouseEvent<HTMLDivElement>) {
+    if (!suppressClickRef.current) return;
+    clickEvent.preventDefault();
+    clickEvent.stopPropagation();
+    suppressClickRef.current = false;
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={isDragging ? "z-10 opacity-60" : undefined}
+      onClickCapture={handleClickCapture}
       {...attributes}
       {...listeners}
     >
-      <Link href={`/events/${event.id}/edit`}>
-        <Card className="transition-shadow hover:shadow-md">
-          <CardContent className="space-y-2 p-4">
+      <Link href={`/events/${event.id}/edit`} className="block">
+        <Card className="flex h-[260px] flex-col overflow-hidden transition-shadow hover:shadow-md">
+          <div className="relative h-[180px] shrink-0 bg-muted">
+            {event.coverUrl ? (
+              <Image
+                src={event.coverUrl}
+                alt={event.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+              </div>
+            )}
+          </div>
+          <CardContent className="min-h-0 flex-1 space-y-2 overflow-hidden p-3">
             <div className="flex items-center gap-2">
               <h2 className="truncate font-semibold">{event.title}</h2>
               <EventStatusBadge status={event.status} />
@@ -88,7 +128,11 @@ export function EventsFolderBrowser() {
   const reorderFolders = useReorderFolders(folderScope);
   const moveEvent = useMoveEvent();
   const { data: profile } = useProfile();
-  const { data: response, isLoading: eventsLoading } = useEvents(1, 50, folderId);
+  const { data: response, isLoading: eventsLoading } = useEventsByFolder(
+    1,
+    50,
+    folderId,
+  );
 
   const allFolders = flattenFolders(folderTree);
   const current = allFolders.find((folder) => folder.id === folderId);
@@ -118,17 +162,26 @@ export function EventsFolderBrowser() {
       const id = activeId.slice("event:".length);
       const event = events.find((item) => item.id === id);
       if (!event || (event.myRole !== "admin" && event.ownerId !== profile?.id)) return;
-      const beforeId = overId.startsWith("event:")
-        ? overId.slice("event:".length)
-        : undefined;
+      if (overId.startsWith("event:")) {
+        const beforeId = beforeIdAfterMove(
+          events.map((item) => item.id),
+          id,
+          overId.slice("event:".length),
+        );
+        moveEvent.mutate(
+          { id, ...(beforeId ? { beforeId } : {}) },
+          { onError: (error) => toast.error(`Falha ao mover evento: ${error.message}`) },
+        );
+        return;
+      }
       const targetFolderId = overId.startsWith("folder:")
         ? overId.slice("folder:".length)
         : overId.startsWith("folder-content:")
           ? overId.slice("folder-content:".length)
           : undefined;
-      if (!beforeId && targetFolderId === undefined) return;
+      if (targetFolderId === undefined) return;
       moveEvent.mutate(
-        beforeId ? { id, beforeId } : { id, folderId: targetFolderId },
+        { id, folderId: targetFolderId },
         { onError: (error) => toast.error(`Falha ao mover evento: ${error.message}`) },
       );
       return;

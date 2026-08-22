@@ -85,8 +85,9 @@ export function useReorderFormFields(eventId: string, formId?: string) {
     },
     onError: (_err, _changes, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
+      void queryClient.invalidateQueries({
+        queryKey: ["events", eventId, "form-fields"],
+      });
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["events", eventId, "form-fields"] }),
   });
 }

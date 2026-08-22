@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,7 @@ import {
 import {
   useDeleteEvent,
   useDuplicateEvent,
-  useEvents,
+  useEventsByFolder,
   useMoveEvent,
 } from "@/lib/api/events";
 import {
@@ -55,6 +55,7 @@ import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
 import { Pagination } from "@/components/common/data-table";
 import { RESERVED_BELOW, useFitPageSize } from "@/components/common/use-fit-page-size";
+import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -258,6 +259,7 @@ function EventCard({
 }
 
 function SortableEventCard({ event, ownerId }: { event: EventObject; ownerId?: string }) {
+  const suppressClickRef = useRef(false);
   const canMove = event.myRole === "admin" || event.ownerId === ownerId;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
@@ -265,11 +267,31 @@ function SortableEventCard({ event, ownerId }: { event: EventObject; ownerId?: s
       disabled: !canMove,
     });
 
+  useEffect(() => {
+    if (isDragging) {
+      suppressClickRef.current = true;
+      return;
+    }
+    if (!suppressClickRef.current) return;
+    const timeout = window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [isDragging]);
+
+  function handleClickCapture(clickEvent: MouseEvent<HTMLDivElement>) {
+    if (!suppressClickRef.current) return;
+    clickEvent.preventDefault();
+    clickEvent.stopPropagation();
+    suppressClickRef.current = false;
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={isDragging ? "z-10 opacity-60" : undefined}
+      onClickCapture={handleClickCapture}
       {...attributes}
       {...listeners}
     >
@@ -308,7 +330,7 @@ export default function EventsPage() {
     isError,
     refetch,
     isRefetching,
-  } = useEvents(page, pageSize ?? 0, null);
+  } = useEventsByFolder(page, pageSize ?? 0, null);
   const events = response?.data ?? [];
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -324,17 +346,26 @@ export default function EventsPage() {
       const id = activeId.slice("event:".length);
       const event = events.find((item) => item.id === id);
       if (!event || (event.myRole !== "admin" && event.ownerId !== profile?.id)) return;
-      const beforeId = overId.startsWith("event:")
-        ? overId.slice("event:".length)
-        : undefined;
+      if (overId.startsWith("event:")) {
+        const beforeId = beforeIdAfterMove(
+          events.map((item) => item.id),
+          id,
+          overId.slice("event:".length),
+        );
+        moveEvent.mutate(
+          { id, ...(beforeId ? { beforeId } : {}) },
+          { onError: (error) => toast.error(`Falha ao mover evento: ${error.message}`) },
+        );
+        return;
+      }
       const targetFolderId = overId.startsWith("folder:")
         ? overId.slice("folder:".length)
         : overId.startsWith("folder-content:")
           ? overId.slice("folder-content:".length)
           : undefined;
-      if (!beforeId && targetFolderId === undefined) return;
+      if (targetFolderId === undefined) return;
       moveEvent.mutate(
-        beforeId ? { id, beforeId } : { id, folderId: targetFolderId },
+        { id, folderId: targetFolderId },
         { onError: (error) => toast.error(`Falha ao mover evento: ${error.message}`) },
       );
       return;

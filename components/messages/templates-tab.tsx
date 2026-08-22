@@ -35,6 +35,7 @@ import { useSetRecordCount } from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
+import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
 import {
   Select,
   SelectContent,
@@ -178,16 +179,25 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
     }
     if (!activeId.startsWith("template:")) return;
     const id = activeId.slice("template:".length);
+    if (overId.startsWith("template:")) {
+      const beforeId = beforeIdAfterMove(
+        templates.map((template) => template.id),
+        id,
+        overId.slice("template:".length),
+      );
+      moveTemplate.mutate(
+        { id, folderId, beforeId },
+        { onError: (error) => toast.error(`Falha ao mover template: ${error.message}`) },
+      );
+      return;
+    }
     const targetFolderId = overId.startsWith("folder:")
       ? overId.slice("folder:".length)
       : overId.startsWith("folder-content:")
         ? overId.slice("folder-content:".length)
         : folderId;
-    const beforeId = overId.startsWith("template:")
-      ? overId.slice("template:".length)
-      : undefined;
     moveTemplate.mutate(
-      { id, folderId: targetFolderId, beforeId },
+      { id, folderId: targetFolderId },
       { onError: (error) => toast.error(`Falha ao mover template: ${error.message}`) },
     );
   }
