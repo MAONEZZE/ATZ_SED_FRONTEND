@@ -23,13 +23,11 @@ import {
 
 export function FolderCard({
   name,
-  count,
   onOpen,
   onEdit,
   onDelete,
 }: {
   name: string;
-  count: number;
   onOpen: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -50,7 +48,12 @@ export function FolderCard({
       <div className="absolute right-2 top-2" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ações da pasta">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              aria-label="Ações da pasta"
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -73,8 +76,8 @@ export function FolderCard({
                 <AlertDialogHeader>
                   <AlertDialogTitle>Excluir pasta?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Isso remove a pasta &quot;{name}&quot; e todo o conteúdo associado. Ação
-                    irreversível.
+                    Isso remove a pasta &quot;{name}&quot; e todo o conteúdo associado.
+                    Ação irreversível.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -94,9 +97,6 @@ export function FolderCard({
 
       <Folder className="h-8 w-8 text-muted-foreground" />
       <h3 className="mt-3 truncate font-semibold">{name}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {count} {count === 1 ? "registro" : "registros"}
-      </p>
     </Card>
   );
 }

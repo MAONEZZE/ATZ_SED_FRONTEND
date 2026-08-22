@@ -12,23 +12,31 @@ import type { FunnelStatus, PaginatedResponse, Registration } from "@/lib/api/ty
 
 export function exportRegistrationsCsv(
   eventId: string,
-  filters: { status?: FunnelStatus; search?: string } = {},
+  filters: { status?: FunnelStatus; search?: string; formId?: string } = {},
 ): Promise<Blob> {
   const params = new URLSearchParams();
   params.set("format", "csv");
   if (filters.status) params.set("status", filters.status);
   if (filters.search) params.set("search", filters.search);
+  if (filters.formId) params.set("formId", filters.formId);
   return apiFetchBlob(`/events/${eventId}/registrations?${params.toString()}`);
 }
 
 export function useRegistrations(
   eventId: string,
-  params: { status?: FunnelStatus; search?: string; page?: number; limit?: number } = {},
+  params: {
+    status?: FunnelStatus;
+    search?: string;
+    formId?: string;
+    page?: number;
+    limit?: number;
+  } = {},
 ) {
-  const { status, search, page = 1, limit = 30 } = params;
+  const { status, search, formId, page = 1, limit = 30 } = params;
   const qs = new URLSearchParams();
   if (status) qs.set("status", status);
   if (search) qs.set("search", search);
+  if (formId) qs.set("formId", formId);
   qs.set("page", String(page));
   qs.set("limit", String(limit));
 
@@ -56,11 +64,17 @@ export interface ImportRegistrationsResult {
   skipped: number;
 }
 
+export interface ImportRegistrationsPayload {
+  formId: string;
+  registrations: ImportRegistrationsInput[];
+}
+
 export function useImportRegistrations(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (registrations: ImportRegistrationsInput[]) =>
+    mutationFn: ({ formId, registrations }: ImportRegistrationsPayload) =>
       api.post<ImportRegistrationsResult>(`/events/${eventId}/registrations/import`, {
+        formId,
         registrations,
       }),
     onSuccess: () =>

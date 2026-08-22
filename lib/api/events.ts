@@ -28,11 +28,16 @@ export interface EventInput {
 
 export type EventUpdateInput = Partial<EventInput>;
 
-export function useEvents(page = 1, limit = 20) {
+export function useEvents(page = 1, limit = 20, folderId?: string | null) {
   return useQuery({
-    queryKey: queryKeys.events({ page, limit }),
-    queryFn: () =>
-      api.get<PaginatedResponse<EventObject>>(`/events?page=${page}&limit=${limit}`),
+    queryKey: queryKeys.events({ page, limit, folderId }),
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      // O backend valida `folderId` como UUID quando ele está presente; o
+      // literal "null" resulta em 400. Na raiz o filtro deve ser omitido.
+      if (folderId) params.set("folderId", folderId);
+      return api.get<PaginatedResponse<EventObject>>(`/events?${params.toString()}`);
+    },
     // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
     enabled: limit > 0,
   });
@@ -144,6 +149,65 @@ export function useDeleteEvent() {
   const invalidate = useInvalidateEvents();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/events/${id}`),
+    onSuccess: () => invalidate(),
+  });
+}
+
+/** Move um evento antes de outro item da mesma pasta; `beforeId` ausente o envia ao fim. */
+export function useMoveEvent() {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidateEvents();
+  return useMutation({
+    mutationFn: ({
+      id,
+      folderId,
+      beforeId,
+    }: {
+      id: string;
+      folderId: string | null;
+      beforeId?: string;
+    }) =>
+      api.patch<void>(`/events/${id}/move`, {
+        folderId,
+        ...(beforeId ? { beforeId } : {}),
+      }),
+    onMutate: async ({ id, folderId, beforeId }) => {
+      await queryClient.cancelQueries({ queryKey: ["events"] });
+      const previous = queryClient.getQueriesData<PaginatedResponse<EventObject>>({
+        queryKey: ["events"],
+      });
+      const moved = previous
+        .flatMap(([, data]) => data?.data ?? [])
+        .find((event) => event.id === id);
+      if (!moved) return { previous };
+
+      for (const [key, data] of previous) {
+        if (!data || !Array.isArray(data.data)) continue;
+        const params = Array.isArray(key)
+          ? (key[1] as { folderId?: string | null } | undefined)
+          : undefined;
+        const isTarget = params?.folderId === folderId;
+        let next = data.data.filter((event) => event.id !== id);
+        if (isTarget) {
+          const nextMoved = { ...moved, folderId };
+          const insertAt = beforeId
+            ? next.findIndex((event) => event.id === beforeId)
+            : -1;
+          next =
+            insertAt >= 0
+              ? [...next.slice(0, insertAt), nextMoved, ...next.slice(insertAt)]
+              : [...next, nextMoved];
+        }
+        queryClient.setQueryData<PaginatedResponse<EventObject>>(key, {
+          ...data,
+          data: next,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, _input, context) => {
+      context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
+    },
     onSuccess: () => invalidate(),
   });
 }

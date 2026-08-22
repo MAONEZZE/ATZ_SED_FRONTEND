@@ -110,12 +110,15 @@ export interface Registration {
   answers: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  /** Nome do form de origem; null = inscrito sem form de origem (painel ou anterior à coluna). */
+  formName: string | null;
 }
 
 export interface MessageTemplate {
   id: string;
 
   eventId: string | null;
+  folderId?: string | null;
   name: string;
   channel: MessageChannel;
   subject: string | null;

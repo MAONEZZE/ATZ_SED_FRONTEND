@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useDroppable } from "@dnd-kit/core";
+import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { FolderCard } from "@/components/common/folder-card";
-import type { Folder } from "@/components/common/use-folders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,18 +17,68 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+function SortableFolderCard({
+  folder,
+  basePath,
+  onRename,
+  onDelete,
+  onOpen,
+}: {
+  folder: { id: string; name: string };
+  basePath: string;
+  onRename: (id: string, name: string) => void;
+  onDelete: (id: string) => void;
+  onOpen?: (folder: { id: string; name: string }) => void;
+}) {
+  const router = useRouter();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: `folder:${folder.id}`,
+    });
+  const { setNodeRef: setContentDropRef } = useDroppable({
+    id: `folder-content:${folder.id}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative ${isDragging ? "z-10 opacity-60" : ""}`}
+      {...attributes}
+      {...listeners}
+    >
+      <div
+        ref={setContentDropRef}
+        className="pointer-events-none absolute inset-5 z-10"
+      />
+      <FolderCard
+        name={folder.name}
+        onOpen={() =>
+          onOpen?.(folder) ??
+          router.push(
+            `${basePath}/folder/${folder.id}?nome=${encodeURIComponent(folder.name)}`,
+          )
+        }
+        onEdit={() => onRename(folder.id, folder.name)}
+        onDelete={() => onDelete(folder.id)}
+      />
+    </div>
+  );
+}
+
 export function FolderGrid({
   folders,
   basePath,
   onRename,
   onDelete,
+  onOpen,
 }: {
-  folders: Folder[];
+  folders: { id: string; name: string }[];
   basePath: string;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  onOpen?: (folder: { id: string; name: string }) => void;
 }) {
-  const router = useRouter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
 
@@ -41,25 +93,31 @@ export function FolderGrid({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {folders.map((folder) => (
-          <FolderCard
-            key={folder.id}
-            name={folder.name}
-            count={folder.count}
-            onOpen={() =>
-              router.push(`${basePath}/folder/${folder.id}?nome=${encodeURIComponent(folder.name)}`)
-            }
-            onEdit={() => {
-              setEditingId(folder.id);
-              setName(folder.name);
-            }}
-            onDelete={() => onDelete(folder.id)}
-          />
-        ))}
-      </div>
+      <SortableContext
+        items={folders.map((folder) => `folder:${folder.id}`)}
+        strategy={rectSortingStrategy}
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {folders.map((folder) => (
+            <SortableFolderCard
+              key={folder.id}
+              folder={folder}
+              basePath={basePath}
+              onRename={(id, folderName) => {
+                setEditingId(id);
+                setName(folderName);
+              }}
+              onDelete={onDelete}
+              onOpen={onOpen}
+            />
+          ))}
+        </div>
+      </SortableContext>
 
-      <Dialog open={editingId != null} onOpenChange={(open) => !open && setEditingId(null)}>
+      <Dialog
+        open={editingId != null}
+        onOpenChange={(open) => !open && setEditingId(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Renomear pasta</DialogTitle>

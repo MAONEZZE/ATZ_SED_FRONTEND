@@ -19,7 +19,13 @@ export const queryKeys = {
   collaborators: (eventId: string) => ["events", eventId, "collaborators"] as const,
   registrations: (
     eventId: string,
-    params?: { status?: string; search?: string; page?: number; limit?: number },
+    params?: {
+      status?: string;
+      search?: string;
+      formId?: string;
+      page?: number;
+      limit?: number;
+    },
   ) =>
     params
       ? (["events", eventId, "registrations", params] as const)
@@ -49,6 +55,7 @@ export const queryKeys = {
     channel?: string;
     eventId?: string | null;
     folderId?: string | null;
+    includeGlobal?: boolean;
   }) =>
     params
       ? (["global", "templates", params] as const)
