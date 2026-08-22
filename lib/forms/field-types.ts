@@ -29,6 +29,7 @@ export const FIELD_TYPES: Record<FieldType, FieldTypeSpec> = {
   date: { hasOptions: false },
   linkedin: { hasOptions: false },
   instagram: { hasOptions: false },
+  on_date_automation_field: { hasOptions: false },
 };
 
 /** O tipo usa a lista de opções? (escolha única/múltipla) */

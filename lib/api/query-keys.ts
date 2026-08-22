@@ -1,12 +1,21 @@
 export const queryKeys = {
-  events: (params?: { page?: number; limit?: number }) =>
+  events: (params?: { page?: number; limit?: number; folderId?: string | null }) =>
     params ? (["events", params] as const) : (["events"] as const),
   event: (id: string) => ["events", id] as const,
-  formFields: (eventId: string, kind?: string) =>
-    kind
-      ? (["events", eventId, "form-fields", kind] as const)
+  forms: (eventId: string) => ["events", eventId, "forms"] as const,
+  form: (eventId: string, formId: string) =>
+    ["events", eventId, "forms", formId] as const,
+  formFields: (eventId: string, formId?: string) =>
+    formId
+      ? (["events", eventId, "form-fields", formId] as const)
       : (["events", eventId, "form-fields"] as const),
-  form: (eventId: string, kind: string) => ["events", eventId, "forms", kind] as const,
+  formResponses: (
+    eventId: string,
+    params?: { formId?: string; search?: string; page?: number; limit?: number },
+  ) =>
+    params
+      ? (["events", eventId, "form-responses", params] as const)
+      : (["events", eventId, "form-responses"] as const),
   collaborators: (eventId: string) => ["events", eventId, "collaborators"] as const,
   registrations: (
     eventId: string,
@@ -17,14 +26,15 @@ export const queryKeys = {
       : (["events", eventId, "registrations"] as const),
   registration: (eventId: string, id: string) =>
     ["events", eventId, "registrations", id] as const,
-  userSubscriptions: (
+  automations: (
     eventId: string,
-    params?: { search?: string; page?: number; limit?: number },
+    params?: { page?: number; limit?: number; folderId?: string | null },
   ) =>
     params
-      ? (["events", eventId, "user-subscriptions", params] as const)
-      : (["events", eventId, "user-subscriptions"] as const),
-  automations: (eventId: string) => ["events", eventId, "automations"] as const,
+      ? (["events", eventId, "automations", params] as const)
+      : (["events", eventId, "automations"] as const),
+  folders: (params?: { resourceType?: string; eventId?: string }) =>
+    params ? (["folders", params] as const) : (["folders"] as const),
   landing: (eventId: string) => ["events", eventId, "landing"] as const,
   messageLogs: (eventId: string, params?: { page?: number; limit?: number }) =>
     params
@@ -38,6 +48,7 @@ export const queryKeys = {
     limit?: number;
     channel?: string;
     eventId?: string | null;
+    folderId?: string | null;
   }) =>
     params
       ? (["global", "templates", params] as const)

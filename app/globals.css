@@ -36,11 +36,12 @@
     --input: var(--ink-200);
     --ring: var(--color-accent-ink);
 
-    /* Âmbar (warn) — destaque/aviso/estados ativos */
-    --warn: 36 76% 48%;
-    --warn-strong: 36 85% 34%; /* 39% dava 3.79:1 com branco no hover, falha 4.5:1 */
-    --warn-soft: 39 85% 89%;
-    --warn-text: 37 86% 15%; /* 23% dava 3.05:1 sobre --warn, falha 4.5:1 */
+    /* Verde-petróleo (warn) — ações de cautela (cancelar, remover); precisa ser
+       visualmente distinto do verde do botão "Salvar" (--primary, hue ~99). */
+    --warn: 170 65% 41%; /* 4.67:1 com --warn-text */
+    --warn-strong: 170 75% 29%; /* 4.75:1 com branco no hover */
+    --warn-soft: 170 50% 90%; /* 11.21:1 com --warn-text */
+    --warn-text: 170 80% 12%;
     --danger: 2 64% 45%;
 
     /* Status semânticos (badges/alertas) — bg suave + texto forte.
@@ -126,10 +127,10 @@
     --ink-300: 189.2 15% 50%; /* 4.51:1 vs bg-dark — mesmo papel de texto quebrado, agora corrigido */
     --ink-200: 198.3 25% 22%;
     --ink-100: 198.3 25% 18%;
-    --warn: 36 76% 48%;
-    --warn-strong: 36 76% 60%;
-    --warn-soft: 36 60% 20%;
-    --warn-text: 36 76% 70%;
+    --warn: 170 65% 41%;
+    --warn-strong: 170 75% 29%;
+    --warn-soft: 170 50% 90%;
+    --warn-text: 170 80% 12%;
     --danger: 2 64% 55%;
     /* Status semânticos — dark. bg com alpha /40 (66 hex) reproduz o
        dark:bg-*-900/40 anterior; texto usa o tom -300. */

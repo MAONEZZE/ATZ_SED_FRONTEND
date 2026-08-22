@@ -2,36 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download, Loader2, Search } from "lucide-react";
-import {
-  exportUserSubscriptionsCsv,
-  useUserSubscriptions,
-} from "@/lib/api/user-subscriptions";
+import { ArrowLeft, Download, Loader2, Search } from "lucide-react";
+import { exportFormResponsesCsv, useFormResponses } from "@/lib/api/form-responses";
 import { useFormFields } from "@/lib/api/form-fields";
-import type { UserSubscription } from "@/lib/api/types";
+import type { FormResponseRow } from "@/lib/api/types";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { formatDate } from "@/lib/utils/format-date";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
+import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { useSetRecordCount } from "@/components/common/record-count";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-type ResponseKind = "post_event" | "nps";
-
-const KEY: Record<ResponseKind, "postEventAnswers" | "npsAnswers"> = {
-  post_event: "postEventAnswers",
-  nps: "npsAnswers",
-};
-
-const EMPTY_LABEL: Record<ResponseKind, string> = {
-  post_event: "Nenhuma resposta de pós-evento ainda.",
-  nps: "Nenhuma avaliação NPS ainda.",
-};
 
 const SAVE_DISABLED_REASON =
   "Edição ainda não existe no backend para esta tabela";
@@ -40,32 +26,35 @@ const BULK_DELETE_DISABLED_REASON =
 
 export function FormResponsesTab({
   eventId,
-  kind,
+  formId,
+  formName,
+  onBack,
 }: {
   eventId: string;
-  kind: ResponseKind;
+  formId: string;
+  formName: string;
+  onBack?: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   // null até a tabela medir quantas linhas cabem sem gerar scroll.
   const [limit, setLimit] = useState<number | null>(null);
-  const [viewing, setViewing] = useState<UserSubscription | null>(null);
+  const [viewing, setViewing] = useState<FormResponseRow | null>(null);
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
-  const answersKey = KEY[kind];
-  const { data: fields = [] } = useFormFields(eventId, kind);
+  const { data: fields = [] } = useFormFields(eventId, formId);
   const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
 
   async function handleExport() {
     setExporting(true);
     try {
-      const blob = await exportUserSubscriptionsCsv(eventId, {
+      const blob = await exportFormResponsesCsv(eventId, formId, {
         search: search.trim() || undefined,
       });
-      downloadBlob(blob, `inscritos-${eventId}.csv`);
+      downloadBlob(blob, `respostas-${formName || formId}.csv`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao exportar CSV");
     } finally {
@@ -73,35 +62,40 @@ export function FormResponsesTab({
     }
   }
 
-  const { data: response, isLoading } = useUserSubscriptions(eventId, {
+  const { data: response, isLoading } = useFormResponses(eventId, {
+    formId,
     search: search.trim() || undefined,
     page,
     limit: limit ?? 0,
   });
 
-  // Só quem enviou o formulário desta aba.
-  const rows = (response?.data ?? []).filter((s) => s[answersKey] != null);
+  const rows = response?.data ?? [];
 
   useSetRecordCount(response?.total ?? 0);
 
-  function openDetails(sub: UserSubscription) {
-    setViewing(sub);
+  function openDetails(row: FormResponseRow) {
+    setViewing(row);
     setOpen(true);
   }
 
   useEffect(() => {
     if (!open || !viewing) return;
-    const answers = (viewing[answersKey] ?? {}) as Record<string, unknown>;
     const d: Record<string, unknown> = {};
     sortedFields.forEach((f) => {
-      d[f.label] = answers[f.label] ?? "";
+      d[f.label] = viewing.answers[f.label] ?? "";
     });
     setDraft(d);
-  }, [open, viewing, sortedFields, answersKey]);
+  }, [open, viewing, sortedFields]);
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        )}
         <div className="relative sm:w-56">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -133,19 +127,24 @@ export function FormResponsesTab({
 
       <DataTable
         columns={[
-          { key: "name", header: "Nome", align: "left", cell: (s) => s.name },
-          { key: "email", header: "E-mail", cell: (s) => s.email },
-          { key: "phone", header: "Telefone", cell: (s) => s.phone },
+          { key: "name", header: "Nome", align: "left", cell: (r) => r.name },
+          { key: "email", header: "E-mail", cell: (r) => r.email },
+          { key: "phone", header: "Telefone", cell: (r) => r.phone },
           {
-            key: "updatedAt",
-            header: "Enviado em",
-            cell: (s) => formatDate(s.updatedAt),
+            key: "createdAt",
+            header: "Inscrição",
+            cell: (r) => formatDate(r.createdAt),
+          },
+          {
+            key: "status",
+            header: "Status",
+            cell: (r) => (r.status ? <FunnelStatusBadge status={r.status} /> : "—"),
           },
         ]}
         data={rows}
-        getRowId={(s) => s.id}
+        getRowId={(r) => r.id}
         isLoading={isLoading}
-        emptyMessage={search ? "Nenhum resultado — ajuste a busca." : EMPTY_LABEL[kind]}
+        emptyMessage={search ? "Nenhum resultado — ajuste a busca." : "Nenhuma resposta ainda."}
         onRowClick={openDetails}
         selected={selectedIds}
         onSelectedChange={setSelectedIds}
@@ -165,9 +164,7 @@ export function FormResponsesTab({
             <>
               <DialogHeader>
                 <DialogTitle>{viewing.name}</DialogTitle>
-                <p className="text-sm text-muted-foreground">
-                  {kind === "nps" ? "Avaliação NPS" : "Respostas do pós-evento"}
-                </p>
+                <p className="text-sm text-muted-foreground">{formName}</p>
               </DialogHeader>
 
               <div className="space-y-4 text-sm">

@@ -13,7 +13,6 @@ import {
   type EventFormValues,
 } from "@/lib/validation/event-schema";
 import { EventFormFields } from "@/components/events/event-form-fields";
-import { Breadcrumb } from "@/components/common/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import type { EventObject } from "@/lib/api/types";
@@ -60,12 +59,6 @@ export default function NewEventPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Breadcrumb
-        items={[
-          { label: "Eventos", href: "/events" },
-          { label: "Novo evento" },
-        ]}
-      />
       <h1 className="text-2xl font-bold tracking-tight">Novo evento</h1>
 
       <form className="space-y-6">

@@ -3,7 +3,6 @@
 import { SendMessageForm } from "@/components/messages/send-message-form";
 import { LogsTab } from "@/components/messages/logs-tab";
 import { TemplatesTab } from "@/components/messages/templates-tab";
-import { Breadcrumb } from "@/components/common/breadcrumb";
 import { RecordCountProvider, useRecordCount } from "@/components/common/record-count";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -20,7 +19,6 @@ function MessagesPageContent() {
 
   return (
     <div className="space-y-4">
-      <Breadcrumb items={[{ label: "Mensagens" }]} />
       <h1 className="text-2xl font-bold tracking-tight">Mensagens</h1>
 
       <Tabs defaultValue="send" className="space-y-4">

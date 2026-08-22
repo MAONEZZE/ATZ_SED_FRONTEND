@@ -9,6 +9,7 @@ import {
   useImportRegistrations,
   useRegistrations,
 } from "@/lib/api/registrations";
+import { useForms } from "@/lib/api/forms";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { formatDate } from "@/lib/utils/format-date";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
@@ -22,6 +23,7 @@ import { DataTable, DataTableDeleteButton } from "@/components/common/data-table
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -32,11 +34,14 @@ const ALL = "all";
 const BULK_DELETE_DISABLED_REASON =
   "Exclusão de inscrições ainda não existe no backend";
 
-type AttendeesTab = "registration" | "post_event" | "nps";
+const REGISTRATION_TAB = "registration";
+type AttendeesTab = string;
 
 export default function AttendeesPage() {
   const params = useParams<{ id: string }>();
   const eventId = params.id;
+  const { data: forms } = useForms(eventId);
+  const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
 
   const [tab, setTab] = useState<AttendeesTab>("registration");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
@@ -113,35 +118,18 @@ export default function AttendeesPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button
-          variant={tab === "registration" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("registration")}
-        >
-          Inscrição
-        </Button>
-        <Button
-          variant={tab === "post_event" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("post_event")}
-        >
-          Pós-evento
-        </Button>
-        <Button
-          variant={tab === "nps" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("nps")}
-        >
-          NPS
-        </Button>
-      </div>
+    <div className="grid items-start gap-6 lg:grid-cols-[1fr_260px]">
+      <div className="min-w-0 space-y-4">
+      {tab !== REGISTRATION_TAB && (
+        <FormResponsesTab
+          eventId={eventId}
+          formId={tab}
+          formName={sortedForms.find((f) => f.id === tab)?.name ?? ""}
+          onBack={() => setTab(REGISTRATION_TAB)}
+        />
+      )}
 
-      {tab === "post_event" && <FormResponsesTab eventId={eventId} kind="post_event" />}
-      {tab === "nps" && <FormResponsesTab eventId={eventId} kind="nps" />}
-
-      {tab === "registration" && (
+      {tab === REGISTRATION_TAB && (
         <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative sm:w-56">
@@ -266,6 +254,33 @@ export default function AttendeesPage() {
         onOpenChange={setCsvModalOpen}
         onFile={handleImportFile}
       />
+      </div>
+
+      <Card className="lg:sticky lg:top-4">
+        <CardHeader className="rounded-t-lg bg-ink-100 py-3">
+          <CardTitle className="text-center text-base">Formulários</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {sortedForms.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground">
+              Nenhum formulário ainda.
+            </p>
+          ) : (
+            sortedForms.map((form) => (
+              <Button
+                key={form.id}
+                type="button"
+                variant={tab === form.id ? "default" : "ghost"}
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => setTab(form.id)}
+              >
+                {form.name}
+              </Button>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

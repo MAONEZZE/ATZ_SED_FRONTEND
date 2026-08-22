@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -15,6 +15,7 @@ import {
 import {
   SortableContext,
   arrayMove,
+  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
@@ -23,15 +24,20 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Link2, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
-  useCreateFormField,
   useDeleteFormField,
   useFormFields,
   useReorderFormFields,
 } from "@/lib/api/form-fields";
-import { useEvent, useUpdateEvent } from "@/lib/api/events";
-import { useForm as useFormMeta, useUpdateForm } from "@/lib/api/forms";
+import { useEvent } from "@/lib/api/events";
+import {
+  useCreateForm,
+  useDeleteForm,
+  useForms,
+  useReorderForms,
+  useUpdateForm,
+} from "@/lib/api/forms";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
-import type { FormField, FormFieldKind } from "@/lib/api/types";
+import type { Form, FormField } from "@/lib/api/types";
 import { FieldEditorDialog } from "@/components/form-builder/field-editor-dialog";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
@@ -42,6 +48,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -153,7 +160,7 @@ function SortableFieldRow({
   );
 }
 
-function FormPreview({ fields, submitLabel = "Enviar inscrição" }: { fields: FormField[]; submitLabel?: string }) {
+function FormPreview({ fields }: { fields: FormField[] }) {
   const previewForm = useForm<Record<string, unknown>>();
 
   return (
@@ -167,55 +174,32 @@ function FormPreview({ fields, submitLabel = "Enviar inscrição" }: { fields: F
       <CardContent className="space-y-5">
         <FormFieldsRenderer fields={fields} form={previewForm} disabled />
         <Button className="w-full" size="lg" disabled>
-          {submitLabel}
+          Enviar inscrição
         </Button>
       </CardContent>
     </Card>
   );
 }
 
-function PipedriveToggle({ eventId }: { eventId: string }) {
-  const { data: event } = useEvent(eventId);
-  const update = useUpdateEvent(eventId);
-  const checked = event?.sendToPipedrive ?? false;
+function FormTogglesCard({
+  eventId,
+  form,
+  slug,
+  readonly,
+}: {
+  eventId: string;
+  form: Form;
+  slug?: string;
+  readonly: boolean;
+}) {
+  const update = useUpdateForm(eventId, form.id);
 
-  function handleChange(value: boolean) {
+  function handleChange(field: "requireImageAuthorization" | "sendToPipedrive", value: boolean) {
     update.mutate(
-      { sendToPipedrive: value },
-      {
-        onSuccess: () =>
-          toast.success(value ? "Envio ao Pipedrive ativado" : "Envio ao Pipedrive desativado"),
-        onError: (e) => toast.error(e.message),
-      },
-    );
-  }
-
-  return (
-    <Card>
-      <CardContent className="flex items-center justify-between gap-4 py-4">
-        <Label htmlFor="pipedrive-toggle">Enviar para o Pipedrive</Label>
-        <Switch
-          id="pipedrive-toggle"
-          checked={checked}
-          onCheckedChange={handleChange}
-          disabled={!event || update.isPending}
-        />
-      </CardContent>
-    </Card>
-  );
-}
-
-function ImageAuthorizationToggle({ eventId, slug }: { eventId: string; slug?: string }) {
-  const { data: form } = useFormMeta(eventId, "registration");
-  const update = useUpdateForm(eventId, "registration");
-  const checked = form?.requireImageAuthorization ?? false;
-
-  function handleChange(value: boolean) {
-    update.mutate(
-      { requireImageAuthorization: value },
+      { [field]: value },
       {
         onSuccess: () => {
-          toast.success(value ? "Autorização de imagem exigida" : "Autorização de imagem não exigida");
+          toast.success("Formulário atualizado");
           if (slug) void revalidatePublicEvent(slug);
         },
         onError: (e) => toast.error(e.message),
@@ -225,14 +209,30 @@ function ImageAuthorizationToggle({ eventId, slug }: { eventId: string; slug?: s
 
   return (
     <Card>
-      <CardContent className="flex items-center justify-between gap-4 py-4">
-        <Label htmlFor="require-image-auth">Autorização de imagem</Label>
-        <Switch
-          id="require-image-auth"
-          checked={checked}
-          onCheckedChange={handleChange}
-          disabled={!form || update.isPending}
-        />
+      <CardContent className="space-y-3 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="require-image-auth">Autorização de imagem</Label>
+          <Switch
+            id="require-image-auth"
+            checked={form.requireImageAuthorization}
+            onCheckedChange={(v) => handleChange("requireImageAuthorization", v)}
+            disabled={readonly || form.anonymous || update.isPending}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="pipedrive-toggle">Enviar para o Pipedrive</Label>
+          <Switch
+            id="pipedrive-toggle"
+            checked={form.sendToPipedrive}
+            onCheckedChange={(v) => handleChange("sendToPipedrive", v)}
+            disabled={readonly || form.anonymous || update.isPending}
+          />
+        </div>
+        {form.anonymous && (
+          <p className="text-xs text-muted-foreground">
+            Formulário anônimo não pode exigir autorização de imagem nem enviar ao Pipedrive.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -240,17 +240,16 @@ function ImageAuthorizationToggle({ eventId, slug }: { eventId: string; slug?: s
 
 function FormMetaEditor({
   eventId,
-  kind,
+  form,
   slug,
   readonly,
 }: {
   eventId: string;
-  kind: FormFieldKind;
+  form: Form;
   slug?: string;
   readonly: boolean;
 }) {
-  const { data: form, isLoading } = useFormMeta(eventId, kind);
-  const update = useUpdateForm(eventId, kind);
+  const update = useUpdateForm(eventId, form.id);
 
   const [description, setDescription] = useState("");
   const [postRegistrationMessage, setPostRegistrationMessage] = useState("");
@@ -258,15 +257,15 @@ function FormMetaEditor({
   const [activeField, setActiveField] = useState<"description" | "post" | "link">("description");
 
   useEffect(() => {
-    setDescription(form?.description ?? "");
-    setPostRegistrationMessage(form?.postRegistrationMessage ?? "");
-    setLinkPostSubscription(form?.linkPostSubscription ?? "");
+    setDescription(form.description ?? "");
+    setPostRegistrationMessage(form.postRegistrationMessage ?? "");
+    setLinkPostSubscription(form.linkPostSubscription ?? "");
   }, [form]);
 
   const dirty =
-    description !== (form?.description ?? "") ||
-    postRegistrationMessage !== (form?.postRegistrationMessage ?? "") ||
-    linkPostSubscription !== (form?.linkPostSubscription ?? "");
+    description !== (form.description ?? "") ||
+    postRegistrationMessage !== (form.postRegistrationMessage ?? "") ||
+    linkPostSubscription !== (form.linkPostSubscription ?? "");
 
   const value =
     activeField === "description"
@@ -284,9 +283,11 @@ function FormMetaEditor({
   function handleSave() {
     update.mutate(
       {
-        description: description || null,
-        postRegistrationMessage: postRegistrationMessage || null,
-        linkPostSubscription: linkPostSubscription || null,
+        description,
+        postRegistrationMessage,
+        // Backend valida com @IsUrl; string vazia não é URL válida, então só
+        // manda a chave quando há valor — não dá pra "limpar" o link por aqui.
+        ...(linkPostSubscription ? { linkPostSubscription } : {}),
       },
       {
         onSuccess: () => {
@@ -297,8 +298,6 @@ function FormMetaEditor({
       },
     );
   }
-
-  if (isLoading) return null;
 
   return (
     <Card>
@@ -376,48 +375,27 @@ function FormMetaEditor({
 
 function FormBuilderSection({
   eventId,
-  kind,
+  form,
   slug,
   readonly,
 }: {
   eventId: string;
-  kind: FormFieldKind;
+  form: Form;
   slug?: string;
   readonly: boolean;
 }) {
-  const { data: event } = useEvent(eventId);
-  const { data: fields, isLoading } = useFormFields(eventId, kind);
-  const reorder = useReorderFormFields(eventId);
+  const formId = form.id;
+  const { data: fields, isLoading } = useFormFields(eventId, formId);
+  const reorder = useReorderFormFields(eventId, formId);
   const deleteField = useDeleteFormField(eventId);
-  const createField = useCreateFormField(eventId);
 
   const [localFields, setLocalFields] = useState<FormField[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editing, setEditing] = useState<FormField | null>(null);
-  const seededPhone = useRef(false);
 
   useEffect(() => {
     if (fields) setLocalFields([...fields].sort((a, b) => a.order - b.order));
   }, [fields]);
-
-  useEffect(() => {
-    if (
-      kind === "post_event" &&
-      fields &&
-      fields.length === 0 &&
-      !seededPhone.current &&
-      !readonly
-    ) {
-      seededPhone.current = true;
-      createField.mutate({
-        label: "Telefone",
-        type: "phone",
-        kind: "post_event",
-        required: true,
-        order: 0,
-      });
-    }
-  }, [kind, fields, readonly, createField]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -454,35 +432,20 @@ function FormBuilderSection({
 
   if (isLoading) return <LoadingSpinner />;
 
-  const isRegistration = kind === "registration";
-  const title =
-    kind === "registration"
-      ? "Formulário de inscrição"
-      : kind === "post_event"
-        ? "Formulário pós-evento"
-        : "Avaliação NPS";
-  const submitLabel =
-    kind === "registration"
-      ? "Enviar inscrição"
-      : kind === "post_event"
-        ? "Enviar respostas"
-        : "Enviar avaliação";
-
   return (
     <div className="grid items-start gap-6 lg:grid-cols-2">
       <div className="space-y-4">
         {readonly && (
           <p className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-200">
-            Evento {event?.status === "cancelled" ? "cancelado" : "encerrado"} — somente
-            leitura.
+            Evento cancelado ou encerrado — somente leitura.
           </p>
         )}
 
-        <FormMetaEditor eventId={eventId} kind={kind} slug={slug} readonly={readonly} />
+        <FormMetaEditor eventId={eventId} form={form} slug={slug} readonly={readonly} />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="font-semibold">{title}</h2>
+            <h2 className="font-semibold">{form.name}</h2>
             <p className="text-sm text-muted-foreground">
               Arraste para reordenar. Adicione os campos que quiser.
             </p>
@@ -541,21 +504,107 @@ function FormBuilderSection({
           open={editorOpen}
           onOpenChange={setEditorOpen}
           nextOrder={localFields.length}
-          kind={kind}
+          formId={formId}
         />
       </div>
 
       <div className="space-y-4">
-        {(isRegistration || kind === "post_event") && (
-          <div className={isRegistration ? "grid gap-4 sm:grid-cols-2" : undefined}>
-            {isRegistration && (
-              <ImageAuthorizationToggle eventId={eventId} slug={slug} />
-            )}
-            <PipedriveToggle eventId={eventId} />
-          </div>
-        )}
-        <FormPreview fields={localFields} submitLabel={submitLabel} />
+        <FormTogglesCard eventId={eventId} form={form} slug={slug} readonly={readonly} />
+        <FormPreview fields={localFields} />
       </div>
+    </div>
+  );
+}
+
+function SortableFormTab({
+  form,
+  active,
+  readonly,
+  onSelect,
+  onRename,
+  onDelete,
+}: {
+  form: Form;
+  active: boolean;
+  readonly: boolean;
+  onSelect: () => void;
+  onRename: () => void;
+  onDelete: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: form.id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-center gap-1 rounded-md border p-1 ${
+        active ? "border-primary bg-primary/5" : "border-transparent"
+      } ${isDragging ? "z-10 shadow-lg" : ""}`}
+    >
+      <button
+        type="button"
+        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        aria-label={`Reordenar formulário ${form.name}`}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3.5 w-3.5" />
+      </button>
+      <Button
+        type="button"
+        variant={active ? "default" : "outline"}
+        size="sm"
+        onClick={onSelect}
+      >
+        {form.name}
+        {form.anonymous && <Badge variant="secondary" className="ml-2">Anônimo</Badge>}
+      </Button>
+      {active && (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={`Renomear ${form.name}`}
+            disabled={readonly}
+            onClick={onRename}
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={`Excluir ${form.name}`}
+                disabled={readonly}
+              >
+                <Trash2 className="h-3.5 w-3.5 text-destructive" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir formulário?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  &quot;{form.name}&quot;, seus campos e as respostas recebidas serão removidos
+                  permanentemente.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+                  onClick={onDelete}
+                >
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
+      )}
     </div>
   );
 }
@@ -564,18 +613,99 @@ export default function FormBuilderPage() {
   const params = useParams<{ id: string }>();
   const eventId = params.id;
   const { data: event } = useEvent(eventId);
-  const [kind, setKind] = useState<FormFieldKind>("registration");
+  const { data: forms, isLoading: formsLoading } = useForms(eventId);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [renaming, setRenaming] = useState<Form | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
   const readonly = event?.status === "cancelled" || event?.status === "ended";
 
-  const formPaths: Record<FormFieldKind, string> = {
-    registration: "",
-    post_event: "/pos-evento",
-    nps: "/nps",
-  };
+  const createForm = useCreateForm(eventId);
+  const updateForm = useUpdateForm(eventId, renaming?.id ?? "");
+  const deleteForm = useDeleteForm(eventId);
+  const reorderForms = useReorderForms(eventId);
+
+  useEffect(() => {
+    if (!forms || forms.length === 0) return;
+    if (!selectedId || !forms.some((f) => f.id === selectedId)) {
+      setSelectedId([...forms].sort((a, b) => a.order - b.order)[0].id);
+    }
+  }, [forms, selectedId]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
+  const selectedForm = sortedForms.find((f) => f.id === selectedId) ?? null;
+
+  function handleTabDragEnd(dragEvent: DragEndEvent) {
+    const { active, over } = dragEvent;
+    if (readonly || !over || active.id === over.id) return;
+
+    const oldIndex = sortedForms.findIndex((f) => f.id === active.id);
+    const newIndex = sortedForms.findIndex((f) => f.id === over.id);
+    const next = arrayMove(sortedForms, oldIndex, newIndex);
+
+    reorderForms.mutate(next.map((f) => f.id), {
+      onError: (e) => toast.error(`Falha ao reordenar: ${e.message}`),
+    });
+  }
+
+  function handleCreate() {
+    if (!newName.trim()) {
+      toast.error("Informe o nome do formulário");
+      return;
+    }
+    createForm.mutate(
+      { name: newName.trim() },
+      {
+        onSuccess: (created) => {
+          toast.success("Formulário criado");
+          setSelectedId(created.id);
+          setCreateOpen(false);
+          setNewName("");
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  }
+
+  function handleRename() {
+    if (!renaming || !renameValue.trim()) {
+      toast.error("Informe o nome do formulário");
+      return;
+    }
+    updateForm.mutate(
+      { name: renameValue.trim() },
+      {
+        onSuccess: () => {
+          toast.success("Formulário renomeado");
+          if (event?.slug) void revalidatePublicEvent(event.slug);
+          setRenaming(null);
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  }
+
+  function handleDelete(form: Form) {
+    deleteForm.mutate(form.id, {
+      onSuccess: () => {
+        toast.success("Formulário excluído");
+        if (event?.slug) void revalidatePublicEvent(event.slug);
+        if (selectedId === form.id) setSelectedId(null);
+      },
+      onError: (e) => toast.error(e.message),
+    });
+  }
 
   function handleCopyLink() {
-    if (!event?.slug) return;
-    const url = `${window.location.origin}/e/${event.slug}${formPaths[kind]}`;
+    if (!event?.slug || !selectedForm) return;
+    const url = `${window.location.origin}/e/${event.slug}/f/${selectedForm.slug}`;
     void navigator.clipboard.writeText(url).then(
       () => toast.success("Link do formulário copiado!"),
       () => toast.error("Falha ao copiar link"),
@@ -584,46 +714,122 @@ export default function FormBuilderPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant={kind === "registration" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setKind("registration")}
-        >
-          Inscrição
-        </Button>
-        <Button
-          variant={kind === "post_event" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setKind("post_event")}
-        >
-          Pós-evento
-        </Button>
-        <Button
-          variant={kind === "nps" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setKind("nps")}
-        >
-          NPS
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-          onClick={handleCopyLink}
-          disabled={!event?.slug}
-        >
-          <Link2 className="mr-2 h-4 w-4" />
-          Copiar link
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTabDragEnd}>
+            <SortableContext items={sortedForms.map((f) => f.id)} strategy={horizontalListSortingStrategy}>
+              <div className="flex flex-wrap items-center gap-2">
+                {sortedForms.map((form) => (
+                  <SortableFormTab
+                    key={form.id}
+                    form={form}
+                    active={form.id === selectedId}
+                    readonly={Boolean(readonly)}
+                    onSelect={() => setSelectedId(form.id)}
+                    onRename={() => {
+                      setRenaming(form);
+                      setRenameValue(form.name);
+                    }}
+                    onDelete={() => handleDelete(form)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={readonly}
+            onClick={() => {
+              setNewName("");
+              setCreateOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Novo formulário
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            disabled={!event?.slug || !selectedForm}
+          >
+            <Link2 className="mr-2 h-4 w-4" />
+            Copiar link
+          </Button>
+        </div>
       </div>
 
-      <FormBuilderSection
-        eventId={eventId}
-        kind={kind}
-        slug={event?.slug}
-        readonly={readonly}
-      />
+      {formsLoading ? (
+        <LoadingSpinner />
+      ) : selectedForm ? (
+        <FormBuilderSection
+          eventId={eventId}
+          form={selectedForm}
+          slug={event?.slug}
+          readonly={Boolean(readonly)}
+        />
+      ) : (
+        <p className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
+          Este evento ainda não tem formulários. Crie um para começar.
+        </p>
+      )}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo formulário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="new-form-name">Nome</Label>
+            <Input
+              id="new-form-name"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Ex.: Inscrição"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreate} disabled={createForm.isPending}>
+              {createForm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(renaming)} onOpenChange={(open) => !open && setRenaming(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Renomear formulário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="rename-form-name">Nome</Label>
+            <Input
+              id="rename-form-name"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRenaming(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleRename} disabled={updateForm.isPending}>
+              {updateForm.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

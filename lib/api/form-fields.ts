@@ -3,25 +3,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { FieldType, FormField, FormFieldKind, PaginatedResponse } from "@/lib/api/types";
+import type { FieldType, FormField, PaginatedResponse } from "@/lib/api/types";
 
 export interface FormFieldInput {
+  formId: string;
   label: string;
   type: FieldType;
-  kind?: FormFieldKind;
   required?: boolean;
   options?: string[];
   order?: number;
 }
 
-export type FormFieldUpdateInput = Partial<FormFieldInput>;
+export type FormFieldUpdateInput = Partial<Omit<FormFieldInput, "formId">>;
 
-export function useFormFields(eventId: string, kind?: FormFieldKind) {
+export function useFormFields(eventId: string, formId?: string) {
   return useQuery({
-    queryKey: queryKeys.formFields(eventId, kind),
+    queryKey: queryKeys.formFields(eventId, formId),
     queryFn: async () => {
       const qs = new URLSearchParams({ limit: "100" });
-      if (kind) qs.set("kind", kind);
+      if (formId) qs.set("formId", formId);
       const res = await api.get<PaginatedResponse<FormField>>(
         `/events/${eventId}/form-fields?${qs.toString()}`,
       );
@@ -60,8 +60,9 @@ export function useDeleteFormField(eventId: string) {
   });
 }
 
-export function useReorderFormFields(eventId: string) {
+export function useReorderFormFields(eventId: string, formId?: string) {
   const queryClient = useQueryClient();
+  const key = queryKeys.formFields(eventId, formId);
   return useMutation({
     mutationFn: async (changes: { id: string; order: number }[]) => {
       await Promise.all(
@@ -69,6 +70,21 @@ export function useReorderFormFields(eventId: string) {
           api.patch<FormField>(`/events/${eventId}/form-fields/${id}`, { order }),
         ),
       );
+    },
+    onMutate: async (changes) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<FormField[]>(key);
+      if (previous) {
+        const order = new Map(changes.map(({ id, order }) => [id, order]));
+        queryClient.setQueryData<FormField[]>(
+          key,
+          previous.map((f) => (order.has(f.id) ? { ...f, order: order.get(f.id)! } : f)),
+        );
+      }
+      return { previous };
+    },
+    onError: (_err, _changes, context) => {
+      if (context?.previous) queryClient.setQueryData(key, context.previous);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["events", eventId, "form-fields"] }),

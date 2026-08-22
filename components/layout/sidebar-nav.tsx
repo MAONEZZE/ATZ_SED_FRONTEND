@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, BookText, CalendarDays, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import {
+  Bot,
+  BookText,
+  CalendarDays,
+  LayoutDashboard,
+  MessageSquare,
+  QrCode,
+  Settings,
+} from "lucide-react";
 import { isActive } from "@/lib/utils/nav";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +26,7 @@ export const sidebarNavItems: NavItem[] = [
   { href: "/messages", label: "Mensagens", icon: MessageSquare },
   { href: "/ai-chat", label: "AI Chat", icon: Bot },
   { href: "/s-docs", label: "S-Docs", icon: BookText },
+  { href: "/scan", label: "Scan", icon: QrCode },
 ];
 
 export function SidebarNav({

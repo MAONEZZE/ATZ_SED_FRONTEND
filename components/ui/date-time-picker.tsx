@@ -8,7 +8,16 @@ import type { DateValue } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { parseValue, formatValue, type DateTimeMode } from "@/lib/utils/date-time-picker";
+import {
+  parseValue,
+  formatValue,
+  to12Hour,
+  from12Hour,
+  maskTimeInput,
+  splitMaskedTime,
+  type DateTimeMode,
+  type Period,
+} from "@/lib/utils/date-time-picker";
 
 // react-aria-components é pesado; carrega só quando o calendário abre, mantendo
 // o bundle das rotas (ex.: edição de evento) leve e a navegação rápida.
@@ -48,17 +57,35 @@ export function DateTimePicker({
     setOpen(false);
   }
 
-  function handleTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange(formatValue(date, e.target.value, mode));
+  const { hour, minute, period } = to12Hour(time);
+
+  // Texto livre do campo "hh:mm" enquanto o usuário digita — só sincroniza com
+  // o valor canônico (padded) quando o campo não está focado, senão o
+  // re-render a cada tecla sobrescreve o meio da digitação.
+  const [rawTime, setRawTime] = React.useState(hour && minute ? `${hour}:${minute}` : "");
+  const [timeFocused, setTimeFocused] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!timeFocused) setRawTime(hour && minute ? `${hour}:${minute}` : "");
+  }, [hour, minute, timeFocused]);
+
+  function commitTime(nextHour: string, nextMinute: string, nextPeriod: Period) {
+    onChange(formatValue(date, from12Hour(nextHour, nextMinute, nextPeriod), mode));
+  }
+
+  function handleTimeInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setRawTime(maskTimeInput(e.target.value));
+  }
+
+  function handleTimeBlur() {
+    setTimeFocused(false);
+    const { hour: h, minute: m } = splitMaskedTime(rawTime);
+    if (h || m) commitTime(h, m, period);
   }
 
   const dd = date ? String(date.day).padStart(2, "0") : "";
   const mm = date ? String(date.month).padStart(2, "0") : "";
-  const label = date
-    ? mode === "datetime"
-      ? `${dd}/${mm}/${date.year}${time ? ` ${time}` : ""}`
-      : `${dd}/${mm}/${date.year}`
-    : placeholder;
+  const label = date ? `${dd}/${mm}/${date.year}` : placeholder;
 
   return (
     <div className="flex gap-2">
@@ -80,14 +107,50 @@ export function DateTimePicker({
         </PopoverContent>
       </Popover>
       {mode === "datetime" && (
-        <Input
-          type="time"
-          aria-label="Hora"
-          value={time}
-          disabled={disabled}
-          onChange={handleTimeChange}
-          className="w-32 appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-        />
+        <div className="flex items-center gap-1">
+          <Input
+            type="text"
+            inputMode="numeric"
+            aria-label="Horário"
+            placeholder="hh:mm"
+            value={rawTime}
+            disabled={disabled}
+            onFocus={() => setTimeFocused(true)}
+            onChange={handleTimeInputChange}
+            onBlur={handleTimeBlur}
+            className="w-16 text-center"
+          />
+          <div className="flex overflow-hidden rounded-md border">
+            <button
+              type="button"
+              aria-label="AM"
+              aria-pressed={period === "AM"}
+              disabled={disabled}
+              onClick={() => commitTime(hour, minute, "AM")}
+              className={`px-2 py-2 text-xs font-medium ${
+                period === "AM"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              AM
+            </button>
+            <button
+              type="button"
+              aria-label="PM"
+              aria-pressed={period === "PM"}
+              disabled={disabled}
+              onClick={() => commitTime(hour, minute, "PM")}
+              className={`px-2 py-2 text-xs font-medium ${
+                period === "PM"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              PM
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

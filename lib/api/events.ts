@@ -21,9 +21,9 @@ export interface EventInput {
   recurrenceFreq?: RecurrenceFreq | null;
   recurrenceInterval?: number | null;
   recurrenceUntil?: string | null;
-  sendToPipedrive?: boolean;
   whatsappInstanceId?: string;
   whatsappToken?: string;
+  folderId?: string | null;
 }
 
 export type EventUpdateInput = Partial<EventInput>;

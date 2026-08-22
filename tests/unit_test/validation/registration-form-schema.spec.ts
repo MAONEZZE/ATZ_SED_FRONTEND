@@ -108,6 +108,42 @@ describe("buildSchema — multiselect", () => {
   });
 });
 
+function dateAutomationField(overrides: Partial<PublicFormField> = {}): PublicFormField {
+  return {
+    id: "f4",
+    label: "Data do lembrete",
+    type: "on_date_automation_field",
+    required: true,
+    options: null,
+    order: 0,
+    ...overrides,
+  };
+}
+
+describe("buildSchema — anonymous form (sem campo phone)", () => {
+  it("formulário anônimo não inclui o telefone entre os campos visíveis, então o schema não o exige", () => {
+    // A filtragem de campos "phone" para formulário anônimo acontece no componente
+    // (RegistrationForm), antes de chamar buildSchema — aqui simulamos a lista já filtrada.
+    const schema = buildSchema([selectField()]);
+    expect(schema.safeParse({ Camiseta: "M" }).success).toBe(true);
+    expect(Object.keys(schema.shape)).not.toContain("Telefone");
+  });
+});
+
+describe("buildSchema — on_date_automation_field", () => {
+  it("exige data estrita AAAA-MM-DD", () => {
+    const schema = buildSchema([dateAutomationField()]);
+    expect(schema.safeParse({ "Data do lembrete": "2026-08-21" }).success).toBe(true);
+    expect(schema.safeParse({ "Data do lembrete": "21/08/2026" }).success).toBe(false);
+    expect(schema.safeParse({ "Data do lembrete": "" }).success).toBe(false);
+  });
+
+  it("campo opcional aceita vazio", () => {
+    const schema = buildSchema([dateAutomationField({ required: false })]);
+    expect(schema.safeParse({ "Data do lembrete": "" }).success).toBe(true);
+  });
+});
+
 describe("buildSchema — image_authorization", () => {
   it("sem a flag, não adiciona o campo de consentimento", () => {
     const schema = buildSchema([]);

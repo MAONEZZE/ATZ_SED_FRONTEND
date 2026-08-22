@@ -8,12 +8,14 @@ import {
   useCreateAutomationGlobal,
   useUpdateAutomationGlobal,
 } from "@/lib/api/global-messaging";
+import { useForms } from "@/lib/api/forms";
 import { buildCron, parseCron, type CronFreq } from "@/lib/utils/automation-cron";
 import type { Automation, AutomationTrigger } from "@/lib/api/types";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
@@ -58,12 +60,16 @@ export function EventAutomationDialog({
 
   const [templateId, setTemplateId] = useState("");
   const [trigger, setTrigger] = useState<AutomationTrigger>("on_registration");
+  const [formIds, setFormIds] = useState<string[]>([]);
   const [delayMinutes, setDelayMinutes] = useState("");
   const [active, setActive] = useState(true);
   const [cronFreq, setCronFreq] = useState<CronFreq>("WEEKLY");
   const [cronTime, setCronTime] = useState("09:00");
   const [cronDayOfWeek, setCronDayOfWeek] = useState(1);
   const [cronDayOfMonth, setCronDayOfMonth] = useState(1);
+
+  const { data: forms } = useForms(eventId);
+  const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
 
   const { data: globalTemplatesResponse } = useAllTemplates(1, 100, undefined, null);
   const { data: eventTemplatesResponse } = useAllTemplates(1, 100, undefined, eventId);
@@ -83,6 +89,7 @@ export function EventAutomationDialog({
     if (open) {
       setTemplateId(automation?.templateId ?? "");
       setTrigger(automation?.trigger ?? "on_registration");
+      setFormIds(automation?.formIds ?? []);
       setDelayMinutes(
         automation?.delayMinutes != null ? String(automation.delayMinutes) : "",
       );
@@ -100,15 +107,28 @@ export function EventAutomationDialog({
   const isEdit = Boolean(automation);
   const supportsDelay = DELAYED_TRIGGERS.includes(trigger);
   const isRecurring = trigger === "recurring";
+  // Espelha AutomationRuleEntity.acceptsForm/requiresForm no backend.
+  const acceptsForm = trigger === "on_form_submitted" || trigger === "on_registration";
+  const requiresForm = trigger === "on_form_submitted";
+
+  function toggleForm(formId: string, checked: boolean) {
+    setFormIds((prev) =>
+      checked ? [...prev, formId] : prev.filter((id) => id !== formId),
+    );
+  }
 
   function handleSave() {
     if (!templateId) return toast.error("Selecione o template");
+    if (requiresForm && formIds.length === 0) {
+      return toast.error("Selecione ao menos um formulário");
+    }
     if (supportsDelay && delayMinutes && Number(delayMinutes) > MAX_DELAY_MINUTES) {
       return toast.error(`Atraso máximo é ${MAX_DELAY_MINUTES} minutos`);
     }
     const input = {
       templateId,
       trigger,
+      formIds: acceptsForm ? formIds : undefined,
       delayMinutes: supportsDelay && delayMinutes ? Number(delayMinutes) : undefined,
       cron: isRecurring
         ? buildCron({
@@ -174,6 +194,36 @@ export function EventAutomationDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {acceptsForm && (
+            <div className="space-y-2">
+              <Label>Formulários{requiresForm && " *"}</Label>
+              <p className="text-sm text-muted-foreground">
+                {requiresForm
+                  ? "Dispara só para quem respondeu um destes formulários."
+                  : "Opcional: sem seleção, dispara para inscritos de qualquer formulário."}
+              </p>
+              <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border p-3">
+                {sortedForms.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Este evento ainda não tem formulários.
+                  </p>
+                )}
+                {sortedForms.map((form) => (
+                  <div key={form.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`eauto-form-${form.id}`}
+                      checked={formIds.includes(form.id)}
+                      onCheckedChange={(checked) => toggleForm(form.id, Boolean(checked))}
+                    />
+                    <Label htmlFor={`eauto-form-${form.id}`} className="font-normal">
+                      {form.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {supportsDelay && (
             <div className="space-y-2">

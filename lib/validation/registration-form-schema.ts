@@ -58,6 +58,11 @@ export function buildSchema(
       case "date":
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
         break;
+      case "on_date_automation_field":
+        schema = field.required
+          ? z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida")
+          : z.string();
+        break;
       case "linkedin":
         schema = z.string().url("URL inválida");
         break;

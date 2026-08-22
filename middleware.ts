@@ -29,6 +29,7 @@ export const config = {
     "/messages/:path*",
     "/ai-chat/:path*",
     "/s-docs/:path*",
+    "/scan/:path*",
     "/settings/:path*",
   ],
 };

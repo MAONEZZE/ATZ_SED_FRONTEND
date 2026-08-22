@@ -3,11 +3,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
-import { PipedriveBadge } from "@/components/attendees/pipedrive-badge";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
 import { useFormFields } from "@/lib/api/form-fields";
 import { useUpdateRegistration } from "@/lib/api/registrations";
-import { useUserSubscriptions } from "@/lib/api/user-subscriptions";
 import type { Registration } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format-date";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
@@ -30,18 +28,6 @@ export function AttendeeDetailSheet({
   const { data: fields = [] } = useFormFields(eventId);
   const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
   const updateRegistration = useUpdateRegistration(eventId);
-
-  // Status do Pipedrive vem da tabela consolidada; cruza por e-mail/telefone.
-  const { data: subs } = useUserSubscriptions(eventId, {
-    search: registration?.email || registration?.phone || undefined,
-    limit: 10,
-  });
-  const pipedriveStatus =
-    subs?.data.find(
-      (s) =>
-        (registration?.email && s.email === registration.email) ||
-        (registration?.phone && s.phone === registration.phone),
-    )?.pipedriveStatus ?? null;
 
   useEffect(() => {
     if (!open || !registration) return;
@@ -82,7 +68,6 @@ export function AttendeeDetailSheet({
               <DialogTitle>{registration.name}</DialogTitle>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <FunnelStatusBadge status={registration.status} />
-                <PipedriveBadge status={pipedriveStatus} />
                 <span>{formatDate(registration.createdAt)}</span>
               </div>
             </DialogHeader>

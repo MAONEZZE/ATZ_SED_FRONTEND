@@ -13,7 +13,7 @@ export default function EventMessagesPage() {
   // na nav do layout do evento, por isso não há TabsList com contador aqui.
   return (
     <Tabs defaultValue="send" className="space-y-4">
-      <TabsList className="w-full">
+      <TabsList>
         <TabsTrigger value="send">Enviar</TabsTrigger>
         <TabsTrigger value="logs">Logs</TabsTrigger>
         <TabsTrigger value="templates">Templates</TabsTrigger>

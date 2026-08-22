@@ -5,54 +5,70 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { createPublicRegistration } from "@/lib/api/public";
+import { submitPublicFormResponse, answerKeyForField } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { renderRichText } from "@/components/ui/rich-text";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
 import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
 
 export function RegistrationForm({
   slug,
+  formSlug,
   fields,
-  successMessage,
-  postSubscriptionLink,
   requireImageAuthorization = false,
+  anonymous = false,
 }: {
   slug: string;
+  formSlug: string;
   fields: PublicFormField[];
-  successMessage?: string;
-  postSubscriptionLink?: string;
   requireImageAuthorization?: boolean;
+  anonymous?: boolean;
 }) {
+  const draftKey = `reg_draft_${slug}_${formSlug}`;
+  const submittedKey = `reg_submitted_${slug}_${formSlug}`;
+  const requireImage = requireImageAuthorization && !anonymous;
+
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(() => isSubmitted(`reg_submitted_${slug}`));
+  const [success, setSuccess] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
 
   const visibleFields = useMemo(
-    () => [...fields].sort((a, b) => a.order - b.order),
-    [fields],
+    () =>
+      [...fields]
+        .filter((f) => !anonymous || f.type !== "phone")
+        .sort((a, b) => a.order - b.order),
+    [fields, anonymous],
   );
   const schema = useMemo(
-    () => buildSchema(visibleFields, requireImageAuthorization),
-    [visibleFields, requireImageAuthorization],
+    () => buildSchema(visibleFields, requireImage),
+    [visibleFields, requireImage],
   );
 
   const form = useForm<Record<string, unknown>>({
     resolver: zodResolver(schema),
-    defaultValues: defaultValues(visibleFields, requireImageAuthorization),
+    defaultValues: defaultValues(visibleFields, requireImage),
   });
 
+  // localStorage nao existe no server: ler so apos a montagem, e so entao
+  // liberar o render real (ver skeleton abaixo) para nao quebrar a hidratacao.
   useEffect(() => {
+    if (!anonymous && isSubmitted(submittedKey)) {
+      setSuccess(true);
+      setHydrated(true);
+      return;
+    }
     try {
-      const raw = localStorage.getItem(`reg_draft_${slug}`);
+      const raw = localStorage.getItem(draftKey);
       if (raw) {
         const parsed = JSON.parse(raw);
         form.reset(parsed);
       }
     } catch {}
-  }, []);
+    setHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey, submittedKey, anonymous]);
 
   const hasMounted = useRef(false);
   const watchedValues = form.watch();
@@ -63,24 +79,56 @@ export function RegistrationForm({
       return;
     }
     try {
-      localStorage.setItem(`reg_draft_${slug}`, JSON.stringify(watchedValues));
+      localStorage.setItem(draftKey, JSON.stringify(watchedValues));
     } catch {}
-  }, [watchedValues, slug]);
+  }, [watchedValues, draftKey]);
 
   async function onSubmit(values: Record<string, unknown>) {
     setSubmitting(true);
     try {
-      await createPublicRegistration(slug, values);
+      const answers: Record<string, unknown> = {};
+      for (const field of visibleFields) {
+        answers[field.label] = values[answerKeyForField(field)];
+      }
+      const phoneField = visibleFields.find((f) => f.type === "phone");
+      const phone = phoneField
+        ? (values[answerKeyForField(phoneField)] as string | undefined)
+        : undefined;
+
+      await submitPublicFormResponse(slug, formSlug, {
+        phone,
+        answers,
+        image_authorization: requireImage
+          ? (values["image_authorization"] as boolean)
+          : undefined,
+      });
       setSuccess(true);
-      markSubmitted(`reg_submitted_${slug}`);
-      try {
-        localStorage.removeItem(`reg_draft_${slug}`);
-      } catch {}
+      if (!anonymous) {
+        markSubmitted(submittedKey);
+        try {
+          localStorage.removeItem(draftKey);
+        } catch {}
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha ao enviar inscrição");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (!hydrated) {
+    return (
+      <div className="space-y-5" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Carregando formulario de inscricao...</span>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="space-y-2">
+            <div className="h-4 w-32 animate-pulse rounded bg-current/10" />
+            <div className="h-10 w-full animate-pulse rounded-md bg-current/10" />
+          </div>
+        ))}
+        <div className="h-11 w-full animate-pulse rounded-md bg-current/10" />
+      </div>
+    );
   }
 
   if (success) {
@@ -89,17 +137,8 @@ export function RegistrationForm({
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h3 className="mt-4 text-xl font-bold">Inscrição enviada!</h3>
         <p className="mt-2 whitespace-pre-line opacity-80">
-          {successMessage
-            ? renderRichText(successMessage)
-            : "Recebemos sua inscrição. Você receberá novidades em breve."}
+          Recebemos sua inscrição. Você receberá novidades em breve.
         </p>
-        {postSubscriptionLink && (
-          <Button asChild className="mt-6">
-            <a href={postSubscriptionLink} target="_blank" rel="noopener noreferrer">
-              Acessar link
-            </a>
-          </Button>
-        )}
       </div>
     );
   }
@@ -114,7 +153,7 @@ export function RegistrationForm({
         <FormFieldsRenderer fields={visibleFields} form={form} />
       )}
 
-      {requireImageAuthorization && (
+      {requireImage && (
         <Controller
           control={form.control}
           name="image_authorization"

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import { fieldHasOptions, fieldOptions } from "@/lib/forms/field-types";
-import type { FieldType, FormField, FormFieldKind } from "@/lib/api/types";
+import type { FieldType, FormField } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +39,7 @@ const fieldTypeLabels: Record<FieldType, string> = {
   date: "Data",
   linkedin: "LinkedIn",
   instagram: "Instagram",
+  on_date_automation_field: "Campo de automação por data",
 };
 
 const creatableTypes: FieldType[] = [
@@ -66,7 +67,7 @@ export function FieldEditorDialog({
   open,
   onOpenChange,
   nextOrder,
-  kind = "registration",
+  formId,
 }: {
   eventId: string;
   slug?: string;
@@ -74,7 +75,7 @@ export function FieldEditorDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nextOrder: number;
-  kind?: FormFieldKind;
+  formId: string;
 }) {
   const create = useCreateFormField(eventId);
   const update = useUpdateFormField(eventId);
@@ -129,7 +130,7 @@ export function FieldEditorDialog({
       );
     } else {
       create.mutate(
-        { label: label.trim(), type, kind, required, options, order: nextOrder },
+        { label: label.trim(), type, formId, required, options, order: nextOrder },
         onDone,
       );
     }

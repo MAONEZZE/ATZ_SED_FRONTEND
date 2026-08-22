@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
-import { Breadcrumb } from "@/components/common/breadcrumb";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { RecordCountProvider, useRecordCount } from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
@@ -46,9 +45,6 @@ function EventLayoutContent({ children }: { children: ReactNode }) {
 
   return (
     <div className="space-y-4">
-      <Breadcrumb
-        items={[{ label: "Eventos", href: "/events" }, { label: event?.title ?? "..." }]}
-      />
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold tracking-tight">{event?.title ?? ""}</h1>
         {event && <EventStatusBadge status={event.status} />}

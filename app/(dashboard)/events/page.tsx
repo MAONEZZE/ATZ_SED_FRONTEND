@@ -24,7 +24,6 @@ import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import type { EventObject } from "@/lib/api/types";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
-import { Breadcrumb } from "@/components/common/breadcrumb";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
 import { Pagination } from "@/components/common/data-table";
@@ -261,8 +260,6 @@ export default function EventsPage() {
 
   return (
     <div className="space-y-6">
-      <Breadcrumb items={[{ label: "Eventos" }]} />
-
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Eventos</h1>
         <div className="flex items-center gap-2">
