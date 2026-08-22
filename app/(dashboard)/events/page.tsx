@@ -24,6 +24,11 @@ import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import type { EventObject } from "@/lib/api/types";
 import { EventStatusBadge } from "@/components/common/status-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { FolderCreateButton } from "@/components/common/folder-create-button";
+import { FolderGrid } from "@/components/common/folder-grid";
+import { Pagination } from "@/components/common/data-table";
+import { RESERVED_BELOW, useFitPageSize } from "@/components/common/use-fit-page-size";
+import { useFolders } from "@/components/common/use-folders";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -90,8 +95,8 @@ function EventCard({
 
   return (
     <>
-      <Card className="overflow-hidden transition-shadow hover:shadow-md">
-        <div className="relative aspect-video bg-muted">
+      <Card className="flex h-[260px] flex-col overflow-hidden transition-shadow hover:shadow-md">
+        <div className="relative h-[180px] shrink-0 bg-muted">
           {event.coverUrl ? (
             <Image
               src={event.coverUrl}
@@ -134,7 +139,10 @@ function EventCard({
                   <Share2 className="mr-2 h-4 w-4" />
                   Colaboradores
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate} disabled={duplicate.isPending}>
+                <DropdownMenuItem
+                  onClick={handleDuplicate}
+                  disabled={duplicate.isPending}
+                >
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicar
                 </DropdownMenuItem>
@@ -153,8 +161,8 @@ function EventCard({
                     <AlertDialogHeader>
                       <AlertDialogTitle>Excluir evento?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Isso apaga o evento, formulário, inscrições, templates, automações e
-                        landing. Ação irreversível.
+                        Isso apaga o evento, formulário, inscrições, templates, automações
+                        e landing. Ação irreversível.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -178,7 +186,7 @@ function EventCard({
           </div>
         </div>
 
-        <CardContent className="p-4">
+        <CardContent className="min-h-0 flex-1 overflow-hidden p-3">
           <Link href={`/events/${event.id}/edit`} className="block">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="truncate font-semibold">{event.title}</h3>
@@ -223,97 +231,102 @@ function EventCard({
   );
 }
 
+/** Altura fixa do EventCard (`h-[260px]`) — a medição depende dela ser constante. */
+const EVENT_CARD_HEIGHT = 260;
+/** `gap-4` do grid. */
+const GRID_GAP = 16;
+
 export default function EventsPage() {
   const [page, setPage] = useState(1);
-  const limit = 20;
   const { data: profile } = useProfile();
+  const { folders, createFolder, renameFolder, deleteFolder } = useFolders();
+  // O grid é medido vazio; o fetch só dispara com a quantidade que cabe na tela.
+  // Todos os estados (carregando, erro, vazio) ficam DENTRO dele, senão o topo
+  // do grid se desloca a cada troca de estado e a medição oscila.
+  const { ref: gridRef, pageSize } = useFitPageSize<HTMLDivElement>({
+    itemHeight: EVENT_CARD_HEIGHT,
+    gap: GRID_GAP,
+    reserved: RESERVED_BELOW,
+  });
   const {
     data: response,
     isLoading,
     isError,
     refetch,
     isRefetching,
-  } = useEvents(page, limit);
+  } = useEvents(page, pageSize ?? 0);
   const events = response?.data;
-  const totalPages = response ? Math.ceil(response.total / limit) : 0;
+  const totalPages = pageSize && response ? Math.ceil(response.total / pageSize) : 0;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Eventos</h1>
-        <Button asChild>
-          <Link href="/events/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo evento
-          </Link>
-        </Button>
-      </div>
-
-      {isLoading && <LoadingSpinner />}
-
-      {isError && (
-        <div className="rounded-xl border border-dashed p-12 text-center">
-          <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 font-semibold">Não foi possível carregar os eventos</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Verifique sua conexão e tente novamente.
-          </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => void refetch()}
-            disabled={isRefetching}
-          >
-            Tentar novamente
-          </Button>
-        </div>
-      )}
-
-      {response && events?.length === 0 && (
-        <div className="rounded-xl border border-dashed p-12 text-center">
-          <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h2 className="mt-4 font-semibold">Nenhum evento ainda</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Crie seu primeiro evento para começar.
-          </p>
-          <Button asChild className="mt-4">
+        <div className="flex items-center gap-2">
+          <FolderCreateButton onCreate={createFolder} />
+          <Button asChild>
             <Link href="/events/new">
               <Plus className="mr-2 h-4 w-4" />
-              Criar evento
+              Novo evento
             </Link>
           </Button>
         </div>
-      )}
+      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <FolderGrid
+        folders={folders}
+        basePath="/events"
+        onRename={renameFolder}
+        onDelete={deleteFolder}
+      />
+
+      <div ref={gridRef} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {isLoading && (
+          <div className="col-span-full">
+            <LoadingSpinner />
+          </div>
+        )}
+
+        {isError && (
+          <div className="col-span-full rounded-xl border border-dashed p-12 text-center">
+            <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h2 className="mt-4 font-semibold">Não foi possível carregar os eventos</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Verifique sua conexão e tente novamente.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => void refetch()}
+              disabled={isRefetching}
+            >
+              Tentar novamente
+            </Button>
+          </div>
+        )}
+
+        {response && events?.length === 0 && (
+          <div className="col-span-full rounded-xl border border-dashed p-12 text-center">
+            <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
+            <h2 className="mt-4 font-semibold">Nenhum evento ainda</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Crie seu primeiro evento para começar.
+            </p>
+            <Button asChild className="mt-4">
+              <Link href="/events/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Criar evento
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {events?.map((event) => (
           <EventCard key={event.id} event={event} ownerId={profile?.id} />
         ))}
       </div>
 
-      {totalPages > 0 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }

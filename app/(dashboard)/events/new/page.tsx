@@ -64,26 +64,37 @@ export default function NewEventPage() {
       <form className="space-y-6">
         <EventFormFields form={form} />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button
             type="button"
             variant="outline"
             disabled={isPending}
-            onClick={form.handleSubmit((v) => submit(v, false))}
+            onClick={() => router.push("/events")}
           >
-            {isPending && !publishing && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Salvar rascunho
+            Cancelar
           </Button>
-          <Button
-            type="button"
-            disabled={isPending}
-            onClick={form.handleSubmit((v) => submit(v, true))}
-          >
-            {isPending && publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Criar e publicar
-          </Button>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              onClick={form.handleSubmit((v) => submit(v, false))}
+            >
+              {isPending && !publishing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Salvar rascunho
+            </Button>
+            <Button
+              type="button"
+              disabled={isPending}
+              onClick={form.handleSubmit((v) => submit(v, true))}
+            >
+              {isPending && publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Criar e publicar
+            </Button>
+          </div>
         </div>
       </form>
     </div>

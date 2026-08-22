@@ -1,9 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, LogOut, MessageSquare, Moon, Settings, Sun } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { LogOut, Menu, Moon, Settings, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useProfile } from "@/lib/api/profile";
@@ -17,20 +16,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import type { ReactNode } from "react";
-
-const navItems = [
-  { href: "/events", label: "Eventos", icon: CalendarDays },
-  { href: "/messages", label: "Mensagens", icon: MessageSquare },
-];
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { SidebarBrand } from "@/components/layout/sidebar-brand";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
   const { session, signOut } = useAuth();
   const { data: profile } = useProfile();
   const { resolvedTheme, setTheme } = useTheme();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const displayName = profile?.name || session?.user.name || "";
   const displayEmail = profile?.email || session?.user.email || "";
@@ -46,36 +42,31 @@ export function AppShell({ children }: { children: ReactNode }) {
     "?";
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
-      <header className="relative z-10 shrink-0 border-b border-border bg-cream-deep">
-        <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-4 px-4">
-          <Link href="/events" className="flex items-center" aria-label="Atlaz — início">
-            <Image
-              src="/logos/Atlaz.png"
-              alt="Atlaz"
-              width={96}
-              height={96}
-              priority
-              className="h-8 w-8 rounded-md object-contain"
-            />
-          </Link>
-          <nav className="flex items-center gap-1 overflow-x-auto">
-            {navItems.map(({ href, label, icon: Icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors hover:bg-brown-100",
-                  pathname.startsWith(href)
-                    ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary"
-                    : "text-brown-500",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{label}</span>
-              </Link>
-            ))}
-          </nav>
+    <div className="flex h-screen overflow-hidden">
+      <AppSidebar />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4">
+          <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden"
+              aria-label="Abrir menu de navegação"
+              aria-expanded={drawerOpen}
+              onClick={() => setDrawerOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <SheetContent side="left" className="w-64 bg-sidebar p-0 text-sidebar-foreground">
+              <SheetTitle className="sr-only">Navegação principal</SheetTitle>
+              <SidebarBrand onNavigate={() => setDrawerOpen(false)} />
+              <div className="py-2">
+                <SidebarNav onNavigate={() => setDrawerOpen(false)} />
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <div className="ml-auto flex items-center gap-2">
             <Button
               variant="ghost"
@@ -121,10 +112,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+        </header>
+
+        <div className="flex-1 overflow-y-auto">
+          <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
         </div>
-      </header>
-      <div className="flex-1 overflow-y-auto">
-        <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AuthBackground } from "@/components/layout/auth-background";
+import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +31,7 @@ const signupSchema = z.object({
 type SignupForm = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
-  const { signUp } = useAuth();
+  const { session, isLoading, signUp } = useAuth();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
@@ -38,6 +39,11 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: { name: "", email: "", password: "" },
   });
+
+  useEffect(() => {
+    if (isLoading || !session) return;
+    router.replace("/dashboard");
+  }, [isLoading, session, router]);
 
   async function onSubmit(values: SignupForm) {
     setSubmitting(true);
@@ -51,6 +57,15 @@ export default function SignupPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (isLoading || session) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center p-4">
+        <AuthBackground />
+        <LoadingSpinner />
+      </main>
+    );
   }
 
   return (

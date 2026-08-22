@@ -93,7 +93,7 @@ export function FormFieldsRenderer({
               />
             )}
 
-            {field.type === "date" && (
+            {(field.type === "date" || field.type === "on_date_automation_field") && (
               <Controller
                 control={form.control}
                 name={key}

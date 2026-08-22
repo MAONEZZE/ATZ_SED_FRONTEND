@@ -1,0 +1,960 @@
+{
+  "nodes": [
+    {
+      "id": "messages_global_template_dialog_spec_layout_roundtrip",
+      "label": "Invariant: global template dialog persists layoutConfig + styleKey and gates by channel",
+      "file_type": "code",
+      "source_file": "tests/unit_test/messages/global-template-dialog.spec.tsx",
+      "source_location": "L42-81",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "messages_resolve_template_selection_spec_channel_rules",
+      "label": "Invariant: resolveTemplateSelection materializes body/subject/layout per channel",
+      "file_type": "code",
+      "source_file": "tests/unit_test/messages/resolve-template-selection.spec.ts",
+      "source_location": "L20-63",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "status_transition_maps_spec_terminal_states",
+      "label": "Invariant: cancelled/ended are terminal event statuses; funnel statuses are fully reversible",
+      "file_type": "code",
+      "source_file": "tests/unit_test/status/transition-maps.spec.ts",
+      "source_location": "L9-49",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "theme_brand_hex_spec_forbidden_hexes",
+      "label": "Invariant: akeel blog hexes banned from app/components/lib/hooks",
+      "file_type": "code",
+      "source_file": "tests/unit_test/theme/brand-hex.spec.ts",
+      "source_location": "L18-51",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "theme_color_contrast_spec_wcag_thresholds",
+      "label": "Invariant: WCAG thresholds + HSL→hex round-trip on brand tokens",
+      "file_type": "code",
+      "source_file": "tests/unit_test/theme/color-contrast.spec.ts",
+      "source_location": "L64-108",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "utils_automation_cron_spec_roundtrip",
+      "label": "Invariant: buildCron/parseCron round-trip for DAILY/WEEKLY/MONTHLY, null on malformed",
+      "file_type": "code",
+      "source_file": "tests/unit_test/utils/automation-cron.spec.ts",
+      "source_location": "L4-41",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "utils_dashboard_metrics_spec_partial_page_honesty",
+      "label": "Invariant: dashboard metrics only claim what the received page contains",
+      "file_type": "code",
+      "source_file": "tests/unit_test/utils/dashboard-metrics.spec.ts",
+      "source_location": "L20-64",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "utils_normalize_phone_spec_br_prefix",
+      "label": "Invariant: BR phone normalization forces 55 prefix and strips formatting",
+      "file_type": "code",
+      "source_file": "tests/unit_test/utils/normalize-phone.spec.ts",
+      "source_location": "L4-20",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validation_event_schema_spec_enddate_ordering",
+      "label": "Invariant: endDate must follow eventDate, error anchored on endDate field",
+      "file_type": "code",
+      "source_file": "tests/unit_test/validation/event-schema.spec.ts",
+      "source_location": "L6-51",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validation_registration_form_schema_spec_option_and_consent",
+      "label": "Invariant: dynamic form schema enforces configured options, instagram handle shape, and image consent",
+      "file_type": "code",
+      "source_file": "tests/unit_test/validation/registration-form-schema.spec.ts",
+      "source_location": "L29-137",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "validation_send_message_spec_payload_rules",
+      "label": "Invariant: send-message payload never carries templateId; channel decides subject/groupIds",
+      "file_type": "code",
+      "source_file": "tests/unit_test/validation/send-message.spec.ts",
+      "source_location": "L20-181",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "integration_test_readme_layer_boundary",
+      "label": "Unit vs integration test boundary (collaboration between layers)",
+      "file_type": "concept",
+      "source_file": "tests/integration_test/README.md",
+      "source_location": "L9-12",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_design_doc",
+      "label": "Design: autorização de uso de imagem por evento",
+      "file_type": "document",
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_design_backend_contract",
+      "label": "Backend contract: requireImageAuthorization / image_authorization",
+      "file_type": "concept",
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L11-20",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_design_consent_ux",
+      "label": "Consent UX: single RHF-managed checkbox + PDF link, per-event not global",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L22-30",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_design_yagni",
+      "label": "YAGNI boundary for image authorization",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L74-78",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_plan",
+      "label": "Implementation plan: autorização de uso de imagem por evento",
+      "file_type": "document",
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_schema_flag",
+      "label": "image_authorization as a literal schema key appended by a flag",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L13-19,L124-155",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_07_21_image_authorization_organizer_toggle",
+      "label": "Organizer Switch shown only when kind === registration",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L300-356",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "public_autorizacao_imagem_termo",
+      "label": "Termo de uso de imagem (PDF served at /autorizacao-imagem.pdf)",
+      "file_type": "document",
+      "source_file": "public/autorizacao-imagem.pdf",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "label": "Plan: nova UI — paleta verde/ink, sidebar colapsável e dashboard",
+      "file_type": "document",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_token_indirection",
+      "label": "shadcn --accent is hover surface, never brand green",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L52-60",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_hsl_decimal_precision",
+      "label": "One-decimal HSL triplets — integers corrupt 4 of 6 hexes",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L41-50",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_bg_dark_derived",
+      "label": "#13232a back-solved from the documented 9.69:1 — only invented value in the plan",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L31-33",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_claude_md_divergences",
+      "label": "CLAUDE.md §Cores divergences (src/ paths and test filenames that never existed)",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L21-33",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_amber_dual_role",
+      "label": "Amber plays double duty (warning + brand focus/active) and must be demoted",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L82-97",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_brown300_failure",
+      "label": "--brown-300 at 2.12:1 serves text, placeholder and border at once",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L79,L99-108",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_sidebar_dark_both_themes",
+      "label": "Same dark --sidebar-* values in :root and .dark so the sidebar is dark by construction",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L118-129",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_isactive_helper",
+      "label": "isActive = exact match or href + '/' prefix (not startsWith)",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L142",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_minw0_scroll_contract",
+      "label": "min-w-0 scroll contract so wide tables scroll inside content, not the body",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L139",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_shared_query_key",
+      "label": "Reuse useEvents() with no args to share the existing cache key (no fourth key, no N+1)",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L149-153,L172",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_honesty_rule",
+      "label": "Honesty rule: complete = data.length >= total; no percentages over a partial page",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L162-170",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_messages_registered_label",
+      "label": "KPI says 'mensagens registradas', not 'enviadas' — total counts failed logs too",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L157",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "plans_2026_08_06_nova_ui_sidebar_dashboard_execution_order",
+      "label": "Retheme first, splitting value change from name change across commits",
+      "file_type": "rationale",
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L197-212",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_color_tokens",
+      "label": "Brand color token table (§Cores)",
+      "file_type": "concept",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_two_greens_rationale",
+      "label": "Two greens exist on purpose — accent for dark, accent-ink for light",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_threshold_locking_rationale",
+      "label": "Lock contrast by thresholds, not exact ratios (exact ratios are brittle)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_blog_hex_ban",
+      "label": "Blog akeel is the source of structure, never of color — its hexes are banned",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_email_hex_exemption",
+      "label": "lib/email and email-layout-editor exempt from the hex ban (email-client design system)",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_open_divergences",
+      "label": "Open backend divergences (after_approval 400, /profile/ensure missing, canTransitionFunnel unused)",
+      "file_type": "concept",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_doc_pointer_policy",
+      "label": "Read-on-demand doc pointers into the Obsidian vault instead of loading everything",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_supabase_auth_only",
+      "label": "Supabase is auth-only behind a wrapper; all CRUD goes through the NestJS API",
+      "file_type": "rationale",
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "theme_color_contrast_spec_wcag_thresholds",
+      "target": "claude_color_tokens",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/theme/color-contrast.spec.ts",
+      "source_location": "L64-108 (describe titles cite 'CLAUDE.md §Cores')",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_threshold_locking_rationale",
+      "target": "theme_color_contrast_spec_wcag_thresholds",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_two_greens_rationale",
+      "target": "theme_color_contrast_spec_wcag_thresholds",
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "tests/unit_test/theme/color-contrast.spec.ts",
+      "source_location": "L96-108 (forbidden pairs assert the two-greens split)",
+      "weight": 1.0
+    },
+    {
+      "source": "theme_brand_hex_spec_forbidden_hexes",
+      "target": "claude_blog_hex_ban",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/theme/brand-hex.spec.ts",
+      "source_location": "L40 (describe cites CLAUDE.md §Cores)",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_email_hex_exemption",
+      "target": "theme_brand_hex_spec_forbidden_hexes",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/theme/brand-hex.spec.ts",
+      "source_location": "L9-15 (EXCLUDE_DIRS / EXCLUDE_FILES)",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_blog_hex_ban",
+      "target": "claude_color_tokens",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "claude_two_greens_rationale",
+      "target": "claude_color_tokens",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "claude_color_tokens",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L7-11",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_claude_md_divergences",
+      "target": "claude_color_tokens",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L21-33",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_bg_dark_derived",
+      "target": "claude_color_tokens",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L33",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_token_indirection",
+      "target": "claude_color_tokens",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L54",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_hsl_decimal_precision",
+      "target": "theme_color_contrast_spec_wcag_thresholds",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L189 (round-trip test exists so the hex comment is not decorative)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "theme_color_contrast_spec_wcag_thresholds",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L189",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "theme_brand_hex_spec_forbidden_hexes",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L190",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "utils_dashboard_metrics_spec_partial_page_honesty",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L191",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_honesty_rule",
+      "target": "utils_dashboard_metrics_spec_partial_page_honesty",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L162-170",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_shared_query_key",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_honesty_rule",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L149-170 (sharing the {page:1,limit:20} key is what makes the dataset partial)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_shared_query_key",
+      "target": "messages_global_template_dialog_spec_layout_roundtrip",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L151 (cites global-template-dialog.tsx:69 as the key holder)",
+      "weight": 0.7
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_amber_dual_role",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L82-97",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_brown300_failure",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L79,L99-108",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_isactive_helper",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L142",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_minw0_scroll_contract",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L139",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_execution_order",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L197-212",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_plan",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_messages_registered_label",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_sidebar_dark_both_themes",
+      "target": "claude_two_greens_rationale",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L129 (active item cannot be bg-primary — the pair CLAUDE.md forbids)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_brown300_failure",
+      "target": "theme_color_contrast_spec_wcag_thresholds",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L99-108 (fix the pre-existing failures rather than water down the test)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_08_06_nova_ui_sidebar_dashboard_amber_dual_role",
+      "target": "plans_2026_08_06_nova_ui_sidebar_dashboard_token_indirection",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md",
+      "source_location": "L54,L82-97 (both are one token carrying two semantics)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_plan",
+      "target": "plans_2026_07_21_image_authorization_design_doc",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "same date, same feature, identical file-by-file breakdown",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_design_doc",
+      "target": "plans_2026_07_21_image_authorization_design_backend_contract",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L11-20",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_design_doc",
+      "target": "plans_2026_07_21_image_authorization_design_consent_ux",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L22-30",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_design_doc",
+      "target": "plans_2026_07_21_image_authorization_design_yagni",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L74-78",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_design_consent_ux",
+      "target": "public_autorizacao_imagem_termo",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L24-25",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_schema_flag",
+      "target": "validation_registration_form_schema_spec_option_and_consent",
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L80-111 (plan contains the exact test block now in the spec)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_plan",
+      "target": "validation_registration_form_schema_spec_option_and_consent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L74-121",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_design_backend_contract",
+      "target": "validation_registration_form_schema_spec_option_and_consent",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "docs/plans/2026-07-21-image-authorization-design.md",
+      "source_location": "L16-17 (client schema mirrors the backend 400 message verbatim)",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_plan",
+      "target": "plans_2026_07_21_image_authorization_organizer_toggle",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L300-356",
+      "weight": 1.0
+    },
+    {
+      "source": "plans_2026_07_21_image_authorization_organizer_toggle",
+      "target": "plans_2026_07_21_image_authorization_design_consent_ux",
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_open_divergences",
+      "target": "status_transition_maps_spec_terminal_states",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "CLAUDE.md",
+      "source_location": "canTransitionFunnel tested but not used by StatusSelect",
+      "weight": 1.0
+    },
+    {
+      "source": "validation_send_message_spec_payload_rules",
+      "target": "messages_resolve_template_selection_spec_channel_rules",
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/validation/send-message.spec.ts",
+      "source_location": "L117-132 vs resolve-template-selection L30-45 — the template is materialized into body client-side, so templateId is never sent",
+      "weight": 1.0
+    },
+    {
+      "source": "messages_global_template_dialog_spec_layout_roundtrip",
+      "target": "messages_resolve_template_selection_spec_channel_rules",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "tests/unit_test/messages/global-template-dialog.spec.tsx",
+      "source_location": "both lock the layoutConfig/styleKey/body triple and the email-vs-whatsapp channel gate",
+      "weight": 1.0
+    },
+    {
+      "source": "utils_normalize_phone_spec_br_prefix",
+      "target": "validation_send_message_spec_payload_rules",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "tests/unit_test/utils/normalize-phone.spec.ts",
+      "source_location": "manual whatsapp recipients require a phone that normalizeBrPhone canonicalizes",
+      "weight": 1.0
+    },
+    {
+      "source": "integration_test_readme_layer_boundary",
+      "target": "validation_send_message_spec_payload_rules",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.65,
+      "source_file": "tests/integration_test/README.md",
+      "source_location": "L9-12 — cites 'form + validação + client HTTP mockado' as the integration counterpart to these unit specs",
+      "weight": 0.6
+    },
+    {
+      "source": "claude_supabase_auth_only",
+      "target": "claude_doc_pointer_policy",
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.55,
+      "source_file": "CLAUDE.md",
+      "source_location": "both are stable-fact notes that keep context small",
+      "weight": 0.5
+    },
+    {
+      "source": "utils_automation_cron_spec_roundtrip",
+      "target": "validation_event_schema_spec_enddate_ordering",
+      "relation": "conceptually_related_to",
+      "confidence": "AMBIGUOUS",
+      "confidence_score": 0.2,
+      "source_file": "tests/unit_test/utils/automation-cron.spec.ts",
+      "source_location": "both are date/time serialization boundaries (cron string vs ISO), but no shared module was found",
+      "weight": 0.3
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "wcag_brand_token_system",
+      "label": "WCAG-locked brand token system (docs + tokens + tests)",
+      "nodes": [
+        "claude_color_tokens",
+        "claude_two_greens_rationale",
+        "claude_threshold_locking_rationale",
+        "theme_color_contrast_spec_wcag_thresholds",
+        "theme_brand_hex_spec_forbidden_hexes",
+        "plans_2026_08_06_nova_ui_sidebar_dashboard_token_indirection",
+        "plans_2026_08_06_nova_ui_sidebar_dashboard_hsl_decimal_precision"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "tests/unit_test/theme/color-contrast.spec.ts"
+    },
+    {
+      "id": "image_authorization_feature",
+      "label": "Per-event image authorization consent feature",
+      "nodes": [
+        "plans_2026_07_21_image_authorization_design_doc",
+        "plans_2026_07_21_image_authorization_plan",
+        "plans_2026_07_21_image_authorization_schema_flag",
+        "plans_2026_07_21_image_authorization_organizer_toggle",
+        "plans_2026_07_21_image_authorization_design_backend_contract",
+        "validation_registration_form_schema_spec_option_and_consent",
+        "public_autorizacao_imagem_termo"
+      ],
+      "relation": "implement",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-07-21-image-authorization.md"
+    },
+    {
+      "id": "dashboard_partial_data_honesty",
+      "label": "Dashboard honesty over partial paginated data",
+      "nodes": [
+        "plans_2026_08_06_nova_ui_sidebar_dashboard_honesty_rule",
+        "plans_2026_08_06_nova_ui_sidebar_dashboard_shared_query_key",
+        "plans_2026_08_06_nova_ui_sidebar_dashboard_messages_registered_label",
+        "utils_dashboard_metrics_spec_partial_page_honesty"
+      ],
+      "relation": "form",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/plans/2026-08-06-nova-ui-sidebar-dashboard.md"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

@@ -5,6 +5,8 @@ export type EventStatus = "draft" | "published" | "cancelled" | "ended";
 
 export type FunnelStatus = "pending" | "approved" | "rejected";
 
+export type EventRole = "admin" | "invited" | "read";
+
 export type FieldType =
   | "text"
   | "textarea"
@@ -16,21 +18,23 @@ export type FieldType =
   | "image"
   | "date"
   | "linkedin"
-  | "instagram";
-
-export type FormFieldKind = "registration" | "post_event" | "nps";
+  | "instagram"
+  | "on_date_automation_field";
 
 export type MessageChannel = "whatsapp" | "email";
 
 export type AutomationTrigger =
   | "on_registration"
-  | "on_post_event"
-  | "on_nps"
   | "on_approval"
   | "on_rejection"
-  | "recurring";
+  | "on_form_submitted"
+  | "recurring"
+  | "on_date"
+  | "on_date_form_field";
 
 export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+
+export type FolderResourceType = "event" | "message_template" | "automation_rule";
 
 export interface EventObject {
   id: string;
@@ -50,7 +54,8 @@ export interface EventObject {
   recurrenceUntil: string | null;
   whatsappInstanceId: string | null;
   whatsappToken: string | null;
-  sendToPipedrive: boolean;
+  folderId: string | null;
+  myRole: EventRole;
   createdAt: string;
   updatedAt: string;
 }
@@ -70,11 +75,15 @@ export interface FormField {
 export interface Form {
   id: string;
   eventId: string;
-  kind: FormFieldKind;
+  name: string;
+  slug: string;
+  order: number;
   description: string | null;
   postRegistrationMessage: string | null;
   linkPostSubscription: string | null;
   requireImageAuthorization: boolean;
+  sendToPipedrive: boolean;
+  anonymous: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -89,23 +98,6 @@ export interface Collaborator {
     email: string;
     photoUrl: string | null;
   };
-}
-
-export type PipedriveStatus = "pending" | "sent" | "failed" | "skipped";
-
-export interface UserSubscription {
-  id: string;
-  eventId: string;
-  name: string;
-  email: string;
-  phone: string;
-  registrationAnswers: Record<string, unknown> | null;
-  postEventAnswers: Record<string, unknown> | null;
-  npsAnswers: Record<string, unknown> | null;
-  sendToPipedrive: boolean;
-  pipedriveStatus: PipedriveStatus | null;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Registration {
@@ -158,10 +150,18 @@ export interface Automation {
   eventId: string;
   templateId: string;
   trigger: AutomationTrigger;
+  formIds: string[];
+  /** Sempre 0/null hoje — backend ainda não tem worker para delay > 0. */
   delayMinutes: number | null;
   cron: string | null;
   timezone: string | null;
   active: boolean;
+  folderId: string | null;
+  order: number;
+  sendAt: string | null;
+  firedAt: string | null;
+  sendTime: string | null;
+  name: string | null;
   createdAt: string;
   template: {
     id: string;
@@ -221,6 +221,17 @@ export interface PublicEvent {
   status: "published";
 }
 
+/** `GET /public/events/:slug/forms` — só os campos que o backend expõe publicamente. */
+export interface PublicFormSummary {
+  id: string;
+  name: string;
+  slug: string;
+  order: number;
+  description: string | null;
+  requireImageAuthorization: boolean;
+  anonymous: boolean;
+}
+
 export interface PublicFormField {
   id: string;
   label: string;
@@ -228,6 +239,32 @@ export interface PublicFormField {
   required: boolean;
   options: unknown | null;
   order: number;
+}
+
+/** Linha de `GET /events/:eventId/form-responses` — projeção com nome do form e do inscrito. */
+export interface FormResponseRow {
+  id: string;
+  formId: string;
+  formName: string;
+  registrationId: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  /** Null em resposta anônima: sem inscrito, sem status de funil. */
+  status: FunnelStatus | null;
+  answers: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  children: Folder[];
 }
 
 export interface ManualRecipient {

@@ -40,7 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.docs/
+docs/
 .claude/
 CLAUDE.md
 
@@ -48,3 +48,4 @@ CLAUDE.md
 .worktrees/
 .Plano/
 graphify-out/
+

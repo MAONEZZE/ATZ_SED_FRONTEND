@@ -43,6 +43,8 @@ export function useAllTemplates(
       if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
   });
 }
 
@@ -55,13 +57,28 @@ export function useEventAutomations(eventId: string) {
   });
 }
 
-export function useAllMessageLogs(page = 1, limit = 30) {
+/** Logs de um evento (`eventId`) ou de todos os eventos do usuário (sem `eventId`). */
+export function useMessageLogs({
+  eventId,
+  page = 1,
+  limit = 30,
+}: {
+  eventId?: string;
+  page?: number;
+  limit?: number;
+}) {
   return useQuery({
-    queryKey: queryKeys.allMessageLogs({ page, limit }),
+    queryKey: eventId
+      ? queryKeys.messageLogs(eventId, { page, limit })
+      : queryKeys.allMessageLogs({ page, limit }),
     queryFn: () =>
       api.get<PaginatedResponse<MessageLogWithEvent>>(
-        `/messaging/logs?page=${page}&limit=${limit}`,
+        eventId
+          ? `/events/${eventId}/message-logs?page=${page}&limit=${limit}`
+          : `/messaging/logs?page=${page}&limit=${limit}`,
       ),
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
   });
 }
 
@@ -82,21 +99,13 @@ export function useCreateTemplateGlobal() {
   });
 }
 
+// O endpoint global resolve por id + ownerId e aplica o eventId que vier no
+// corpo — não existe rota /events/:eventId/templates/:id no backend.
 export function useUpdateTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    mutationFn: ({
-      eventId,
-      id,
-      input,
-    }: {
-      eventId: string | null;
-      id: string;
-      input: Partial<TemplateInput>;
-    }) =>
-      eventId
-        ? api.patch(`/events/${eventId}/templates/${id}`, input)
-        : api.patch(`/templates/${id}`, input),
+    mutationFn: ({ id, input }: { id: string; input: Partial<TemplateInput> }) =>
+      api.patch(`/templates/${id}`, input),
     onSuccess: invalidate,
   });
 }
@@ -104,10 +113,7 @@ export function useUpdateTemplateGlobal() {
 export function useDeleteTemplateGlobal() {
   const invalidate = useInvalidateGlobal();
   return useMutation({
-    mutationFn: ({ eventId, id }: { eventId: string | null; id: string }) =>
-      eventId
-        ? api.delete(`/events/${eventId}/templates/${id}`)
-        : api.delete(`/templates/${id}`),
+    mutationFn: ({ id }: { id: string }) => api.delete(`/templates/${id}`),
     onSuccess: invalidate,
   });
 }

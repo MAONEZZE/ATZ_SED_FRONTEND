@@ -3,59 +3,57 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Eye, Loader2, Search, Upload, Users } from "lucide-react";
+import { Download, Filter, Loader2, Search, Upload } from "lucide-react";
 import {
   exportRegistrationsCsv,
   useImportRegistrations,
   useRegistrations,
 } from "@/lib/api/registrations";
+import { useForms } from "@/lib/api/forms";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { formatDate } from "@/lib/utils/format-date";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
 import type { FunnelStatus, Registration } from "@/lib/api/types";
-import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { StatusSelect } from "@/components/attendees/status-select";
 import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
 import { FormResponsesTab } from "@/components/attendees/form-responses-tab";
-import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { CsvImportModal } from "@/components/common/csv-import-modal";
+import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { useSetRecordCount } from "@/components/common/record-count";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const ALL = "all";
 
-type AttendeesTab = "registration" | "post_event" | "nps";
+const BULK_DELETE_DISABLED_REASON =
+  "Exclusão de inscrições ainda não existe no backend";
+
+const REGISTRATION_TAB = "registration";
+type AttendeesTab = string;
 
 export default function AttendeesPage() {
   const params = useParams<{ id: string }>();
   const eventId = params.id;
+  const { data: forms } = useForms(eventId);
+  const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
 
   const [tab, setTab] = useState<AttendeesTab>("registration");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
-  const [selected, setSelected] = useState<Registration | null>(null);
+  // null até a tabela medir quantas linhas cabem sem gerar scroll.
+  const [limit, setLimit] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<Registration | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const importRegistrations = useImportRegistrations(eventId);
 
   function handleImportFile(file: File) {
@@ -108,49 +106,33 @@ export default function AttendeesPage() {
     status: statusFilter === ALL ? undefined : (statusFilter as FunnelStatus),
     search: search.trim() || undefined,
     page,
-    limit,
+    limit: limit ?? 0,
   });
   const registrations = response?.data ?? [];
-  const totalPages = response ? Math.ceil(response.total / limit) : 0;
+
+  useSetRecordCount(tab === "registration" ? response?.total ?? 0 : null);
 
   function openDetails(registration: Registration) {
-    setSelected(registration);
+    setViewing(registration);
     setSheetOpen(true);
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button
-          variant={tab === "registration" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("registration")}
-        >
-          Inscrição
-        </Button>
-        <Button
-          variant={tab === "post_event" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("post_event")}
-        >
-          Pós-evento
-        </Button>
-        <Button
-          variant={tab === "nps" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setTab("nps")}
-        >
-          NPS
-        </Button>
-      </div>
+    <div className="grid items-start gap-6 lg:grid-cols-[1fr_260px]">
+      <div className="min-w-0 space-y-4">
+      {tab !== REGISTRATION_TAB && (
+        <FormResponsesTab
+          eventId={eventId}
+          formId={tab}
+          formName={sortedForms.find((f) => f.id === tab)?.name ?? ""}
+          onBack={() => setTab(REGISTRATION_TAB)}
+        />
+      )}
 
-      {tab === "post_event" && <FormResponsesTab eventId={eventId} kind="post_event" />}
-      {tab === "nps" && <FormResponsesTab eventId={eventId} kind="nps" />}
-
-      {tab === "registration" && (
+      {tab === REGISTRATION_TAB && (
         <>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative sm:w-56">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome, e-mail ou telefone..."
@@ -159,19 +141,6 @@ export default function AttendeesPage() {
             onChange={handleSearch}
           />
         </div>
-        <Select value={statusFilter} onValueChange={handleStatusFilter}>
-          <SelectTrigger className="sm:w-[200px]" aria-label="Filtrar por status">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>Todos os status</SelectItem>
-            {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
-              <SelectItem key={status} value={status}>
-                {funnelStatusConfig[status].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Button variant="outline" onClick={() => setCsvModalOpen(true)}>
           <Download className="mr-2 h-4 w-4" />
           Importar CSV
@@ -184,117 +153,96 @@ export default function AttendeesPage() {
           )}
           Exportar CSV
         </Button>
+        <DataTableDeleteButton
+          className="sm:ml-auto"
+          selectedCount={selectedIds.size}
+          disabled
+          disabledReason={BULK_DELETE_DISABLED_REASON}
+          onDelete={() => {}}
+        />
       </div>
 
-      {isLoading && <LoadingSpinner />}
-
-      {!isLoading && registrations.length === 0 && (
-        <div className="rounded-xl border border-dashed p-12 text-center">
-          <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 font-semibold">Nenhum inscrito encontrado</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {search || statusFilter !== ALL
-              ? "Ajuste a busca ou o filtro."
-              : "Compartilhe o link público do evento para receber inscrições."}
-          </p>
-        </div>
-      )}
-
-      {registrations.length > 0 && (
-        <div className="hidden overflow-hidden rounded-xl border md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Inscrição</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {registrations.map((registration) => (
-                <TableRow key={registration.id}>
-                  <TableCell className="font-medium">{registration.name}</TableCell>
-                  <TableCell>{registration.email}</TableCell>
-                  <TableCell>{registration.phone}</TableCell>
-                  <TableCell>
-                    {formatDate(registration.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <StatusSelect eventId={eventId} registration={registration} />
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Ver detalhes de ${registration.name}`}
-                      onClick={() => openDetails(registration)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {registrations.length > 0 && (
-        <div className="space-y-3 md:hidden">
-          {registrations.map((registration) => (
-            <Card key={registration.id}>
-              <CardContent className="space-y-3 p-4">
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => openDetails(registration)}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate font-semibold">{registration.name}</p>
-                    <FunnelStatusBadge status={registration.status} />
-                  </div>
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {registration.email}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{registration.phone}</p>
-                </button>
-                <StatusSelect eventId={eventId} registration={registration} />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {totalPages > 0 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
+      <DataTable
+        columns={[
+          { key: "name", header: "Nome", align: "left", cell: (r) => r.name },
+          { key: "email", header: "E-mail", cell: (r) => r.email },
+          { key: "phone", header: "Telefone", cell: (r) => r.phone },
+          {
+            key: "createdAt",
+            header: "Inscrição",
+            cell: (r) => formatDate(r.createdAt),
+          },
+          {
+            key: "status",
+            header: (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 hover:text-foreground",
+                      statusFilter !== ALL && "text-primary",
+                    )}
+                  >
+                    <Filter
+                      className={cn("h-3.5 w-3.5", statusFilter !== ALL && "fill-current")}
+                    />
+                    {statusFilter === ALL
+                      ? "Status"
+                      : funnelStatusConfig[statusFilter as FunnelStatus].label}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56" align="center">
+                  <RadioGroup value={statusFilter} onValueChange={handleStatusFilter}>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value={ALL} id="status-filter-all" />
+                      <Label htmlFor="status-filter-all" className="font-normal">
+                        Todos os status
+                      </Label>
+                    </div>
+                    {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
+                      <div key={status} className="flex items-center gap-2">
+                        <RadioGroupItem value={status} id={`status-filter-${status}`} />
+                        <Label htmlFor={`status-filter-${status}`} className="font-normal">
+                          {funnelStatusConfig[status].label}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </PopoverContent>
+              </Popover>
+            ),
+            cell: (r) => (
+              <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                <StatusSelect eventId={eventId} registration={r} />
+              </div>
+            ),
+          },
+        ]}
+        data={registrations}
+        getRowId={(r) => r.id}
+        isLoading={isLoading}
+        emptyMessage={
+          search || statusFilter !== ALL
+            ? "Nenhum inscrito encontrado — ajuste a busca ou o filtro."
+            : "Nenhum inscrito ainda — compartilhe o link público do evento."
+        }
+        onRowClick={openDetails}
+        selected={selectedIds}
+        onSelectedChange={setSelectedIds}
+        total={response?.total ?? 0}
+        page={page}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setLimit(size);
+          setPage(1);
+        }}
+      />
 
       <AttendeeDetailSheet
         eventId={eventId}
-        registration={selected}
+        registration={viewing}
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
@@ -306,6 +254,33 @@ export default function AttendeesPage() {
         onOpenChange={setCsvModalOpen}
         onFile={handleImportFile}
       />
+      </div>
+
+      <Card className="lg:sticky lg:top-4">
+        <CardHeader className="rounded-t-lg bg-ink-100 py-3">
+          <CardTitle className="text-center text-base">Formulários</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {sortedForms.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground">
+              Nenhum formulário ainda.
+            </p>
+          ) : (
+            sortedForms.map((form) => (
+              <Button
+                key={form.id}
+                type="button"
+                variant={tab === form.id ? "default" : "ghost"}
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => setTab(form.id)}
+              >
+                {form.name}
+              </Button>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

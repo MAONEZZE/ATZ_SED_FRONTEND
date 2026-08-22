@@ -21,9 +21,9 @@ export interface EventInput {
   recurrenceFreq?: RecurrenceFreq | null;
   recurrenceInterval?: number | null;
   recurrenceUntil?: string | null;
-  sendToPipedrive?: boolean;
   whatsappInstanceId?: string;
   whatsappToken?: string;
+  folderId?: string | null;
 }
 
 export type EventUpdateInput = Partial<EventInput>;
@@ -33,6 +33,8 @@ export function useEvents(page = 1, limit = 20) {
     queryKey: queryKeys.events({ page, limit }),
     queryFn: () =>
       api.get<PaginatedResponse<EventObject>>(`/events?page=${page}&limit=${limit}`),
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: limit > 0,
   });
 }
 

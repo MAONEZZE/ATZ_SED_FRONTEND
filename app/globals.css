@@ -4,34 +4,45 @@
 
 @layer base {
   :root {
+    /* Paleta de marca — CLAUDE.md §Cores. Tripletas com uma decimal:
+       inteiro corrompe 4 dos 6 hexes (ex.: 100 64% 63% → #8ddd64, não #8edd65). */
+    --color-accent:      99.5 63.8% 63.1%;  /* #8edd65 — só sobre escuro */
+    --color-accent-ink:  99.1 75.4% 23.9%;  /* #2f6b0f — UI/texto sobre claro */
+    --color-ink:        189.2 30.2% 8.4%;   /* #0f1a1c */
+    --color-offwhite:      0 0% 95.7%;      /* #f4f4f4 */
+    --color-bg-dark:   198.3 37.7% 12%;     /* #13232a — derivado, back-solved */
+    --color-bg-dark-2: 192.6 44.2% 8.4%;    /* #0c1b1f */
+    --color-accent-ink-hover: 99.1 70% 32%; /* accent-ink levantado — hover do primary claro */
+
     /* Design system "Marrom macOS" — claro-only.
        Tokens shadcn em HSL; paleta marrom/creme + acento âmbar. */
-    --background: 36 50% 96%; /* cream  #FBF7F1 */
-    --foreground: 24 31% 14%; /* brown-900 */
+    --background: var(--color-offwhite);
+    --foreground: var(--color-ink);
     --card: 0 0% 100%; /* white */
-    --card-foreground: 24 31% 14%;
+    --card-foreground: var(--color-ink);
     --popover: 0 0% 100%;
-    --popover-foreground: 24 31% 14%;
-    --primary: 26 34% 33%; /* brown-600 */
-    --primary-foreground: 36 50% 97%;
-    --secondary: 34 40% 89%; /* brown-100 */
-    --secondary-foreground: 25 31% 23%; /* brown-700 */
-    --muted: 34 39% 92%; /* cream-deep */
-    --muted-foreground: 24 28% 40%; /* brown-500 */
-    --accent: 34 40% 89%; /* brown-100 */
-    --accent-foreground: 25 31% 23%;
-    --destructive: 2 64% 58%; /* danger */
+    --popover-foreground: var(--color-ink);
+    --primary: var(--color-accent-ink);
+    --primary-foreground: var(--color-offwhite); /* 5.8:1, AA */
+    --secondary: var(--ink-100);
+    --secondary-foreground: var(--ink-700);
+    --muted: var(--surface-2);
+    --muted-foreground: var(--ink-500);
+    --accent: var(--ink-100); /* superfície de hover shadcn, NUNCA a cor de marca */
+    --accent-foreground: var(--ink-700);
+    --destructive: 2 64% 45%; /* danger — 58% dava 3.96:1 com texto branco, falha 4.5:1 */
     --destructive-foreground: 0 0% 100%;
-    --border: 33 37% 80%; /* brown-200 */
-    --input: 33 37% 80%;
-    --ring: 36 76% 48%; /* warn (âmbar) — foco */
+    --border: var(--ink-200);
+    --input: var(--ink-200);
+    --ring: var(--color-accent-ink);
 
-    /* Âmbar (warn) — destaque/aviso/estados ativos */
-    --warn: 36 76% 48%;
-    --warn-strong: 36 85% 39%;
-    --warn-soft: 39 85% 89%;
-    --warn-text: 37 86% 23%;
-    --danger: 2 64% 58%;
+    /* Verde-petróleo (warn) — ações de cautela (cancelar, remover); precisa ser
+       visualmente distinto do verde do botão "Salvar" (--primary, hue ~99). */
+    --warn: 170 65% 41%; /* 4.67:1 com --warn-text */
+    --warn-strong: 170 75% 29%; /* 4.75:1 com branco no hover */
+    --warn-soft: 170 50% 90%; /* 11.21:1 com --warn-text */
+    --warn-text: 170 80% 12%;
+    --danger: 2 64% 45%;
 
     /* Status semânticos (badges/alertas) — bg suave + texto forte.
        Valores hex idênticos à paleta Tailwind usada antes da tokenização. */
@@ -44,16 +55,18 @@
     --status-neutral-bg: #e4e4e7; /* zinc-200 */
     --status-neutral-fg: #3f3f46; /* zinc-700 */
 
-    /* Escala marrom auxiliar */
-    --brown-900: 24 31% 14%;
-    --brown-700: 25 31% 23%;
-    --brown-600: 26 34% 33%;
-    --brown-500: 24 28% 40%;
-    --brown-300: 31 31% 66%;
-    --brown-200: 33 37% 80%;
-    --brown-100: 34 40% 89%;
-    --cream: 36 50% 96%;
-    --cream-deep: 34 39% 92%;
+    /* Escala neutra teal-ink, derivada de #0f1a1c → #f4f4f4.
+       900-300 são papéis de texto: L ≤ ~38% para manter ≥4.5:1 contra offwhite
+       (ink-300 fazia esse papel quebrado a 2.12:1; agora 5.02:1). */
+    --ink-900: 189.2 30% 8%;
+    --ink-700: 189.2 27% 16%;
+    --ink-600: 189.2 24% 24%;
+    --ink-500: 189.2 22% 32%;
+    --ink-300: 189.2 20% 38%;
+    --ink-200: 189.2 15% 68%;
+    --ink-100: 189.2 10% 82%;
+    --surface: 189.2 15% 97%;
+    --surface-2: 189.2 12% 91%;
 
     --chart-1: 26 34% 33%;
     --chart-2: 36 76% 48%;
@@ -63,53 +76,61 @@
 
     --radius: 0.6875rem; /* 11px */
 
-    /* Sombras macOS — marrom translúcido, difusas */
-    --shadow-sm: 0 1px 2px rgba(46, 32, 24, 0.08);
-    --shadow: 0 8px 28px rgba(46, 32, 24, 0.12), 0 2px 6px rgba(46, 32, 24, 0.06);
-    --shadow-pop: 0 18px 50px rgba(46, 32, 24, 0.22);
+    /* Sombras — tingidas de ink (#0f1a1c = 15,26,28), não mais marrom */
+    --shadow-sm: 0 1px 2px rgba(15, 26, 28, 0.08);
+    --shadow: 0 8px 28px rgba(15, 26, 28, 0.12), 0 2px 6px rgba(15, 26, 28, 0.06);
+    --shadow-pop: 0 18px 50px rgba(15, 26, 28, 0.22);
 
-    --sidebar: 34 39% 92%; /* cream-deep */
-    --sidebar-foreground: 24 31% 14%;
-    --sidebar-primary: 26 34% 33%;
-    --sidebar-primary-foreground: 36 50% 97%;
-    --sidebar-accent: 34 40% 89%;
-    --sidebar-accent-foreground: 25 31% 23%;
-    --sidebar-border: 33 37% 80%;
-    --sidebar-ring: 36 76% 48%;
+    /* Sidebar sempre escura, claro ou dark — mesmos valores nos dois blocos. */
+    --sidebar: var(--color-bg-dark);
+    --sidebar-foreground: var(--color-offwhite);
+    --sidebar-primary: var(--color-accent);
+    --sidebar-primary-foreground: var(--color-ink);
+    --sidebar-accent: 198.3 30% 19%; /* bg-dark levantado — hover */
+    --sidebar-accent-foreground: var(--color-offwhite);
+    --sidebar-border: 198.3 25% 22%; /* hairline */
+    --sidebar-ring: var(--color-accent);
+
+    /* Host Grotesk (secundária) carregada via <link> em app/layout.tsx —
+       fora do bundle de fontes do next/font nesta versão do Next. Fica só
+       em :root (não em .dark): é uma pilha de fontes, não uma cor — repeti-la
+       por tema é o que causava a fonte trocar ao alternar claro/escuro. */
+    --font-host-grotesk: "Host Grotesk", ui-sans-serif, system-ui, sans-serif;
   }
 
   .dark {
-    --background: 24 20% 10%;
-    --foreground: 36 40% 92%;
-    --card: 24 18% 14%;
-    --card-foreground: 36 40% 92%;
-    --popover: 24 18% 14%;
-    --popover-foreground: 36 40% 92%;
-    --primary: 36 76% 55%;
-    --primary-foreground: 24 31% 10%;
-    --secondary: 24 20% 18%;
-    --secondary-foreground: 36 40% 85%;
-    --muted: 24 18% 16%;
-    --muted-foreground: 33 25% 60%;
-    --accent: 24 20% 20%;
-    --accent-foreground: 36 40% 85%;
+    --background: var(--color-bg-dark);
+    --foreground: var(--color-offwhite);
+    --card: var(--color-bg-dark-2);
+    --card-foreground: var(--color-offwhite);
+    --popover: var(--color-bg-dark-2);
+    --popover-foreground: var(--color-offwhite);
+    --primary: var(--color-accent);
+    --primary-foreground: var(--color-ink);
+    --color-accent-ink-hover: 99.5 55% 55%; /* accent escurecido — hover do primary escuro */
+    --secondary: var(--ink-100);
+    --secondary-foreground: var(--ink-700);
+    --muted: var(--surface-2);
+    --muted-foreground: var(--ink-500);
+    --accent: var(--ink-200);
+    --accent-foreground: var(--ink-700);
     --destructive: 2 64% 55%;
-    --border: 24 18% 22%;
-    --input: 24 18% 22%;
-    --ring: 36 76% 48%;
-    --cream: 24 20% 12%;
-    --cream-deep: 24 18% 16%;
-    --brown-900: 36 40% 90%;
-    --brown-700: 36 35% 80%;
-    --brown-600: 36 30% 70%;
-    --brown-500: 33 25% 60%;
-    --brown-300: 24 18% 35%;
-    --brown-200: 24 18% 25%;
-    --brown-100: 24 18% 20%;
-    --warn: 36 76% 48%;
-    --warn-strong: 36 76% 60%;
-    --warn-soft: 36 60% 20%;
-    --warn-text: 36 76% 70%;
+    --border: var(--ink-200);
+    --input: var(--ink-200);
+    --ring: var(--color-accent);
+    --surface: 198.3 20% 12%;
+    --surface-2: 198.3 18% 16%;
+    --ink-900: 189.2 25% 88%;
+    --ink-700: 189.2 22% 78%;
+    --ink-600: 189.2 20% 68%;
+    --ink-500: 189.2 18% 58%;
+    --ink-300: 189.2 15% 50%; /* 4.51:1 vs bg-dark — mesmo papel de texto quebrado, agora corrigido */
+    --ink-200: 198.3 25% 22%;
+    --ink-100: 198.3 25% 18%;
+    --warn: 170 65% 41%;
+    --warn-strong: 170 75% 29%;
+    --warn-soft: 170 50% 90%;
+    --warn-text: 170 80% 12%;
     --danger: 2 64% 55%;
     /* Status semânticos — dark. bg com alpha /40 (66 hex) reproduz o
        dark:bg-*-900/40 anterior; texto usa o tom -300. */
@@ -130,14 +151,14 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
     --shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
     --shadow-pop: 0 18px 50px rgba(0, 0, 0, 0.6);
-    --sidebar: 24 18% 14%;
-    --sidebar-foreground: 36 40% 92%;
-    --sidebar-primary: 36 76% 55%;
-    --sidebar-primary-foreground: 24 31% 10%;
-    --sidebar-accent: 24 20% 20%;
-    --sidebar-accent-foreground: 36 40% 85%;
-    --sidebar-border: 24 18% 22%;
-    --sidebar-ring: 36 76% 48%;
+    --sidebar: var(--color-bg-dark);
+    --sidebar-foreground: var(--color-offwhite);
+    --sidebar-primary: var(--color-accent);
+    --sidebar-primary-foreground: var(--color-ink);
+    --sidebar-accent: 198.3 30% 19%;
+    --sidebar-accent-foreground: var(--color-offwhite);
+    --sidebar-border: 198.3 25% 22%;
+    --sidebar-ring: var(--color-accent);
   }
 }
 
@@ -147,8 +168,21 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* Textura de linhas diagonais quase imperceptível — usa --foreground em
+       opacidade baixíssima, então se adapta ao tema sozinha (ink no claro,
+       offwhite no escuro). Só no body: cards/popovers/sheets ficam lisos. */
+    background-image: repeating-linear-gradient(
+      45deg,
+      hsl(var(--foreground) / 0.025) 0px,
+      hsl(var(--foreground) / 0.025) 1px,
+      transparent 1px,
+      transparent 14px
+    );
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans;
   }
 }
 
@@ -170,7 +204,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: hsl(var(--warn-strong));
+    color: hsl(var(--color-accent-ink));
   }
 }
 

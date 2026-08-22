@@ -4,25 +4,44 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { ClipboardList, ExternalLink, Pencil, Users, Zap } from "lucide-react";
+import {
+  ClipboardList,
+  ExternalLink,
+  MessageSquare,
+  Pencil,
+  Users,
+  Zap,
+} from "lucide-react";
 import { useEvent } from "@/lib/api/events";
 import { CollaboratorsDialog } from "@/components/events/collaborators-dialog";
 import { EventStatusBadge } from "@/components/common/status-badge";
+import { RecordCountProvider, useRecordCount } from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isActive } from "@/lib/utils/nav";
 
 const tabs = [
   { segment: "edit", label: "Detalhes", icon: Pencil },
   { segment: "form", label: "Formulário", icon: ClipboardList },
   { segment: "attendees", label: "Inscritos", icon: Users },
+  { segment: "messages", label: "Mensagens", icon: MessageSquare },
   { segment: "automations", label: "Automações", icon: Zap },
 ];
 
 export default function EventLayout({ children }: { children: ReactNode }) {
+  return (
+    <RecordCountProvider>
+      <EventLayoutContent>{children}</EventLayoutContent>
+    </RecordCountProvider>
+  );
+}
+
+function EventLayoutContent({ children }: { children: ReactNode }) {
   const params = useParams<{ id: string }>();
   const pathname = usePathname();
   const { data: event } = useEvent(params.id);
   const [collabOpen, setCollabOpen] = useState(false);
+  const count = useRecordCount();
 
   return (
     <div className="space-y-4">
@@ -50,10 +69,10 @@ export default function EventLayout({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="-mx-4 overflow-x-auto px-4">
-        <div className="flex w-max min-w-full gap-1 border-b">
+        <div className="flex w-full min-w-full items-center gap-1 border-b">
           {tabs.map(({ segment, label, icon: Icon }) => {
             const href = `/events/${params.id}/${segment}`;
-            const active = pathname.startsWith(href);
+            const active = isActive(pathname, href);
             return (
               <Link
                 key={segment}
@@ -70,6 +89,11 @@ export default function EventLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {count != null && (
+            <span className="ml-auto whitespace-nowrap pr-2 text-sm text-muted-foreground">
+              {count} {count === 1 ? "registro" : "registros"}
+            </span>
+          )}
         </div>
       </nav>
 

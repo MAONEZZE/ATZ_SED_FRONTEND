@@ -1,104 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Download, Eye, Loader2, Search, Users } from "lucide-react";
-import {
-  exportUserSubscriptionsCsv,
-  useUserSubscriptions,
-} from "@/lib/api/user-subscriptions";
-import type { UserSubscription } from "@/lib/api/types";
+import { ArrowLeft, Download, Loader2, Search } from "lucide-react";
+import { exportFormResponsesCsv, useFormResponses } from "@/lib/api/form-responses";
+import { useFormFields } from "@/lib/api/form-fields";
+import type { FormResponseRow } from "@/lib/api/types";
 import { downloadBlob } from "@/lib/utils/download-blob";
-import { formatAnswer } from "@/lib/forms/field-types";
 import { formatDate } from "@/lib/utils/format-date";
-import { LoadingSpinner } from "@/components/common/loading-spinner";
-import { Input } from "@/components/ui/input";
+import { AnswerEditor } from "@/components/attendees/answer-editor";
+import { FunnelStatusBadge } from "@/components/common/status-badge";
+import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
+import { useSetRecordCount } from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type ResponseKind = "post_event" | "nps";
-
-const KEY: Record<ResponseKind, "postEventAnswers" | "npsAnswers"> = {
-  post_event: "postEventAnswers",
-  nps: "npsAnswers",
-};
-
-const EMPTY_LABEL: Record<ResponseKind, string> = {
-  post_event: "Nenhuma resposta de pós-evento ainda.",
-  nps: "Nenhuma avaliação NPS ainda.",
-};
-
-function isImageValue(value: unknown): value is string {
-  return (
-    typeof value === "string" &&
-    (value.startsWith("http") || value.startsWith("data:image"))
-  );
-}
-
-function AnswerValue({ value }: { value: unknown }) {
-  const items = Array.isArray(value) ? value : [value];
-  const images = items.filter(isImageValue);
-
-  if (images.length > 0) {
-    return (
-      <div className="flex flex-wrap gap-2">
-        {images.map((src, i) => (
-          <a key={i} href={src} target="_blank" rel="noopener noreferrer">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt={`Imagem ${i + 1}`}
-              className="h-20 w-20 rounded-md border object-cover"
-            />
-          </a>
-        ))}
-      </div>
-    );
-  }
-
-  if (Array.isArray(value) || typeof value === "boolean" || value == null || value === "")
-    return <p className="font-medium">{formatAnswer(value)}</p>;
-  return <p className="whitespace-pre-line font-medium">{String(value)}</p>;
-}
+const SAVE_DISABLED_REASON =
+  "Edição ainda não existe no backend para esta tabela";
+const BULK_DELETE_DISABLED_REASON =
+  "Exclusão ainda não existe no backend para esta tabela";
 
 export function FormResponsesTab({
   eventId,
-  kind,
+  formId,
+  formName,
+  onBack,
 }: {
   eventId: string;
-  kind: ResponseKind;
+  formId: string;
+  formName: string;
+  onBack?: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const limit = 10;
-  const [selected, setSelected] = useState<UserSubscription | null>(null);
+  // null até a tabela medir quantas linhas cabem sem gerar scroll.
+  const [limit, setLimit] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<FormResponseRow | null>(null);
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
 
-  const answersKey = KEY[kind];
+  const { data: fields = [] } = useFormFields(eventId, formId);
+  const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
 
   async function handleExport() {
     setExporting(true);
     try {
-      const blob = await exportUserSubscriptionsCsv(eventId, {
+      const blob = await exportFormResponsesCsv(eventId, formId, {
         search: search.trim() || undefined,
       });
-      downloadBlob(blob, `inscritos-${eventId}.csv`);
+      downloadBlob(blob, `respostas-${formName || formId}.csv`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao exportar CSV");
     } finally {
@@ -106,27 +62,41 @@ export function FormResponsesTab({
     }
   }
 
-  const { data: response, isLoading } = useUserSubscriptions(eventId, {
+  const { data: response, isLoading } = useFormResponses(eventId, {
+    formId,
     search: search.trim() || undefined,
     page,
-    limit,
+    limit: limit ?? 0,
   });
 
-  // Só quem enviou o formulário desta aba.
-  const rows = (response?.data ?? []).filter((s) => s[answersKey] != null);
-  const totalPages = response ? Math.ceil(response.total / limit) : 0;
+  const rows = response?.data ?? [];
 
-  function openDetails(sub: UserSubscription) {
-    setSelected(sub);
+  useSetRecordCount(response?.total ?? 0);
+
+  function openDetails(row: FormResponseRow) {
+    setViewing(row);
     setOpen(true);
   }
 
-  const answers = selected?.[answersKey] ?? {};
+  useEffect(() => {
+    if (!open || !viewing) return;
+    const d: Record<string, unknown> = {};
+    sortedFields.forEach((f) => {
+      d[f.label] = viewing.answers[f.label] ?? "";
+    });
+    setDraft(d);
+  }, [open, viewing, sortedFields]);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+        )}
+        <div className="relative sm:w-56">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome, e-mail ou telefone..."
@@ -146,138 +116,95 @@ export function FormResponsesTab({
           )}
           Exportar CSV
         </Button>
+        <DataTableDeleteButton
+          className="sm:ml-auto"
+          selectedCount={selectedIds.size}
+          disabled
+          disabledReason={BULK_DELETE_DISABLED_REASON}
+          onDelete={() => {}}
+        />
       </div>
 
-      {isLoading && <LoadingSpinner />}
+      <DataTable
+        columns={[
+          { key: "name", header: "Nome", align: "left", cell: (r) => r.name },
+          { key: "email", header: "E-mail", cell: (r) => r.email },
+          { key: "phone", header: "Telefone", cell: (r) => r.phone },
+          {
+            key: "createdAt",
+            header: "Inscrição",
+            cell: (r) => formatDate(r.createdAt),
+          },
+          {
+            key: "status",
+            header: "Status",
+            cell: (r) => (r.status ? <FunnelStatusBadge status={r.status} /> : "—"),
+          },
+        ]}
+        data={rows}
+        getRowId={(r) => r.id}
+        isLoading={isLoading}
+        emptyMessage={search ? "Nenhum resultado — ajuste a busca." : "Nenhuma resposta ainda."}
+        onRowClick={openDetails}
+        selected={selectedIds}
+        onSelectedChange={setSelectedIds}
+        total={response?.total ?? 0}
+        page={page}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setLimit(size);
+          setPage(1);
+        }}
+      />
 
-      {!isLoading && rows.length === 0 && (
-        <div className="rounded-xl border border-dashed p-12 text-center">
-          <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-          <p className="mt-4 font-semibold">Nada por aqui</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {search ? "Ajuste a busca." : EMPTY_LABEL[kind]}
-          </p>
-        </div>
-      )}
-
-      {rows.length > 0 && (
-        <div className="hidden overflow-hidden rounded-xl border md:block">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
-                <TableHead>Telefone</TableHead>
-                <TableHead>Enviado em</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((sub) => (
-                <TableRow key={sub.id}>
-                  <TableCell className="font-medium">{sub.name}</TableCell>
-                  <TableCell>{sub.email}</TableCell>
-                  <TableCell>{sub.phone}</TableCell>
-                  <TableCell>
-                    {formatDate(sub.updatedAt)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Ver respostas de ${sub.name}`}
-                      onClick={() => openDetails(sub)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {rows.length > 0 && (
-        <div className="space-y-3 md:hidden">
-          {rows.map((sub) => (
-            <Card key={sub.id}>
-              <CardContent className="p-4">
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => openDetails(sub)}
-                >
-                  <p className="truncate font-semibold">{sub.name}</p>
-                  <p className="mt-1 truncate text-sm text-muted-foreground">
-                    {sub.email}
-                  </p>
-                  <p className="text-sm text-muted-foreground">{sub.phone}</p>
-                </button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page === 1}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            {page} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page === totalPages}
-          >
-            Próxima
-          </Button>
-        </div>
-      )}
-
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          {selected && (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+          {viewing && (
             <>
-              <SheetHeader>
-                <SheetTitle>{selected.name}</SheetTitle>
-                <SheetDescription>
-                  {kind === "nps" ? "Avaliação NPS" : "Respostas do pós-evento"}
-                </SheetDescription>
-              </SheetHeader>
+              <DialogHeader>
+                <DialogTitle>{viewing.name}</DialogTitle>
+                <p className="text-sm text-muted-foreground">{formName}</p>
+              </DialogHeader>
 
-              <div className="mt-6 space-y-4 text-sm">
+              <div className="space-y-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">E-mail</p>
-                  <p className="font-medium">{selected.email}</p>
+                  <p className="font-medium">{viewing.email}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Telefone</p>
-                  <p className="font-medium">{selected.phone}</p>
+                  <p className="font-medium">{viewing.phone}</p>
                 </div>
 
-                <div className="space-y-4 border-t pt-4">
-                  {Object.entries(answers).map(([key, val]) => (
-                    <div key={key}>
-                      <p className="text-muted-foreground">{key}</p>
-                      <AnswerValue value={val} />
+                <Separator />
+
+                <div className="space-y-4">
+                  {sortedFields.map((field) => (
+                    <div key={field.id} className="space-y-1.5">
+                      <Label>{field.label}</Label>
+                      <AnswerEditor
+                        field={field}
+                        value={draft[field.label]}
+                        onChange={(v) =>
+                          setDraft((prev) => ({ ...prev, [field.label]: v }))
+                        }
+                      />
                     </div>
                   ))}
                 </div>
               </div>
+
+              <EditDialogFooter
+                onCancel={() => setOpen(false)}
+                onSave={() => {}}
+                saveDisabled
+                saveDisabledReason={SAVE_DISABLED_REASON}
+              />
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

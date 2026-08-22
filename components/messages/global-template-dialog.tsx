@@ -3,7 +3,8 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Braces, ChevronDown, LayoutTemplate, Loader2 } from "lucide-react";
+import { Braces, ChevronDown, LayoutTemplate } from "lucide-react";
+import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
@@ -34,13 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariableTextarea } from "@/components/ui/variable-textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -59,10 +54,13 @@ export function GlobalTemplateDialog({
   template,
   open,
   onOpenChange,
+  fixedEventId,
 }: {
   template: TemplateWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Dentro de um evento: some o campo Evento e o template nasce vinculado a ele. */
+  fixedEventId?: string;
 }) {
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
@@ -137,7 +135,7 @@ export function GlobalTemplateDialog({
       body,
       layoutConfig: channel === "email" ? layoutConfig : null,
       styleKey: channel === "email" ? activeStyle : null,
-      eventId: eventId || null,
+      eventId: fixedEventId ?? (eventId || null),
     };
     const onDone = {
       onSuccess: () => {
@@ -146,9 +144,7 @@ export function GlobalTemplateDialog({
       },
       onError: (e: Error) => toast.error(e.message),
     };
-    // Endpoint global (/templates/:id) resolve por id + ownerId e aplica o eventId
-    // do input (vincula/desvincula), então roteamos sempre por ele.
-    if (template) update.mutate({ eventId: null, id: template.id, input }, onDone);
+    if (template) update.mutate({ id: template.id, input }, onDone);
     else create.mutate({ input }, onDone);
   }
 
@@ -165,25 +161,27 @@ export function GlobalTemplateDialog({
               <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Evento</Label>
-                <Select
-                  value={eventId || NO_EVENT}
-                  onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Global (sem evento)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NO_EVENT}>Global (sem evento)</SelectItem>
-                    {events?.map((e) => (
-                      <SelectItem key={e.id} value={e.id}>
-                        {e.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!fixedEventId && (
+                <div className="space-y-2">
+                  <Label>Evento</Label>
+                  <Select
+                    value={eventId || NO_EVENT}
+                    onValueChange={(v) => setEventId(v === NO_EVENT ? "" : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Global (sem evento)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NO_EVENT}>Global (sem evento)</SelectItem>
+                      {events?.map((e) => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -301,7 +299,9 @@ export function GlobalTemplateDialog({
                           size="sm"
                           className="h-7 gap-1 px-2 text-xs"
                           disabled={!activeStyle}
-                          title={activeStyle ? undefined : "Escolha um tom para habilitar"}
+                          title={
+                            activeStyle ? undefined : "Escolha um tom para habilitar"
+                          }
                           onClick={openLayoutEditor}
                         >
                           <LayoutTemplate className="h-3.5 w-3.5" />
@@ -339,15 +339,11 @@ export function GlobalTemplateDialog({
           </Card>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Salvar
-          </Button>
-        </DialogFooter>
+        <EditDialogFooter
+          onCancel={() => onOpenChange(false)}
+          onSave={handleSave}
+          isSaving={isPending}
+        />
       </DialogContent>
 
       {layoutEditorOpen && (

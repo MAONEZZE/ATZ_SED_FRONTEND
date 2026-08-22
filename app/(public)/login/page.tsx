@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { AuthBackground } from "@/components/layout/auth-background";
+import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,7 @@ function LoginPageInner() {
   useEffect(() => {
     if (isLoading || !session) return;
     const next = searchParams.get("next");
-    router.replace(next && next.startsWith("/") ? next : "/events");
+    router.replace(next && next.startsWith("/") ? next : "/dashboard");
   }, [isLoading, session, searchParams, router]);
 
   async function onSubmit(values: LoginForm) {
@@ -50,7 +51,7 @@ function LoginPageInner() {
     try {
       await signIn(values.email, values.password);
       const next = searchParams.get("next");
-      router.push(next && next.startsWith("/") ? next : "/events");
+      router.push(next && next.startsWith("/") ? next : "/dashboard");
       router.refresh();
     } catch (error) {
       toast.error(
@@ -58,6 +59,15 @@ function LoginPageInner() {
       );
       setSubmitting(false);
     }
+  }
+
+  if (isLoading || session) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center p-4">
+        <AuthBackground />
+        <LoadingSpinner />
+      </main>
+    );
   }
 
   return (

@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import type { PublicEvent, PublicFormField, Registration } from "@/lib/api/types";
+import type { PublicEvent, PublicFormField, PublicFormSummary } from "@/lib/api/types";
 
 const REVALIDATE_SECONDS = 300;
 
@@ -12,25 +12,37 @@ export async function getPublicEvent(slug: string): Promise<PublicEvent | null> 
   return (await res.json()) as PublicEvent;
 }
 
-export async function getPublicFormFields(slug: string): Promise<PublicFormField[]> {
+export async function getPublicForms(slug: string): Promise<PublicFormSummary[]> {
+  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/forms`, {
+    next: { revalidate: REVALIDATE_SECONDS, tags: [`event:${slug}`] },
+  });
+  if (!res.ok) return [];
+  return (await res.json()) as PublicFormSummary[];
+}
+
+export async function getPublicFormFields(
+  slug: string,
+  formSlug: string,
+): Promise<PublicFormField[]> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/form-fields`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/forms/${formSlug}/fields`,
     { next: { revalidate: REVALIDATE_SECONDS, tags: [`event:${slug}`] } },
   );
   if (!res.ok) return [];
   return (await res.json()) as PublicFormField[];
 }
 
-export async function createPublicRegistration(
+export async function submitPublicFormResponse(
   slug: string,
-  answers: Record<string, unknown>,
-): Promise<Registration> {
+  formSlug: string,
+  payload: { phone?: string; answers: Record<string, unknown>; image_authorization?: boolean },
+): Promise<{ registrationId: string | null; created: boolean }> {
   const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/registrations`,
+    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/forms/${formSlug}/responses`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(answers),
+      body: JSON.stringify(payload),
     },
   );
   if (!res.ok) {
@@ -43,82 +55,33 @@ export async function createPublicRegistration(
     } catch {}
     throw new Error(message);
   }
-  return (await res.json()) as Registration;
-}
-
-export async function getPublicPostEventFields(slug: string): Promise<PublicFormField[]> {
-  const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/form-fields`,
-    { cache: "no-store" },
-  );
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`Formulário indisponível (${res.status})`);
-  return (await res.json()) as PublicFormField[];
-}
-
-export async function submitPublicPostEvent(
-  slug: string,
-  payload: { identifier: string; answers: Record<string, unknown> },
-): Promise<void> {
-  const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/post-event/responses`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    },
-  );
-  if (!res.ok) {
-    if (res.status === 404) {
-      // 404 aqui = identifier não encontrado, distinto do 404 de "form não configurado" em getPublic*Fields
-      throw new Error(
-        "Não encontramos uma inscrição com esse e-mail ou telefone. Verifique os dados e tente novamente.",
-      );
-    }
-    let message = "Falha ao enviar respostas";
-    try {
-      const body = (await res.json()) as { message?: string | string[] };
-      if (body.message) {
-        message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
-      }
-    } catch {}
-    throw new Error(message);
-  }
-}
-
-export async function getPublicNpsFields(slug: string): Promise<PublicFormField[]> {
-  const res = await fetch(
-    `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/form-fields`,
-    { cache: "no-store" },
-  );
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`Formulário indisponível (${res.status})`);
-  return (await res.json()) as PublicFormField[];
-}
-
-export async function submitPublicNps(
-  slug: string,
-  payload: { answers: Record<string, unknown> },
-): Promise<void> {
-  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/nps/responses`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) {
-    let message = "Falha ao enviar avaliação";
-    try {
-      const body = (await res.json()) as { message?: string | string[] };
-      if (body.message) {
-        message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
-      }
-    } catch {}
-    throw new Error(message);
-  }
+  return (await res.json()) as { registrationId: string | null; created: boolean };
 }
 
 export function answerKeyForField(
   field: Pick<PublicFormField, "label" | "type">,
 ): string {
   return field.label;
+}
+
+/**
+ * Check-in público pelo QR genérico: só o telefone vai no corpo. O evento do dia
+ * e a inscrição correspondente são resolvidos no backend.
+ */
+export async function submitPublicCheckin(phone: string): Promise<void> {
+  const res = await fetch(`${env.NEXT_PUBLIC_API_URL}/public/checkin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone }),
+  });
+  if (!res.ok) {
+    let message = "Falha ao fazer check-in";
+    try {
+      const body = (await res.json()) as { message?: string | string[] };
+      if (body.message) {
+        message = Array.isArray(body.message) ? body.message.join("; ") : body.message;
+      }
+    } catch {}
+    throw new Error(message);
+  }
 }

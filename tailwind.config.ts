@@ -12,12 +12,20 @@ const config: Config = {
   theme: {
   	extend: {
   		fontFamily: {
+  			// Principal — corpo do site (aplicada em <body>, ver app/layout.tsx)
+  			serif: [
+  				'var(--font-eb-garamond)',
+  				'Georgia',
+  				'"Times New Roman"',
+  				'serif'
+  			],
+  			// Secundária — títulos (h1-h6, ver app/globals.css) e uso pontual
   			sans: [
+  				'var(--font-host-grotesk)',
   				'-apple-system',
   				'BlinkMacSystemFont',
   				'"SF Pro Text"',
   				'"Segoe UI"',
-  				'Inter',
   				'Roboto',
   				'Helvetica',
   				'Arial',
@@ -53,6 +61,12 @@ const config: Config = {
   			},
   			destructive: 'hsl(var(--destructive))',
   			danger: 'hsl(var(--danger))',
+  			brand: {
+  				DEFAULT: 'hsl(var(--color-accent))',
+  				ink: 'hsl(var(--color-accent-ink))',
+  				'ink-hover': 'hsl(var(--color-accent-ink-hover))'
+  			},
+  			offwhite: 'hsl(var(--color-offwhite))',
   			status: {
   				'success-bg': 'var(--status-success-bg)',
   				'success-fg': 'var(--status-success-fg)',
@@ -69,18 +83,19 @@ const config: Config = {
   				soft: 'hsl(var(--warn-soft))',
   				text: 'hsl(var(--warn-text))'
   			},
-  			brown: {
-  				'900': 'hsl(var(--brown-900))',
-  				'700': 'hsl(var(--brown-700))',
-  				'600': 'hsl(var(--brown-600))',
-  				'500': 'hsl(var(--brown-500))',
-  				'300': 'hsl(var(--brown-300))',
-  				'200': 'hsl(var(--brown-200))',
-  				'100': 'hsl(var(--brown-100))'
+  			ink: {
+  				DEFAULT: 'hsl(var(--color-ink))',
+  				'900': 'hsl(var(--ink-900))',
+  				'700': 'hsl(var(--ink-700))',
+  				'600': 'hsl(var(--ink-600))',
+  				'500': 'hsl(var(--ink-500))',
+  				'300': 'hsl(var(--ink-300))',
+  				'200': 'hsl(var(--ink-200))',
+  				'100': 'hsl(var(--ink-100))'
   			},
-  			cream: {
-  				DEFAULT: 'hsl(var(--cream))',
-  				deep: 'hsl(var(--cream-deep))'
+  			surface: {
+  				DEFAULT: 'hsl(var(--surface))',
+  				'2': 'hsl(var(--surface-2))'
   			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',

@@ -1,7 +1,7 @@
 "use client";
 
 import { createBrowserClient } from "@supabase/ssr";
-import type { Session, Subscription } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, Subscription } from "@supabase/supabase-js";
 import { env } from "@/lib/env";
 
 export interface AuthUser {
@@ -17,11 +17,19 @@ export interface AuthSession {
 
 export type AuthChangeCallback = (session: AuthSession | null) => void;
 
+// Singleton: uma segunda instância de GoTrueClient no mesmo storage key
+// disputa lock com a primeira (_acquireLock) e atrasa a resolução da sessão
+// inicial — é o que fazia /login demorar pra reconhecer o usuário já logado.
+let supabaseSingleton: ReturnType<typeof createBrowserClient> | null = null;
+
 function getSupabase() {
-  return createBrowserClient(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
+  if (!supabaseSingleton) {
+    supabaseSingleton = createBrowserClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    );
+  }
+  return supabaseSingleton;
 }
 
 function mapSession(session: Session | null): AuthSession | null {
@@ -82,7 +90,7 @@ export const authClient = {
     const {
       data: { subscription },
     }: { data: { subscription: Subscription } } = getSupabase().auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: AuthChangeEvent, session: Session | null) => {
         callback(mapSession(session));
       },
     );

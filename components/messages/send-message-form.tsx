@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Download, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
-import { useEvents } from "@/lib/api/events";
+import { useEvent } from "@/lib/api/events";
 import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
 import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { useRegistrations } from "@/lib/api/registrations";
@@ -38,7 +38,6 @@ import { ManualRecipientList } from "@/components/messages/send-message/manual-r
 import { SelectedGroupsList } from "@/components/messages/send-message/selected-groups-list";
 import { resolveTemplateSelection } from "@/lib/messages/resolve-template-selection";
 import {
-  NO_EVENT,
   NO_INSTANCE,
   NO_TEMPLATE,
   STEP_LABEL_CLASS,
@@ -49,7 +48,6 @@ import { useEmailComposer } from "@/hooks/use-email-composer";
 import { useIframeAutosize } from "@/hooks/use-iframe-autosize";
 import { useVariableInsertion } from "@/hooks/use-variable-insertion";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -69,13 +67,16 @@ export function SendMessageForm({
   eventId?: string;
   initialRegistrationId?: string;
 }) {
-  const { data: eventsResponse } = useEvents();
-  const events = eventsResponse?.data;
-  const [localEventId, setLocalEventId] = useState("");
-  const effectiveEventId = fixedEventId ?? localEventId;
+  const effectiveEventId = fixedEventId ?? "";
+  const { data: fixedEvent } = useEvent(effectiveEventId);
 
   const { data: whatsappInstances } = useWhatsAppInstances();
-  const [instanceId, setInstanceId] = useState("");
+  const [globalInstanceId, setGlobalInstanceId] = useState("");
+  // Dentro do evento não há campo de instância: ela já está configurada no
+  // evento e serve só para listar os grupos de WhatsApp.
+  const instanceId = fixedEventId
+    ? (fixedEvent?.whatsappInstanceId ?? "")
+    : globalInstanceId;
   const selectedInstance = whatsappInstances?.find((i) => i.id === instanceId);
 
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
@@ -105,7 +106,8 @@ export function SendMessageForm({
     });
   }
 
-  const { data: templatesResponse } = useAllTemplates(1, 100);
+  // Dentro do evento, só os templates daquele evento; no global, todos.
+  const { data: templatesResponse } = useAllTemplates(1, 100, undefined, fixedEventId);
   const templates = templatesResponse?.data;
   const sendMessage = useSendMessage(effectiveEventId || undefined);
   const uploadAttachment = useUploadAttachment();
@@ -175,7 +177,10 @@ export function SendMessageForm({
   const selectedTemplate = channelTemplates.find((t) => t.id === templateId);
 
   function applyEmailTemplate(key: EmailTemplateKey) {
-    applyPreset(key, selectedTemplate ? { paragraph1: selectedTemplate.body } : undefined);
+    applyPreset(
+      key,
+      selectedTemplate ? { paragraph1: selectedTemplate.body } : undefined,
+    );
   }
 
   function selectTemplate(value: string) {
@@ -206,15 +211,14 @@ export function SendMessageForm({
     registrationIds: Array.from(selected),
     manualRecipients,
     groupIds: Array.from(groupIds),
-    instanceId,
+    // Com evento, o backend resolve a instância pelo próprio evento.
+    instanceId: fixedEventId ? undefined : instanceId,
     attachments,
   };
   const hasEventId = Boolean(effectiveEventId);
   const count = recipientCount(draft);
-  const validationError = validateSendMessage(draft, { hasEventId });
+  const validationError = validateSendMessage(draft);
   const bodyEmpty = !body.trim();
-
-  const selectedEvent = events?.find((e) => e.id === effectiveEventId);
   const attachmentsBytes = attachments.reduce((sum, a) => sum + a.size, 0);
 
   const allSelected =
@@ -375,36 +379,12 @@ export function SendMessageForm({
             <CardTitle className={STEP_LABEL_CLASS}>1 · Configuração</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {!fixedEventId && (
-                <div className="space-y-2">
-                  <Label>Evento</Label>
-                  <Select
-                    value={localEventId || NO_EVENT}
-                    onValueChange={(v) => setLocalEventId(v === NO_EVENT ? "" : v)}
-                    disabled={Boolean(instanceId)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o evento (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NO_EVENT}>Nenhum</SelectItem>
-                      {events?.map((e) => (
-                        <SelectItem key={e.id} value={e.id}>
-                          {e.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className={cn("space-y-2", fixedEventId && "sm:col-span-2")}>
+            {!fixedEventId && (
+              <div className="space-y-2">
                 <Label>Instância</Label>
                 <Select
-                  value={instanceId || NO_INSTANCE}
-                  onValueChange={(v) => setInstanceId(v === NO_INSTANCE ? "" : v)}
-                  disabled={Boolean(effectiveEventId)}
+                  value={globalInstanceId || NO_INSTANCE}
+                  onValueChange={(v) => setGlobalInstanceId(v === NO_INSTANCE ? "" : v)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a instância (opcional)">
@@ -433,7 +413,7 @@ export function SendMessageForm({
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -558,9 +538,7 @@ export function SendMessageForm({
                 draft={manualDraft}
                 setDraft={setManualDraft}
                 onAdd={addManualRecipient}
-                addDisabled={
-                  channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT
-                }
+                addDisabled={channel === "whatsapp" && count >= WHATSAPP_RECIPIENT_LIMIT}
               />
             </div>
           </CardHeader>
@@ -601,7 +579,7 @@ export function SendMessageForm({
 
       <SendSummaryRail
         channel={channel}
-        eventTitle={selectedEvent?.title}
+        eventTitle={fixedEvent?.title}
         instanceLabel={selectedInstance?.nickname}
         count={count}
         groupCount={groupIds.size}

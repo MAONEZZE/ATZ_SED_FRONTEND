@@ -38,7 +38,8 @@ export function useRegistrations(
       api.get<PaginatedResponse<Registration>>(
         `/events/${eventId}/registrations?${qs.toString()}`,
       ),
-    enabled: Boolean(eventId),
+    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
+    enabled: Boolean(eventId) && limit > 0,
 
     placeholderData: keepPreviousData,
   });

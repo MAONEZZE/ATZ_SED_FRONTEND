@@ -23,5 +23,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Apenas rotas do grupo (dashboard) — públicas ficam fora
-  matcher: ["/events/:path*", "/settings/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/events/:path*",
+    "/messages/:path*",
+    "/ai-chat/:path*",
+    "/s-docs/:path*",
+    "/scan/:path*",
+    "/settings/:path*",
+  ],
 };
