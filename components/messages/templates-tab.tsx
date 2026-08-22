@@ -94,8 +94,8 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
   };
   const { data: folderTree = [] } = useFolders(folderScope);
   const createFolder = useCreateFolder(folderScope);
-  const renameFolder = useRenameFolder(folderScope);
-  const deleteFolder = useDeleteFolder(folderScope);
+  const renameFolder = useRenameFolder();
+  const deleteFolder = useDeleteFolder();
   const reorderFolders = useReorderFolders(folderScope);
   const { data: response, isLoading } = useAllTemplates(
     page,

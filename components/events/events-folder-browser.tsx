@@ -83,8 +83,8 @@ export function EventsFolderBrowser() {
   const folderScope = { resourceType: "event" as const };
   const { data: folderTree = [], isLoading: foldersLoading } = useFolders(folderScope);
   const createFolder = useCreateFolder(folderScope);
-  const renameFolder = useRenameFolder(folderScope);
-  const deleteFolder = useDeleteFolder(folderScope);
+  const renameFolder = useRenameFolder();
+  const deleteFolder = useDeleteFolder();
   const reorderFolders = useReorderFolders(folderScope);
   const moveEvent = useMoveEvent();
   const { data: profile } = useProfile();
