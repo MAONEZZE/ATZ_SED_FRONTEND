@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { useRegistrations } from "@/lib/api/registrations";
+import { useRegistrations, exportRegistrationsCsv } from "@/lib/api/registrations";
 
 function wrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient({
@@ -50,5 +50,25 @@ describe("useRegistrations", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     const url = fetchMock.mock.calls[0][0] as string;
     expect(url).not.toContain("formId");
+  });
+});
+
+describe("exportRegistrationsCsv", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("inclui formId na query string do export quando informado", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      statusText: "200",
+      headers: new Headers(),
+      blob: () => Promise.resolve(new Blob()),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await exportRegistrationsCsv("evt-1", { formId: "form-9" });
+
+    const url = fetchMock.mock.calls[0][0] as string;
+    expect(url).toContain("formId=form-9");
   });
 });

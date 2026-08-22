@@ -12,12 +12,13 @@ import type { FunnelStatus, PaginatedResponse, Registration } from "@/lib/api/ty
 
 export function exportRegistrationsCsv(
   eventId: string,
-  filters: { status?: FunnelStatus; search?: string } = {},
+  filters: { status?: FunnelStatus; search?: string; formId?: string } = {},
 ): Promise<Blob> {
   const params = new URLSearchParams();
   params.set("format", "csv");
   if (filters.status) params.set("status", filters.status);
   if (filters.search) params.set("search", filters.search);
+  if (filters.formId) params.set("formId", filters.formId);
   return apiFetchBlob(`/events/${eventId}/registrations?${params.toString()}`);
 }
 
