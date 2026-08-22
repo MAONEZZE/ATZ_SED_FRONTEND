@@ -173,6 +173,7 @@ export default function AttendeesPage() {
               onValueChange={(value) => {
                 setSelectedFormId(value);
                 setPage(1);
+                setSelectedIds(new Set());
               }}
             >
               <SelectTrigger className="w-48" aria-label="Formulário">
