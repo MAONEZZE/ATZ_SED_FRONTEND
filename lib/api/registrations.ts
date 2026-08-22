@@ -23,12 +23,19 @@ export function exportRegistrationsCsv(
 
 export function useRegistrations(
   eventId: string,
-  params: { status?: FunnelStatus; search?: string; page?: number; limit?: number } = {},
+  params: {
+    status?: FunnelStatus;
+    search?: string;
+    formId?: string;
+    page?: number;
+    limit?: number;
+  } = {},
 ) {
-  const { status, search, page = 1, limit = 30 } = params;
+  const { status, search, formId, page = 1, limit = 30 } = params;
   const qs = new URLSearchParams();
   if (status) qs.set("status", status);
   if (search) qs.set("search", search);
+  if (formId) qs.set("formId", formId);
   qs.set("page", String(page));
   qs.set("limit", String(limit));
 
