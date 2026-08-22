@@ -33,9 +33,11 @@ export function useEvents(page = 1, limit = 20, folderId?: string | null) {
     queryKey: queryKeys.events({ page, limit, folderId }),
     queryFn: () => {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      // O backend valida `folderId` como UUID quando ele está presente; o
-      // literal "null" resulta em 400. Na raiz o filtro deve ser omitido.
-      if (folderId) params.set("folderId", folderId);
+      // O backend distingue a raiz da lista sem filtro: `folderId=null`
+      // traz apenas eventos fora de pasta, enquanto a ausência do parâmetro
+      // traz todos os eventos. Sem isso, um evento recém-movido reaparece na
+      // grade principal após a invalidação do cache.
+      if (folderId !== undefined) params.set("folderId", folderId ?? "null");
       return api.get<PaginatedResponse<EventObject>>(`/events?${params.toString()}`);
     },
     // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
