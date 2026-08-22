@@ -153,7 +153,11 @@ export function useDeleteEvent() {
   });
 }
 
-/** Move um evento antes de outro item da mesma pasta; `beforeId` ausente o envia ao fim. */
+/**
+ * Reordena um evento dentro da pasta atual ou o move para outra pasta.
+ * O endpoint `/move` aceita somente `beforeId`; a pasta é alterada no endpoint
+ * principal do evento.
+ */
 export function useMoveEvent() {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateEvents();
@@ -164,13 +168,16 @@ export function useMoveEvent() {
       beforeId,
     }: {
       id: string;
-      folderId: string | null;
+      folderId?: string | null;
       beforeId?: string;
-    }) =>
-      api.patch<void>(`/events/${id}/move`, {
-        folderId,
+    }) => {
+      if (folderId !== undefined) {
+        return api.patch<EventObject>(`/events/${id}`, { folderId }).then(() => undefined);
+      }
+      return api.patch<void>(`/events/${id}/move`, {
         ...(beforeId ? { beforeId } : {}),
-      }),
+      });
+    },
     onMutate: async ({ id, folderId, beforeId }) => {
       await queryClient.cancelQueries({ queryKey: ["events"] });
       const previous = queryClient.getQueriesData<PaginatedResponse<EventObject>>({
@@ -181,15 +188,16 @@ export function useMoveEvent() {
         .find((event) => event.id === id);
       if (!moved) return { previous };
 
+      const targetFolderId = folderId ?? moved.folderId;
       for (const [key, data] of previous) {
         if (!data || !Array.isArray(data.data)) continue;
         const params = Array.isArray(key)
           ? (key[1] as { folderId?: string | null } | undefined)
           : undefined;
-        const isTarget = params?.folderId === folderId;
+        const isTarget = params?.folderId === targetFolderId;
         let next = data.data.filter((event) => event.id !== id);
         if (isTarget) {
-          const nextMoved = { ...moved, folderId };
+          const nextMoved = { ...moved, folderId: targetFolderId };
           const insertAt = beforeId
             ? next.findIndex((event) => event.id === beforeId)
             : -1;

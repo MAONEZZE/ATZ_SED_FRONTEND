@@ -118,16 +118,17 @@ export function EventsFolderBrowser() {
       const id = activeId.slice("event:".length);
       const event = events.find((item) => item.id === id);
       if (!event || (event.myRole !== "admin" && event.ownerId !== profile?.id)) return;
+      const beforeId = overId.startsWith("event:")
+        ? overId.slice("event:".length)
+        : undefined;
       const targetFolderId = overId.startsWith("folder:")
         ? overId.slice("folder:".length)
         : overId.startsWith("folder-content:")
           ? overId.slice("folder-content:".length)
-          : folderId;
-      const beforeId = overId.startsWith("event:")
-        ? overId.slice("event:".length)
-        : undefined;
+          : undefined;
+      if (!beforeId && targetFolderId === undefined) return;
       moveEvent.mutate(
-        { id, folderId: targetFolderId, beforeId },
+        beforeId ? { id, beforeId } : { id, folderId: targetFolderId },
         { onError: (error) => toast.error(`Falha ao mover evento: ${error.message}`) },
       );
       return;
