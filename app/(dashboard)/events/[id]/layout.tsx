@@ -101,8 +101,7 @@ function EventLayoutContent({ children }: { children: ReactNode }) {
 
       {event && (
         <CollaboratorsDialog
-          eventId={event.id}
-          ownerId={event.ownerId}
+          event={event}
           open={collabOpen}
           onOpenChange={setCollabOpen}
         />

@@ -28,14 +28,12 @@ export interface TemplateInput {
 
 // eventId: undefined = sem filtro (todos os templates); null = envia o literal
 // "null" ao backend (apenas templates globais); string = filtra exclusivamente
-// pelo evento informado (NÃO soma com os globais — precisa de duas chamadas
-// para combinar "globais + este evento", ver event-automation-dialog.tsx).
+// pelo evento informado.
 export function useAllTemplates(
   page = 1,
   limit = 20,
   channel?: MessageChannel,
   eventId?: string | null,
-  includeGlobal?: boolean,
   folderId?: string | null,
 ) {
   return useQuery({
@@ -44,14 +42,12 @@ export function useAllTemplates(
       limit,
       channel,
       eventId,
-      includeGlobal,
       folderId,
     }),
     queryFn: () => {
       const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (channel) qs.set("channel", channel);
       if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
-      if (includeGlobal !== undefined) qs.set("includeGlobal", String(includeGlobal));
       if (folderId !== undefined) qs.set("folderId", folderId ?? "null");
       return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
     },

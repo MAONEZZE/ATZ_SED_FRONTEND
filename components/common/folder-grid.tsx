@@ -23,17 +23,20 @@ function SortableFolderCard({
   onRename,
   onDelete,
   onOpen,
+  canEdit,
 }: {
   folder: { id: string; name: string };
   basePath: string;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onOpen?: (folder: { id: string; name: string }) => void;
+  canEdit: boolean;
 }) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: `folder:${folder.id}`,
+      disabled: !canEdit,
     });
   const { setNodeRef: setContentDropRef } = useDroppable({
     id: `folder-content:${folder.id}`,
@@ -59,8 +62,8 @@ function SortableFolderCard({
             `${basePath}/folder/${folder.id}?nome=${encodeURIComponent(folder.name)}`,
           )
         }
-        onEdit={() => onRename(folder.id, folder.name)}
-        onDelete={() => onDelete(folder.id)}
+        onEdit={canEdit ? () => onRename(folder.id, folder.name) : undefined}
+        onDelete={canEdit ? () => onDelete(folder.id) : undefined}
       />
     </div>
   );
@@ -72,12 +75,14 @@ export function FolderGrid({
   onRename,
   onDelete,
   onOpen,
+  canEdit = true,
 }: {
   folders: { id: string; name: string }[];
   basePath: string;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
   onOpen?: (folder: { id: string; name: string }) => void;
+  canEdit?: boolean;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -109,6 +114,7 @@ export function FolderGrid({
               }}
               onDelete={onDelete}
               onOpen={onOpen}
+              canEdit={canEdit}
             />
           ))}
         </div>

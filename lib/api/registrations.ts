@@ -96,6 +96,18 @@ export function useUpdateRegistration(eventId: string) {
   });
 }
 
+export function useDeleteRegistrations(eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.delete<{ deleted: number }>(`/events/${eventId}/registrations`, { ids }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ["events", eventId, "registrations"],
+      }),
+  });
+}
+
 export function useUpdateRegistrationStatus(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({

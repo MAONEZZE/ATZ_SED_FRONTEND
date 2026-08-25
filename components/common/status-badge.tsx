@@ -1,6 +1,7 @@
 import { Check, CheckCheck, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
+  attendanceConfig,
   eventStatusConfig,
   funnelStatusConfig,
   messageLogStatusConfig,
@@ -24,6 +25,10 @@ export function EventStatusBadge({ status }: { status: EventStatus }) {
 
 export function FunnelStatusBadge({ status }: { status: FunnelStatus }) {
   return <ConfigBadge config={funnelStatusConfig[status]} />;
+}
+
+export function AttendanceBadge({ attended }: { attended: boolean }) {
+  return <ConfigBadge config={attended ? attendanceConfig.done : attendanceConfig.pending} />;
 }
 
 const messageLogStatusIcon: Record<MessageLog["status"], typeof Check> = {

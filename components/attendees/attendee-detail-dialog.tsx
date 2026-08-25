@@ -1,74 +1,86 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { toast } from "sonner";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
 import { useFormFields } from "@/lib/api/form-fields";
-import { useUpdateRegistration } from "@/lib/api/registrations";
-import type { Registration } from "@/lib/api/types";
+import type { FunnelStatus } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format-date";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export function AttendeeDetailSheet({
+export interface AttendeeDetailData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  answers: Record<string, unknown>;
+  createdAt: string;
+  /** null = sem funil (resposta de formulário anônimo). */
+  status: FunnelStatus | null;
+  /** Nome do form de origem, quando houver. */
+  formName: string | null;
+}
+
+export function AttendeeDetailDialog({
   eventId,
-  registration,
+  formId,
+  data,
   open,
   onOpenChange,
+  onSave,
+  isSaving = false,
+  saveDisabledReason,
 }: {
   eventId: string;
-  registration: Registration | null;
+  /** Presente = campos escopados a um form específico (modo anônimo). */
+  formId?: string;
+  data: AttendeeDetailData | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Ausente = salvar desabilitado (ainda não existe no backend para este modo). */
+  onSave?: (answers: Record<string, unknown>) => void;
+  isSaving?: boolean;
+  saveDisabledReason?: string;
 }) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
-  const { data: fields = [] } = useFormFields(eventId);
+  const { data: fields = [] } = useFormFields(eventId, formId);
   const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
-  const updateRegistration = useUpdateRegistration(eventId);
 
   useEffect(() => {
-    if (!open || !registration) return;
+    if (!open || !data) return;
     const d: Record<string, unknown> = {};
     sortedFields.forEach((f) => {
       const fallback = f.isFixed
         ? f.type === "email"
-          ? registration.email
+          ? data.email
           : f.type === "phone"
-            ? registration.phone
-            : registration.name
+            ? data.phone
+            : data.name
         : "";
-      d[f.label] = registration.answers[f.label] ?? fallback;
+      d[f.label] = data.answers[f.label] ?? fallback;
     });
     setDraft(d);
-  }, [open, registration, sortedFields]);
+  }, [open, data, sortedFields]);
 
   function save() {
-    if (!registration) return;
-    updateRegistration.mutate(
-      { id: registration.id, answers: draft },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          toast.success("Respostas atualizadas");
-        },
-        onError: (e) => toast.error(e.message),
-      },
-    );
+    if (!data || !onSave) return;
+    onSave(draft);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
-        {registration && (
+        {data && (
           <>
             <DialogHeader>
-              <DialogTitle>{registration.name}</DialogTitle>
+              <DialogTitle>{data.name}</DialogTitle>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                <FunnelStatusBadge status={registration.status} />
-                <span>{formatDate(registration.createdAt)}</span>
+                {data.status && <FunnelStatusBadge status={data.status} />}
+                <span>{formatDate(data.createdAt)}</span>
+                {data.formName && <span>{data.formName}</span>}
               </div>
             </DialogHeader>
 
@@ -95,7 +107,9 @@ export function AttendeeDetailSheet({
             <EditDialogFooter
               onCancel={() => onOpenChange(false)}
               onSave={save}
-              isSaving={updateRegistration.isPending}
+              isSaving={isSaving}
+              saveDisabled={!onSave}
+              saveDisabledReason={saveDisabledReason}
             />
           </>
         )}

@@ -1,6 +1,10 @@
 export const queryKeys = {
-  events: (params?: { page?: number; limit?: number; folderId?: string | null }) =>
-    params ? (["events", params] as const) : (["events"] as const),
+  events: (params?: {
+    page?: number;
+    limit?: number;
+    folderId?: string | null;
+    folderIds?: string[];
+  }) => (params ? (["events", params] as const) : (["events"] as const)),
   event: (id: string) => ["events", id] as const,
   forms: (eventId: string) => ["events", eventId, "forms"] as const,
   form: (eventId: string, formId: string) =>
@@ -55,7 +59,6 @@ export const queryKeys = {
     channel?: string;
     eventId?: string | null;
     folderId?: string | null;
-    includeGlobal?: boolean;
   }) =>
     params
       ? (["global", "templates", params] as const)

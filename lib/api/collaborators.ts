@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { Collaborator } from "@/lib/api/types";
+import type { Collaborator, EventRole } from "@/lib/api/types";
 
 export function useCollaborators(eventId: string) {
   return useQuery({
@@ -16,8 +16,20 @@ export function useCollaborators(eventId: string) {
 export function useAddCollaborator(eventId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (email: string) =>
-      api.post<Collaborator>(`/events/${eventId}/collaborators`, { email }),
+    mutationFn: ({ email, role }: { email: string; role: EventRole }) =>
+      api.post<Collaborator>(`/events/${eventId}/collaborators`, { email, role }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.collaborators(eventId) }),
+  });
+}
+
+export function useUpdateCollaboratorRole(eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ profileId, role }: { profileId: string; role: EventRole }) =>
+      api.patch<Collaborator>(`/events/${eventId}/collaborators/${profileId}`, {
+        role,
+      }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: queryKeys.collaborators(eventId) }),
   });

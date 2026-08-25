@@ -117,6 +117,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="flex-1 overflow-y-auto">
           <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
         </div>
+        <footer
+          id="dashboard-pagination-footer"
+          className="flex shrink-0 items-center justify-center px-4 py-2 empty:hidden"
+          aria-label="Paginação da página"
+        />
       </div>
     </div>
   );

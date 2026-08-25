@@ -84,9 +84,8 @@ export function EventAutomationDialog({
     [formSearch, sortedForms],
   );
 
-  // O seletor de automação aceita tanto templates deste evento quanto globais.
-  // A lista da página do evento, por sua vez, pede includeGlobal=false.
-  const { data: templatesResponse } = useAllTemplates(1, 100, undefined, eventId, true);
+  // Automações de evento usam estritamente os templates vinculados ao evento.
+  const { data: templatesResponse } = useAllTemplates(1, 100, undefined, eventId);
   const templates = templatesResponse?.data ?? [];
 
   useEffect(() => {

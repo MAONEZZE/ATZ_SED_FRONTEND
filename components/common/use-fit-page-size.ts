@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 /** Altura de uma linha de tabela: `h-12` (48px) + 1px de borda inferior. */
 export const TABLE_ROW_HEIGHT = 49;
-/** Paginação (32px + 16px de margem) + padding inferior do `<main>` (24px). */
+/** Footer de paginação (32px + 16px de padding) + padding do `<main>` (24px). */
 export const RESERVED_BELOW = 72;
 
 /**
