@@ -30,9 +30,10 @@ export function useRegistrations(
     formId?: string;
     page?: number;
     limit?: number;
+    enabled?: boolean;
   } = {},
 ) {
-  const { status, search, formId, page = 1, limit = 30 } = params;
+  const { status, search, formId, page = 1, limit = 30, enabled = true } = params;
   const qs = new URLSearchParams();
   if (status) qs.set("status", status);
   if (search) qs.set("search", search);
@@ -41,14 +42,12 @@ export function useRegistrations(
   qs.set("limit", String(limit));
 
   return useQuery({
-    queryKey: queryKeys.registrations(eventId, params),
+    queryKey: queryKeys.registrations(eventId, { status, search, formId, page, limit }),
     queryFn: () =>
       api.get<PaginatedResponse<Registration>>(
         `/events/${eventId}/registrations?${qs.toString()}`,
       ),
-    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
-    enabled: Boolean(eventId) && limit > 0,
-
+    enabled: Boolean(eventId) && enabled,
     placeholderData: keepPreviousData,
   });
 }

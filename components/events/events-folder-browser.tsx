@@ -33,6 +33,8 @@ import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
+import { Pagination } from "@/components/common/data-table";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { EventCard, SortableEventCard } from "@/components/events/event-card";
 import { Button } from "@/components/ui/button";
 
@@ -60,6 +62,8 @@ function RootDropLink() {
 export function EventsFolderBrowser() {
   const { folderId } = useParams<{ folderId: string }>();
   const [activeEvent, setActiveEvent] = useState<EventObject | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const folderScope = { resourceType: "event" as const };
   const { data: folderTree = [], isLoading: foldersLoading } = useFolders(folderScope);
   const createFolder = useCreateFolder(folderScope);
@@ -68,7 +72,12 @@ export function EventsFolderBrowser() {
   const reorderFolders = useReorderFolders(folderScope);
   const moveEvent = useMoveEvent();
   const { data: profile } = useProfile();
-  const { data: response, isLoading: eventsLoading } = useEventsByFolder(1, 50, folderId);
+  const { data: response, isLoading: eventsLoading } = useEventsByFolder(
+    page,
+    pageSize,
+    folderId,
+  );
+  const totalPages = response ? Math.max(1, Math.ceil(response.total / pageSize)) : 1;
 
   const allFolders = flattenFolders(folderTree);
   const current = allFolders.find((folder) => folder.id === folderId);
@@ -215,6 +224,13 @@ export function EventsFolderBrowser() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            <PageSizeSelect
+              value={pageSize}
+              onChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
             <FolderCreateButton
               onCreate={(name) => createFolder.mutate({ name, parentId: folderId })}
             />
@@ -261,6 +277,8 @@ export function EventsFolderBrowser() {
             </div>
           ) : null}
         </DragOverlay>
+
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
     </DndContext>
   );

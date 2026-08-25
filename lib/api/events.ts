@@ -47,8 +47,6 @@ export function useEvents(page = 1, limit = 20, folderId?: string | null) {
     queryKey: queryKeys.events({ page, limit, folderId }),
     queryFn: () =>
       api.get<PaginatedResponse<EventObject>>(eventsListPath(page, limit, folderId)),
-    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
-    enabled: limit > 0,
   });
 }
 
@@ -104,7 +102,7 @@ export function useEventsByFolder(page: number, limit: number, folderId: string 
   return useQuery({
     queryKey: queryKeys.events({ page, limit, folderId, folderIds }),
     queryFn: () => fetchEventsByFolder(page, limit, folderId, myFolderIds),
-    enabled: limit > 0 && foldersLoaded,
+    enabled: foldersLoaded,
   });
 }
 

@@ -1,10 +1,17 @@
 import React from "react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
-import { render, screen, cleanup, fireEvent, waitFor, within } from "@testing-library/react";
+import {
+  render,
+  screen,
+  cleanup,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { AttendeesTable } from "@/components/attendees/attendees-table";
 
 beforeAll(() => {
-  // jsdom não implementa ResizeObserver; a DataTable usa um pra remedir no resize.
+  // jsdom não implementa ResizeObserver; os primitivos Radix (Select, Popover) usam.
   globalThis.ResizeObserver = class {
     observe() {}
     unobserve() {}
@@ -80,7 +87,8 @@ describe("AttendeesTable — coluna Checkin", () => {
 describe("AttendeesTable — exclusão em massa", () => {
   it("desabilita Excluir sem seleção e habilita com seleção", () => {
     const { rerender } = renderTable({ selected: new Set() });
-    const button = () => screen.getByRole("button", { name: /excluir/i }) as HTMLButtonElement;
+    const button = () =>
+      screen.getByRole("button", { name: /excluir/i }) as HTMLButtonElement;
     expect(button().disabled).toBe(true);
 
     rerender(

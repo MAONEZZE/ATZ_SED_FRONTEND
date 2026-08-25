@@ -2,8 +2,13 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Download, Filter, Loader2, Search, Upload } from "lucide-react";
-import { DataTable, DataTableDeleteButton, type DataTableColumn } from "@/components/common/data-table";
+import { ChevronDown, Download, Loader2, Search, Upload } from "lucide-react";
+import {
+  DataTable,
+  DataTableDeleteButton,
+  type DataTableColumn,
+} from "@/components/common/data-table";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { AttendanceBadge } from "@/components/common/status-badge";
 import { formatDate } from "@/lib/utils/format-date";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
@@ -54,7 +59,7 @@ export interface AttendeesTableProps<T> {
   onSearchChange: (value: string) => void;
 
   page: number;
-  pageSize: number | null;
+  pageSize: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
 
@@ -190,9 +195,7 @@ export function AttendeesTable<T>({
                 statusFilter.value !== ALL_STATUS && "text-primary",
               )}
             >
-              <Filter
-                className={cn("h-3.5 w-3.5", statusFilter.value !== ALL_STATUS && "fill-current")}
-              />
+              <ChevronDown className="h-3.5 w-3.5" />
               {statusFilter.value === ALL_STATUS
                 ? "Status"
                 : funnelStatusConfig[statusFilter.value as FunnelStatus].label}
@@ -267,6 +270,7 @@ export function AttendeesTable<T>({
           Exportar CSV
         </Button>
         {formSelector}
+        <PageSizeSelect value={pageSize} onChange={onPageSizeChange} />
         <DataTableDeleteButton
           className="sm:ml-auto"
           selectedCount={selected.size}
@@ -289,13 +293,14 @@ export function AttendeesTable<T>({
         page={page}
         pageSize={pageSize}
         onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
       />
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {selectedNames.length} inscrito(s)?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Excluir {selectedNames.length} inscrito(s)?
+            </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <ul className="list-inside list-disc">
@@ -305,8 +310,8 @@ export function AttendeesTable<T>({
                 </ul>
                 {remaining > 0 && <p>e mais {remaining}</p>}
                 <p>
-                  Mensagens e logs associados a esses inscritos também serão apagados. Esta ação
-                  não pode ser desfeita.
+                  Mensagens e logs associados a esses inscritos também serão apagados.
+                  Esta ação não pode ser desfeita.
                 </p>
               </div>
             </AlertDialogDescription>

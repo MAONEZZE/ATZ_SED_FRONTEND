@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-react";
 import type { FunnelStatus, Registration } from "@/lib/api/types";
 import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
+import { Pagination } from "@/components/common/data-table";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -26,6 +28,11 @@ export function RecipientTable({
   onToggleStatusFilter,
   onClearStatusFilter,
   hasEvent,
+  page,
+  totalPages,
+  onPageChange,
+  pageSize,
+  onPageSizeChange,
 }: {
   registrations: Registration[];
   selected: Set<string>;
@@ -36,10 +43,19 @@ export function RecipientTable({
   onToggleStatusFilter: (s: FunnelStatus) => void;
   onClearStatusFilter: () => void;
   hasEvent: boolean;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  pageSize: number;
+  onPageSizeChange: (size: number) => void;
 }) {
   return (
-    <div className="max-h-72 overflow-y-auto rounded-lg border">
-      <Table>
+    <div className="space-y-2">
+      <div className="flex h-8 items-center justify-end">
+        <PageSizeSelect value={pageSize} onChange={onPageSizeChange} />
+      </div>
+
+      <Table containerClassName="max-h-72 rounded-lg border">
         <TableHeader>
           <TableRow>
             <TableHead className="w-10 pl-4 pr-0">
@@ -60,12 +76,14 @@ export function RecipientTable({
                     type="button"
                     className="-ml-1 flex items-center gap-1 rounded px-1 py-0.5 font-medium hover:bg-muted hover:text-foreground"
                   >
-                    Status
                     <ChevronDown className="h-3.5 w-3.5" />
+                    Status
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-48 p-2">
-                  <p className="px-1 pb-1 text-xs text-muted-foreground">Mostrar status</p>
+                  <p className="px-1 pb-1 text-xs text-muted-foreground">
+                    Mostrar status
+                  </p>
                   {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((s) => (
                     <label
                       key={s}
@@ -131,6 +149,13 @@ export function RecipientTable({
           )}
         </TableBody>
       </Table>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        onPageChange={onPageChange}
+        inline
+      />
     </div>
   );
 }

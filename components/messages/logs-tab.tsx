@@ -8,11 +8,7 @@ import { ChannelBadge } from "@/components/messages/channel-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { MessageLogStatusBadge } from "@/components/common/status-badge";
 import { Pagination } from "@/components/common/data-table";
-import {
-  RESERVED_BELOW,
-  TABLE_ROW_HEIGHT,
-  useFitPageSize,
-} from "@/components/common/use-fit-page-size";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -27,18 +23,14 @@ import {
 /** Logs de envio. Com `eventId`, lista só os do evento e some a coluna Evento. */
 export function LogsTab({ eventId }: { eventId?: string }) {
   const [page, setPage] = useState(1);
-  // A tabela é medida vazia; o fetch só dispara com o limite que cabe na tela.
-  const { ref: bodyRef, pageSize } = useFitPageSize<HTMLTableSectionElement>({
-    itemHeight: TABLE_ROW_HEIGHT,
-    reserved: RESERVED_BELOW,
-  });
+  const [pageSize, setPageSize] = useState(10);
   const { data: response, isLoading } = useMessageLogs({
     eventId,
     page,
-    limit: pageSize ?? 0,
+    limit: pageSize,
   });
   const logs = response?.data;
-  const totalPages = pageSize && response ? Math.ceil(response.total / pageSize) : 0;
+  const totalPages = response ? Math.max(1, Math.ceil(response.total / pageSize)) : 1;
   const [viewing, setViewing] = useState<MessageLogWithEvent | null>(null);
   const cols = eventId ? 4 : 5;
 
@@ -48,54 +40,62 @@ export function LogsTab({ eventId }: { eventId?: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Destinatário</TableHead>
-              <TableHead>Canal</TableHead>
-              {!eventId && <TableHead>Evento</TableHead>}
-              <TableHead>Status</TableHead>
-              <TableHead className="w-[96px] text-right">Data</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody ref={bodyRef}>
-            {logs?.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={cols}
-                  className="py-10 text-center text-muted-foreground"
-                >
-                  Nenhuma mensagem enviada ainda.
-                </TableCell>
-              </TableRow>
-            )}
-            {logs?.map((log) => (
-              <TableRow
-                key={log.id}
-                className="h-12 cursor-pointer"
-                onClick={() => setViewing(log)}
-              >
-                <TableCell className="font-medium">{log.recipient}</TableCell>
-                <TableCell>
-                  <ChannelBadge channel={log.channel} />
-                </TableCell>
-                {!eventId && (
-                  <TableCell className="text-muted-foreground">
-                    {log.event?.title ?? "—"}
-                  </TableCell>
-                )}
-                <TableCell>
-                  <MessageLogStatusBadge status={log.status} />
-                </TableCell>
-                <TableCell className="text-right text-muted-foreground">
-                  {formatDateTime(log.sentAt ?? log.createdAt)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="flex h-9 items-center justify-end">
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
       </div>
+
+      <Table containerClassName="max-h-[60vh] rounded-xl border">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Destinatário</TableHead>
+            <TableHead>Canal</TableHead>
+            {!eventId && <TableHead>Evento</TableHead>}
+            <TableHead>Status</TableHead>
+            <TableHead className="w-[96px] text-right">Data</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {logs?.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={cols}
+                className="py-10 text-center text-muted-foreground"
+              >
+                Nenhuma mensagem enviada ainda.
+              </TableCell>
+            </TableRow>
+          )}
+          {logs?.map((log) => (
+            <TableRow
+              key={log.id}
+              className="h-12 cursor-pointer"
+              onClick={() => setViewing(log)}
+            >
+              <TableCell className="font-medium">{log.recipient}</TableCell>
+              <TableCell>
+                <ChannelBadge channel={log.channel} />
+              </TableCell>
+              {!eventId && (
+                <TableCell className="text-muted-foreground">
+                  {log.event?.title ?? "—"}
+                </TableCell>
+              )}
+              <TableCell>
+                <MessageLogStatusBadge status={log.status} />
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">
+                {formatDateTime(log.sentAt ?? log.createdAt)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
 

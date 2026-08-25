@@ -56,11 +56,13 @@ export function useAllTemplates(
   });
 }
 
-export function useEventAutomations(eventId: string) {
+export function useEventAutomations(eventId: string, page = 1, limit = 10) {
   return useQuery({
-    queryKey: queryKeys.automations(eventId),
+    queryKey: queryKeys.automations(eventId, { page, limit }),
     queryFn: () =>
-      api.get<PaginatedResponse<Automation>>(`/events/${eventId}/automations`),
+      api.get<PaginatedResponse<Automation>>(
+        `/events/${eventId}/automations?page=${page}&limit=${limit}`,
+      ),
     enabled: Boolean(eventId),
   });
 }
