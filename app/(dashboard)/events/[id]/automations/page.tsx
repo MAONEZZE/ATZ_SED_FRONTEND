@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { AlertTriangle, Plus } from "lucide-react";
 import { useDeleteAutomationGlobal, useEventAutomations } from "@/lib/api/global-messaging";
 import { TRIGGER_LABELS } from "@/lib/api/automations";
 import type { Automation } from "@/lib/api/types";
@@ -95,9 +95,22 @@ export default function EventAutomationsPage() {
             cell: (a) => (a.template.channel === "whatsapp" ? "WhatsApp" : "E-mail"),
           },
           {
-            key: "delay",
-            header: "Atraso",
-            cell: (a) => (a.delayMinutes ? `${a.delayMinutes} min` : "—"),
+            key: "forms",
+            header: "Formulários",
+            cell: (a) => {
+              if (a.formIds.length === 0) {
+                if (a.trigger === "on_date_form_field") {
+                  return (
+                    <span className="inline-flex items-center gap-1 text-status-danger-fg">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                      Sem formulário — não dispara
+                    </span>
+                  );
+                }
+                return "Todos";
+              }
+              return `${a.formIds.length} formulário${a.formIds.length === 1 ? "" : "s"}`;
+            },
           },
           {
             key: "status",

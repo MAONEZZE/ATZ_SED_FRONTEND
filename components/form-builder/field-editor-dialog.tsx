@@ -54,6 +54,7 @@ const creatableTypes: FieldType[] = [
   "date",
   "linkedin",
   "instagram",
+  "on_date_automation_field",
 ];
 
 function optionsToText(options: unknown): string {

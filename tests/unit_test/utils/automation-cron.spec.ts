@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCron, parseCron } from "@/lib/utils/automation-cron";
+import { buildCron, cronEquivalent, parseCron } from "@/lib/utils/automation-cron";
 
 describe("buildCron", () => {
   it("diário", () => {
@@ -37,5 +37,30 @@ describe("parseCron — round-trip", () => {
 
   it("retorna null para cron inválido", () => {
     expect(parseCron("* * *")).toBeNull();
+  });
+});
+
+describe("cronEquivalent", () => {
+  it("null === null", () => {
+    expect(cronEquivalent(null, null)).toBe(true);
+  });
+
+  it("null !== string", () => {
+    expect(cronEquivalent(null, "0 9 * * 1")).toBe(false);
+    expect(cronEquivalent("0 9 * * 1", null)).toBe(false);
+  });
+
+  it("ignora diferença de zero à esquerda no horário", () => {
+    expect(cronEquivalent("5 9 * * *", "05 09 * * *")).toBe(true);
+  });
+
+  it("detecta mudança real de horário ou dia", () => {
+    expect(cronEquivalent("0 9 * * 1", "0 9 * * 2")).toBe(false);
+    expect(cronEquivalent("0 9 * * 1", "0 10 * * 1")).toBe(false);
+  });
+
+  it("cron malformado só é equivalente se a string for idêntica", () => {
+    expect(cronEquivalent("* * *", "* * *")).toBe(true);
+    expect(cronEquivalent("* * *", "* * * *")).toBe(false);
   });
 });

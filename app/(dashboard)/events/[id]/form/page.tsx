@@ -80,6 +80,7 @@ const typeLabels: Record<string, string> = {
   date: "Data",
   linkedin: "LinkedIn",
   instagram: "Instagram",
+  on_date_automation_field: "Campo de automação por data",
 };
 
 function SortableFieldRow({

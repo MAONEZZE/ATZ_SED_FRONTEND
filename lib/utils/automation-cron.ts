@@ -27,3 +27,22 @@ export function parseCron(cron: string): CronParts | null {
   if (dow !== "*") return { freq: "WEEKLY", time, dayOfWeek: Number(dow) };
   return { freq: "DAILY", time };
 }
+
+/**
+ * Compara dois crons por valor lógico, não por string — `buildCron` remove
+ * zeros à esquerda (ex.: "09:05" vira "5 9 * * *"), então uma comparação
+ * literal apontaria mudança onde não houve, disparando `cron` no PATCH à toa.
+ */
+export function cronEquivalent(a: string | null, b: string | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const pa = parseCron(a);
+  const pb = parseCron(b);
+  if (!pa || !pb) return false;
+  return (
+    pa.freq === pb.freq &&
+    pa.time === pb.time &&
+    pa.dayOfWeek === pb.dayOfWeek &&
+    pa.dayOfMonth === pb.dayOfMonth
+  );
+}
