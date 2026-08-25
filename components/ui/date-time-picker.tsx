@@ -40,6 +40,7 @@ export function DateTimePicker({
   id,
   disabled = false,
   placeholder = "Selecionar data",
+  minValue,
 }: {
   value?: string;
   onChange: (v: string) => void;
@@ -47,6 +48,7 @@ export function DateTimePicker({
   id?: string;
   disabled?: boolean;
   placeholder?: string;
+  minValue?: CalendarDate;
 }) {
   const [open, setOpen] = React.useState(false);
   const { date, time } = parseValue(value, mode);
@@ -103,7 +105,11 @@ export function DateTimePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto overflow-hidden p-2" align="start">
-          <Calendar value={date ?? undefined} onChange={handleDateSelect} />
+          <Calendar
+            value={date ?? undefined}
+            onChange={handleDateSelect}
+            minValue={minValue}
+          />
         </PopoverContent>
       </Popover>
       {mode === "datetime" && (

@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { today, getLocalTimeZone } from "@internationalized/date";
 
 const MAX_DELAY_MINUTES = 2147483647;
 const RECURRING_TIMEZONE = "America/Sao_Paulo";
@@ -71,6 +73,7 @@ export function EventAutomationDialog({
   const [cronDayOfMonth, setCronDayOfMonth] = useState(1);
   const [formsOpen, setFormsOpen] = useState(false);
   const [formSearch, setFormSearch] = useState("");
+  const [sendAt, setSendAt] = useState("");
 
   const { data: forms } = useForms(eventId);
   const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
@@ -93,6 +96,7 @@ export function EventAutomationDialog({
       setTemplateId(automation?.templateId ?? "");
       setTrigger(automation?.trigger ?? "on_registration");
       setFormIds(automation?.formIds ?? []);
+      setSendAt(automation?.sendAt ?? "");
       setDelayMinutes(
         automation?.delayMinutes != null ? String(automation.delayMinutes) : "",
       );
@@ -110,9 +114,6 @@ export function EventAutomationDialog({
   const isEdit = Boolean(automation);
   const supportsDelay = DELAYED_TRIGGERS.includes(trigger);
   const isRecurring = trigger === "recurring";
-  // Espelha AutomationRuleEntity.acceptsForm/requiresForm no backend.
-  const acceptsForm = trigger === "on_form_submitted" || trigger === "on_registration";
-  const requiresForm = trigger === "on_form_submitted";
 
   function toggleForm(formId: string, checked: boolean) {
     setFormIds((prev) =>
@@ -122,16 +123,22 @@ export function EventAutomationDialog({
 
   function handleSave() {
     if (!templateId) return toast.error("Selecione o template");
-    if (requiresForm && formIds.length === 0) {
+    if (formIds.length === 0) {
       return toast.error("Selecione ao menos um formulário");
     }
     if (supportsDelay && delayMinutes && Number(delayMinutes) > MAX_DELAY_MINUTES) {
       return toast.error(`Atraso máximo é ${MAX_DELAY_MINUTES} minutos`);
     }
+    if (trigger === "on_date") {
+      if (!sendAt) return toast.error("Selecione a data e hora de envio");
+      if (new Date(sendAt) <= new Date()) {
+        return toast.error("A data e hora devem estar no futuro");
+      }
+    }
     const input = {
       templateId,
       trigger,
-      formIds: acceptsForm ? formIds : undefined,
+      formIds,
       delayMinutes: supportsDelay && delayMinutes ? Number(delayMinutes) : undefined,
       cron: isRecurring
         ? buildCron({
@@ -142,6 +149,7 @@ export function EventAutomationDialog({
           })
         : undefined,
       timezone: isRecurring ? RECURRING_TIMEZONE : undefined,
+      sendAt: trigger === "on_date" ? sendAt : undefined,
       active,
     };
     const onDone = {
@@ -198,62 +206,71 @@ export function EventAutomationDialog({
             </Select>
           </div>
 
-          {acceptsForm && (
-            <div className="space-y-2">
-              <Label>Formulários{requiresForm && " *"}</Label>
-              <p className="text-sm text-muted-foreground">
-                {requiresForm
-                  ? "Dispara só para quem respondeu um destes formulários."
-                  : "Opcional: sem seleção, dispara para inscritos de qualquer formulário."}
-              </p>
-              <Popover open={formsOpen} onOpenChange={setFormsOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-between"
-                  >
-                    {formIds.length === 0
-                      ? "Selecionar formulários"
-                      : `${formIds.length} formulário${formIds.length === 1 ? "" : "s"} selecionado${formIds.length === 1 ? "" : "s"}`}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="start"
-                  className="w-[var(--radix-popover-trigger-width)] p-2"
+          <div className="space-y-2">
+            <Label>Formulários *</Label>
+            <p className="text-sm text-muted-foreground">
+              Esta automação só é considerada para estes formulários.
+            </p>
+            <Popover open={formsOpen} onOpenChange={setFormsOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-between"
                 >
-                  <Input
-                    aria-label="Buscar formulário"
-                    value={formSearch}
-                    onChange={(event) => setFormSearch(event.target.value)}
-                    placeholder="Buscar formulário..."
-                    className="mb-2 h-8"
-                  />
-                  <div role="listbox" className="max-h-52 space-y-1 overflow-y-auto">
-                    {filteredForms.length === 0 && (
-                      <p className="p-2 text-sm text-muted-foreground">
-                        {sortedForms.length === 0
-                          ? "Este evento ainda não tem formulários."
-                          : "Nenhum formulário encontrado."}
-                      </p>
-                    )}
-                    {filteredForms.map((form) => (
-                      <label
-                        key={form.id}
-                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
-                      >
-                        <Checkbox
-                          checked={formIds.includes(form.id)}
-                          onCheckedChange={(checked) =>
-                            toggleForm(form.id, Boolean(checked))
-                          }
-                        />
-                        {form.name}
-                      </label>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  {formIds.length === 0
+                    ? "Selecionar formulários"
+                    : `${formIds.length} formulário${formIds.length === 1 ? "" : "s"} selecionado${formIds.length === 1 ? "" : "s"}`}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="w-[var(--radix-popover-trigger-width)] p-2"
+              >
+                <Input
+                  aria-label="Buscar formulário"
+                  value={formSearch}
+                  onChange={(event) => setFormSearch(event.target.value)}
+                  placeholder="Buscar formulário..."
+                  className="mb-2 h-8"
+                />
+                <div role="listbox" className="max-h-52 space-y-1 overflow-y-auto">
+                  {filteredForms.length === 0 && (
+                    <p className="p-2 text-sm text-muted-foreground">
+                      {sortedForms.length === 0
+                        ? "Este evento ainda não tem formulários."
+                        : "Nenhum formulário encontrado."}
+                    </p>
+                  )}
+                  {filteredForms.map((form) => (
+                    <label
+                      key={form.id}
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+                    >
+                      <Checkbox
+                        checked={formIds.includes(form.id)}
+                        onCheckedChange={(checked) =>
+                          toggleForm(form.id, Boolean(checked))
+                        }
+                      />
+                      {form.name}
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          {trigger === "on_date" && (
+            <div className="space-y-2">
+              <Label htmlFor="eauto-send-at">Data e hora de envio *</Label>
+              <DateTimePicker
+                id="eauto-send-at"
+                mode="datetime"
+                value={sendAt}
+                onChange={setSendAt}
+                minValue={today(getLocalTimeZone())}
+              />
             </div>
           )}
 
