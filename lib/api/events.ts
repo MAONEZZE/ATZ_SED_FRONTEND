@@ -3,9 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
+import { useFolders } from "@/lib/api/folders";
 import type {
   EventObject,
   EventStatus,
+  Folder,
   PaginatedResponse,
   RecurrenceFreq,
 } from "@/lib/api/types";
@@ -56,6 +58,7 @@ export async function fetchEventsByFolder(
   page: number,
   limit: number,
   folderId: string | null,
+  myFolderIds: ReadonlySet<string> = new Set(),
 ): Promise<PaginatedResponse<EventObject>> {
   // A API implantada rejeita `folderId` na query de GET /events. Carregamos as
   // páginas sem esse parâmetro e aplicamos o escopo no cliente até o DTO do
@@ -73,7 +76,11 @@ export async function fetchEventsByFolder(
   );
   const scoped = [first, ...remaining]
     .flatMap((response) => response.data)
-    .filter((event) => event.folderId === folderId);
+    .filter((event) => {
+      const effectiveFolderId =
+        event.folderId && myFolderIds.has(event.folderId) ? event.folderId : null;
+      return effectiveFolderId === folderId;
+    });
   const offset = (page - 1) * limit;
 
   return {
@@ -86,11 +93,23 @@ export async function fetchEventsByFolder(
 
 /** Lista paginada de uma pasta sem serializar `folderId` na query da API. */
 export function useEventsByFolder(page: number, limit: number, folderId: string | null) {
-  return useQuery({
-    queryKey: queryKeys.events({ page, limit, folderId }),
-    queryFn: () => fetchEventsByFolder(page, limit, folderId),
-    enabled: limit > 0,
+  const { data: folderTree = [], isSuccess: foldersLoaded } = useFolders({
+    resourceType: "event",
   });
+  const folderIds = flattenFolders(folderTree)
+    .map((folder) => folder.id)
+    .sort();
+  const myFolderIds = new Set(folderIds);
+
+  return useQuery({
+    queryKey: queryKeys.events({ page, limit, folderId, folderIds }),
+    queryFn: () => fetchEventsByFolder(page, limit, folderId, myFolderIds),
+    enabled: limit > 0 && foldersLoaded,
+  });
+}
+
+function flattenFolders(folders: Folder[]): Folder[] {
+  return folders.flatMap((folder) => [folder, ...flattenFolders(folder.children ?? [])]);
 }
 
 export function useEvent(id: string) {
@@ -221,7 +240,9 @@ export function useMoveEvent() {
       beforeId?: string;
     }) => {
       if (folderId !== undefined) {
-        return api.patch<EventObject>(`/events/${id}`, { folderId }).then(() => undefined);
+        return api
+          .patch<EventObject>(`/events/${id}`, { folderId })
+          .then(() => undefined);
       }
       return api.patch<void>(`/events/${id}/move`, {
         ...(beforeId ? { beforeId } : {}),
@@ -241,7 +262,7 @@ export function useMoveEvent() {
       for (const [key, data] of previous) {
         if (!data || !Array.isArray(data.data)) continue;
         const params = Array.isArray(key)
-          ? (key[1] as { folderId?: string | null } | undefined)
+          ? (key[1] as { folderId?: string | null; folderIds?: string[] } | undefined)
           : undefined;
         if (params?.folderId === undefined) {
           queryClient.setQueryData<PaginatedResponse<EventObject>>(key, {
@@ -252,7 +273,13 @@ export function useMoveEvent() {
           });
           continue;
         }
-        const isTarget = params?.folderId === targetFolderId;
+        const effectiveTargetFolderId =
+          folderId === undefined && params.folderIds
+            ? targetFolderId && params.folderIds.includes(targetFolderId)
+              ? targetFolderId
+              : null
+            : targetFolderId;
+        const isTarget = params.folderId === effectiveTargetFolderId;
         let next = data.data.filter((event) => event.id !== id);
         if (isTarget) {
           const nextMoved = { ...moved, folderId: targetFolderId };

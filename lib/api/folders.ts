@@ -9,8 +9,13 @@ type FolderScope = { resourceType: FolderResourceType; eventId?: string };
 
 function folderPath({ resourceType, eventId }: FolderScope) {
   const params = new URLSearchParams({ resourceType });
-  if (eventId) params.set("eventId", eventId);
-  return `/folders?${params.toString()}`;
+  const basePath = eventId ? `/events/${eventId}/folders` : "/folders";
+  return `${basePath}?${params.toString()}`;
+}
+
+function folderMutationPath(scope: FolderScope, suffix = "") {
+  const basePath = scope.eventId ? `/events/${scope.eventId}/folders` : "/folders";
+  return `${basePath}${suffix}`;
 }
 
 function invalidateFolders(queryClient: ReturnType<typeof useQueryClient>) {
@@ -28,24 +33,28 @@ export function useCreateFolder(scope: FolderScope) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ name, parentId = null }: { name: string; parentId?: string | null }) =>
-      api.post<Folder>("/folders", { ...scope, name, parentId }),
+      api.post<Folder>(folderMutationPath(scope), {
+        resourceType: scope.resourceType,
+        name,
+        parentId,
+      }),
     onSuccess: invalidateFolders(queryClient),
   });
 }
 
-export function useRenameFolder() {
+export function useRenameFolder(scope: FolderScope = { resourceType: "event" }) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
-      api.patch<Folder>(`/folders/${id}`, { name }),
+      api.patch<Folder>(folderMutationPath(scope, `/${id}`), { name }),
     onSuccess: invalidateFolders(queryClient),
   });
 }
 
-export function useDeleteFolder() {
+export function useDeleteFolder(scope: FolderScope = { resourceType: "event" }) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/folders/${id}`),
+    mutationFn: (id: string) => api.delete(folderMutationPath(scope, `/${id}`)),
     onSuccess: invalidateFolders(queryClient),
   });
 }
@@ -56,7 +65,11 @@ export function useReorderFolders(scope: FolderScope) {
   const key = queryKeys.folders(scope);
   return useMutation({
     mutationFn: ({ ids, parentId }: { ids: string[]; parentId: string | null }) =>
-      api.patch<void>("/folders/reorder", { ...scope, ids, parentId }),
+      api.patch<void>(folderMutationPath(scope, "/reorder"), {
+        resourceType: scope.resourceType,
+        ids,
+        parentId,
+      }),
     onMutate: async ({ ids, parentId }) => {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<Folder[]>(key);

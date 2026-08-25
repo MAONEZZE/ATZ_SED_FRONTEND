@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { describe, it, expect, beforeAll, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, within } from "@testing-library/react";
 import { DataTable } from "@/components/common/data-table";
 
 beforeAll(() => {
@@ -12,7 +12,10 @@ beforeAll(() => {
   } as unknown as typeof ResizeObserver;
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  document.getElementById("dashboard-pagination-footer")?.remove();
+});
 
 type Row = { id: string; name: string };
 
@@ -49,13 +52,18 @@ describe("DataTable", () => {
     expect(measured).toBeGreaterThan(0);
   });
 
-  it("esconde a paginação quando todos os registros cabem em uma página", () => {
+  it("mostra 1/1 e desabilita os dois botões quando há uma página", () => {
     render(<Harness total={3} rows={makeRows(3)} />);
 
-    // Garante que sumiu por caber tudo, não por a tabela ainda não ter medido.
+    // Garante que há apenas uma página porque todos os registros cabem nela.
     expect(Number(screen.getByTestId("page-size").textContent)).toBeGreaterThan(3);
-    expect(screen.queryByRole("button", { name: "Anterior" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Próxima" })).toBeNull();
+    expect(screen.getByText("1/1")).toBeTruthy();
+    expect(
+      (screen.getByRole("button", { name: "Anterior" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("button", { name: "Próxima" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 
   it("mostra Anterior/Próxima quando há mais de uma página", () => {
@@ -64,6 +72,16 @@ describe("DataTable", () => {
 
     expect(screen.getByRole("button", { name: "Anterior" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Próxima" })).toBeTruthy();
+  });
+
+  it("renderiza a paginação no footer fixo do dashboard", () => {
+    const footer = document.createElement("footer");
+    footer.id = "dashboard-pagination-footer";
+    document.body.appendChild(footer);
+
+    render(<Harness total={3} rows={makeRows(3)} />);
+
+    expect(within(footer).getByText("1/1")).toBeTruthy();
   });
 
   it("desabilita Anterior na primeira página", () => {

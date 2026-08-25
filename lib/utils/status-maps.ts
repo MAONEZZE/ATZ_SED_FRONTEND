@@ -1,4 +1,4 @@
-import type { EventStatus, FunnelStatus, MessageLog } from "@/lib/api/types";
+import type { EventRole, EventStatus, FunnelStatus, MessageLog } from "@/lib/api/types";
 
 export const funnelStatusConfig: Record<
   FunnelStatus,
@@ -37,6 +37,32 @@ export const eventStatusConfig: Record<
   ended: {
     label: "Encerrado",
     className: "bg-status-neutral-bg text-status-neutral-fg",
+  },
+};
+
+export const eventRoleConfig: Record<EventRole, { label: string; className: string }> = {
+  admin: {
+    label: "Administrador",
+    className: "bg-status-success-bg text-status-success-fg",
+  },
+  invited: {
+    label: "Escritor",
+    className: "bg-status-pending-bg text-status-pending-fg",
+  },
+  read: {
+    label: "Leitor",
+    className: "bg-status-neutral-bg text-status-neutral-fg",
+  },
+};
+
+export const attendanceConfig: Record<"done" | "pending", { label: string; className: string }> = {
+  done: {
+    label: "Feito",
+    className: "bg-status-success-bg text-status-success-fg",
+  },
+  pending: {
+    label: "Não feito",
+    className: "bg-status-danger-bg text-status-danger-fg",
   },
 };
 

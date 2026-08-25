@@ -120,6 +120,33 @@ describe("cache otimista do drag-and-drop", () => {
     ]);
   });
 
+  it("mantém evento compartilhado na raiz efetiva ao reordenar", async () => {
+    const { queryClient, wrapper } = setup();
+    const key = queryKeys.events({
+      page: 1,
+      limit: 20,
+      folderId: null,
+      folderIds: ["folder-mine"],
+    });
+    const previous: PaginatedResponse<EventObject> = {
+      data: [event("mine"), { ...event("shared"), folderId: "folder-from-owner" }],
+      total: 2,
+      page: 1,
+      limit: 20,
+    };
+    queryClient.setQueryData(key, previous);
+
+    const { result } = renderHook(() => useMoveEvent(), { wrapper });
+
+    await act(() => result.current.mutateAsync({ id: "shared", beforeId: "mine" }));
+
+    expect(
+      queryClient
+        .getQueryData<PaginatedResponse<EventObject>>(key)
+        ?.data.map(({ id }) => id),
+    ).toEqual(["shared", "mine"]);
+  });
+
   it("mantém a nova ordem dos templates depois que a API responde", async () => {
     const { queryClient, wrapper } = setup();
     const params = {
@@ -127,7 +154,6 @@ describe("cache otimista do drag-and-drop", () => {
       limit: 20,
       channel: undefined,
       eventId: null,
-      includeGlobal: undefined,
       folderId: null,
     };
     const key = queryKeys.allTemplates(params);
@@ -145,7 +171,7 @@ describe("cache otimista do drag-and-drop", () => {
 
     const { result } = renderHook(
       () => ({
-        query: useAllTemplates(1, 20, undefined, null, undefined, null),
+        query: useAllTemplates(1, 20, undefined, null, null),
         move: useMoveTemplate(),
       }),
       { wrapper },
@@ -288,11 +314,13 @@ describe("cache otimista do drag-and-drop", () => {
       }),
     );
 
-    expect(result.current.query.data?.map(({ id }) => id)).toEqual(["target"]);
-    expect(result.current.query.data?.[0].children.map(({ id }) => id)).toEqual([
-      "child",
-      "source",
-    ]);
+    await waitFor(() => {
+      expect(result.current.query.data?.map(({ id }) => id)).toEqual(["target"]);
+      expect(result.current.query.data?.[0].children.map(({ id }) => id)).toEqual([
+        "child",
+        "source",
+      ]);
+    });
     expect(getMock).not.toHaveBeenCalled();
   });
 

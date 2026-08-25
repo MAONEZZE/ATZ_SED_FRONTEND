@@ -4,7 +4,7 @@ import type { FieldType } from "@/lib/api/types";
  * Registry por tipo de campo — fonte única da lógica type-keyed de formulários
  * (parsing de opções, formatação de resposta, regras de render compartilhadas).
  * A renderização dos inputs em si fica em cada consumidor: o formulário público
- * (form-fields-renderer) e a edição inline do admin (attendee-detail-sheet)
+ * (form-fields-renderer) e a edição inline do admin (attendee-detail-dialog)
  * diferem materialmente (DateTimePicker vs input nativo, radio vs dropdown,
  * upload vs leitura), então forçar um render único aqui prejudicaria a leitura.
  */

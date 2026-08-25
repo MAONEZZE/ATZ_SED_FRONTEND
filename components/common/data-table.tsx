@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, Trash2 } from "lucide-react";
 import {
   Table,
@@ -202,7 +203,7 @@ export function DataTable<T>({
   );
 }
 
-/** Anterior/Próxima abaixo da lista. Só aparece quando há mais de uma página. */
+/** Anterior/Próxima no footer fixo do dashboard, inclusive quando há uma página. */
 export function Pagination({
   page,
   totalPages,
@@ -212,31 +213,39 @@ export function Pagination({
   totalPages: number;
   onPageChange: (page: number) => void;
 }) {
-  if (totalPages <= 1) return null;
+  const [footer, setFooter] = useState<HTMLElement | null>(null);
+  const safeTotalPages = Math.max(1, totalPages);
+  const safePage = Math.min(Math.max(1, page), safeTotalPages);
 
-  return (
-    <div className="mt-4 flex items-center justify-center gap-2">
+  useEffect(() => {
+    setFooter(document.getElementById("dashboard-pagination-footer"));
+  }, []);
+
+  const pagination = (
+    <div className="flex items-center justify-center gap-2">
       <Button
         variant="outline"
         size="sm"
-        disabled={page <= 1}
-        onClick={() => onPageChange(page - 1)}
+        disabled={safePage <= 1}
+        onClick={() => onPageChange(safePage - 1)}
       >
         Anterior
       </Button>
       <span className="text-sm text-muted-foreground">
-        {page} / {totalPages}
+        {safePage}/{safeTotalPages}
       </span>
       <Button
         variant="outline"
         size="sm"
-        disabled={page >= totalPages}
-        onClick={() => onPageChange(page + 1)}
+        disabled={safePage >= safeTotalPages}
+        onClick={() => onPageChange(safePage + 1)}
       >
         Próxima
       </Button>
     </div>
   );
+
+  return footer ? createPortal(pagination, footer) : pagination;
 }
 
 export function DataTableDeleteButton({

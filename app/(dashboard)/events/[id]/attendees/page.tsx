@@ -3,29 +3,27 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-import { Download, Filter, Loader2, Search, Upload } from "lucide-react";
 import {
   exportRegistrationsCsv,
+  useDeleteRegistrations,
   useImportRegistrations,
   useRegistrations,
+  useUpdateRegistration,
 } from "@/lib/api/registrations";
+import { exportFormResponsesCsv, useFormResponses } from "@/lib/api/form-responses";
 import { useForms } from "@/lib/api/forms";
 import { downloadBlob } from "@/lib/utils/download-blob";
-import { formatDate } from "@/lib/utils/format-date";
-import { funnelStatusConfig } from "@/lib/utils/status-maps";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
-import type { FunnelStatus, Registration } from "@/lib/api/types";
+import type { FormResponseRow, FunnelStatus, Registration } from "@/lib/api/types";
 import { StatusSelect } from "@/components/attendees/status-select";
-import { AttendeeDetailSheet } from "@/components/attendees/attendee-detail-sheet";
-import { FormResponsesTab } from "@/components/attendees/form-responses-tab";
+import {
+  AttendeeDetailDialog,
+  type AttendeeDetailData,
+} from "@/components/attendees/attendee-detail-dialog";
+import { AttendeesTable, ALL_STATUS } from "@/components/attendees/attendees-table";
+import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { CsvImportModal } from "@/components/common/csv-import-modal";
-import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
 import { useSetRecordCount } from "@/components/common/record-count";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -33,14 +31,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-
-const ALL = "all";
-
-const BULK_DELETE_DISABLED_REASON =
-  "Exclusão de inscrições ainda não existe no backend";
 
 const GERAL_VALUE = "__geral__";
+
+const IMPORT_DISABLED_ANONYMOUS_REASON =
+  "Importação não disponível para formulários anônimos";
+const IMPORT_DISABLED_NO_FORM_REASON = "Selecione um formulário para importar";
+const DELETE_DISABLED_ANONYMOUS_REASON =
+  "Exclusão não está disponível para respostas de formulário anônimo";
+const SAVE_DISABLED_ANONYMOUS_REASON =
+  "Edição ainda não existe no backend para esta tabela";
 
 export default function AttendeesPage() {
   const params = useParams<{ id: string }>();
@@ -52,17 +52,21 @@ export default function AttendeesPage() {
   const selectedForm = sortedForms.find((f) => f.id === selectedFormId);
   const isAnonymousView = Boolean(selectedForm?.anonymous);
   const activeFormId = selectedFormId === GERAL_VALUE ? undefined : selectedFormId;
-  const [statusFilter, setStatusFilter] = useState<string>(ALL);
+
+  const [statusFilter, setStatusFilter] = useState<string>(ALL_STATUS);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   // null até a tabela medir quantas linhas cabem sem gerar scroll.
   const [limit, setLimit] = useState<number | null>(null);
-  const [viewing, setViewing] = useState<Registration | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [viewing, setViewing] = useState<AttendeeDetailData | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [csvModalOpen, setCsvModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const importRegistrations = useImportRegistrations(eventId);
+  const updateRegistration = useUpdateRegistration(eventId);
+  const deleteRegistrations = useDeleteRegistrations(eventId);
 
   function handleImportFile(file: File) {
     const reader = new FileReader();
@@ -89,15 +93,30 @@ export default function AttendeesPage() {
     reader.readAsText(file);
   }
 
-  async function handleExport() {
+  async function handleExportRegistrations() {
     setExporting(true);
     try {
       const blob = await exportRegistrationsCsv(eventId, {
-        status: statusFilter === ALL ? undefined : (statusFilter as FunnelStatus),
+        status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
         search: search.trim() || undefined,
         formId: activeFormId,
       });
       downloadBlob(blob, `inscritos-${eventId}.csv`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao exportar CSV");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleExportResponses() {
+    if (!selectedForm) return;
+    setExporting(true);
+    try {
+      const blob = await exportFormResponsesCsv(eventId, selectedForm.id, {
+        search: search.trim() || undefined,
+      });
+      downloadBlob(blob, `respostas-${selectedForm.name || selectedForm.id}.csv`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao exportar CSV");
     } finally {
@@ -110,188 +129,195 @@ export default function AttendeesPage() {
     setPage(1);
   }
 
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    setSearch(e.target.value);
+  function handleSearchChange(value: string) {
+    setSearch(value);
     setPage(1);
   }
 
-  const { data: response, isLoading } = useRegistrations(eventId, {
-    status: statusFilter === ALL ? undefined : (statusFilter as FunnelStatus),
-    search: search.trim() || undefined,
-    formId: activeFormId,
-    page,
-    limit: isAnonymousView ? 0 : (limit ?? 0),
-  });
-  const registrations = response?.data ?? [];
+  const { data: registrationsResponse, isLoading: registrationsLoading } = useRegistrations(
+    eventId,
+    {
+      status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
+      search: search.trim() || undefined,
+      formId: activeFormId,
+      page,
+      limit: isAnonymousView ? 0 : (limit ?? 0),
+    },
+  );
+  const registrations = registrationsResponse?.data ?? [];
 
-  useSetRecordCount(isAnonymousView ? null : response?.total ?? 0);
+  const { data: formResponsesResponse, isLoading: formResponsesLoading } = useFormResponses(
+    eventId,
+    {
+      formId: isAnonymousView ? selectedForm?.id : undefined,
+      search: search.trim() || undefined,
+      page,
+      limit: isAnonymousView ? (limit ?? 0) : 0,
+    },
+  );
+  const formResponses = formResponsesResponse?.data ?? [];
 
-  function openDetails(registration: Registration) {
-    setViewing(registration);
-    setSheetOpen(true);
+  const total = isAnonymousView
+    ? (formResponsesResponse?.total ?? 0)
+    : (registrationsResponse?.total ?? 0);
+  useSetRecordCount(total);
+
+  function openRegistrationDetails(r: Registration) {
+    setViewing({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      answers: r.answers,
+      createdAt: r.createdAt,
+      status: r.status,
+      formName: r.formName,
+    });
+    setDetailOpen(true);
   }
+
+  function openResponseDetails(r: FormResponseRow) {
+    setViewing({
+      id: r.id,
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      answers: r.answers,
+      createdAt: r.createdAt,
+      status: r.status,
+      formName: selectedForm?.name ?? null,
+    });
+    setDetailOpen(true);
+  }
+
+  function handleSaveRegistration(answers: Record<string, unknown>) {
+    if (!viewing) return;
+    updateRegistration.mutate(
+      { id: viewing.id, answers },
+      {
+        onSuccess: () => {
+          setDetailOpen(false);
+          toast.success("Respostas atualizadas");
+        },
+        onError: (e) => toast.error(e.message),
+      },
+    );
+  }
+
+  const formSelector = (
+    <Select
+      value={selectedFormId}
+      onValueChange={(value) => {
+        setSelectedFormId(value);
+        setPage(1);
+        setSelectedIds(new Set());
+      }}
+    >
+      <SelectTrigger className="w-48" aria-label="Formulário">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={GERAL_VALUE}>Geral</SelectItem>
+        {sortedForms.map((form) => (
+          <SelectItem key={form.id} value={form.id}>
+            {form.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 
   return (
     <div className="min-w-0 space-y-4">
       {isAnonymousView && selectedForm ? (
-        <FormResponsesTab
-          eventId={eventId}
-          formId={selectedForm.id}
-          formName={selectedForm.name}
+        <AttendeesTable
+          data={formResponses}
+          isLoading={formResponsesLoading}
+          total={total}
+          getRowId={(r) => r.id}
+          getName={(r) => r.name}
+          getEmail={(r) => r.email}
+          getPhone={(r) => r.phone}
+          getCreatedAt={(r) => r.createdAt}
+          getAttended={() => null}
+          renderStatus={(r) => (r.status ? <FunnelStatusBadge status={r.status} /> : "—")}
+          search={search}
+          onSearchChange={handleSearchChange}
+          page={page}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setLimit(size);
+            setPage(1);
+          }}
+          selected={selectedIds}
+          onSelectedChange={setSelectedIds}
+          onRowClick={openResponseDetails}
+          emptyMessage={search ? "Nenhum resultado — ajuste a busca." : "Nenhuma resposta ainda."}
+          formSelector={formSelector}
+          exporting={exporting}
+          onExport={handleExportResponses}
+          importDisabled
+          importDisabledReason={IMPORT_DISABLED_ANONYMOUS_REASON}
+          onImportClick={() => {}}
+          deleteDisabled
+          deleteDisabledReason={DELETE_DISABLED_ANONYMOUS_REASON}
+          onDeleteConfirmed={() => Promise.resolve({ deleted: 0 })}
         />
       ) : (
-        <>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative sm:w-56">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por nome, e-mail ou telefone..."
-                className="pl-9"
-                value={search}
-                onChange={handleSearch}
-              />
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => setCsvModalOpen(true)}
-              disabled={!activeFormId}
-              title={!activeFormId ? "Selecione um formulário para importar" : undefined}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Importar CSV
-            </Button>
-            <Button variant="outline" onClick={handleExport} disabled={exporting}>
-              {exporting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="mr-2 h-4 w-4" />
-              )}
-              Exportar CSV
-            </Button>
-            <Select
-              value={selectedFormId}
-              onValueChange={(value) => {
-                setSelectedFormId(value);
-                setPage(1);
-                setSelectedIds(new Set());
-              }}
-            >
-              <SelectTrigger className="w-48" aria-label="Formulário">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={GERAL_VALUE}>Geral</SelectItem>
-                {sortedForms.map((form) => (
-                  <SelectItem key={form.id} value={form.id}>
-                    {form.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DataTableDeleteButton
-              className="sm:ml-auto"
-              selectedCount={selectedIds.size}
-              disabled
-              disabledReason={BULK_DELETE_DISABLED_REASON}
-              onDelete={() => {}}
-            />
-          </div>
-
-          <DataTable
-            columns={[
-              { key: "name", header: "Nome", align: "left", cell: (r: Registration) => r.name },
-              { key: "email", header: "E-mail", cell: (r: Registration) => r.email },
-              { key: "phone", header: "Telefone", cell: (r: Registration) => r.phone },
-              ...(selectedFormId === GERAL_VALUE
-                ? [
-                    {
-                      key: "formName",
-                      header: "Formulário",
-                      cell: (r: Registration) => r.formName ?? "—",
-                    },
-                  ]
-                : []),
-              {
-                key: "createdAt",
-                header: "Inscrição",
-                cell: (r: Registration) => formatDate(r.createdAt),
-              },
-              {
-                key: "status",
-                header: (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "inline-flex items-center gap-1.5 hover:text-foreground",
-                          statusFilter !== ALL && "text-primary",
-                        )}
-                      >
-                        <Filter
-                          className={cn("h-3.5 w-3.5", statusFilter !== ALL && "fill-current")}
-                        />
-                        {statusFilter === ALL
-                          ? "Status"
-                          : funnelStatusConfig[statusFilter as FunnelStatus].label}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-56" align="center">
-                      <RadioGroup value={statusFilter} onValueChange={handleStatusFilter}>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value={ALL} id="status-filter-all" />
-                          <Label htmlFor="status-filter-all" className="font-normal">
-                            Todos os status
-                          </Label>
-                        </div>
-                        {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
-                          <div key={status} className="flex items-center gap-2">
-                            <RadioGroupItem value={status} id={`status-filter-${status}`} />
-                            <Label htmlFor={`status-filter-${status}`} className="font-normal">
-                              {funnelStatusConfig[status].label}
-                            </Label>
-                          </div>
-                        ))}
-                      </RadioGroup>
-                    </PopoverContent>
-                  </Popover>
-                ),
-                cell: (r: Registration) => (
-                  <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
-                    <StatusSelect eventId={eventId} registration={r} />
-                  </div>
-                ),
-              },
-            ]}
-            data={registrations}
-            getRowId={(r) => r.id}
-            isLoading={isLoading}
-            emptyMessage={
-              search || statusFilter !== ALL
-                ? "Nenhum inscrito encontrado — ajuste a busca ou o filtro."
-                : "Nenhum inscrito ainda — compartilhe o link público do evento."
-            }
-            onRowClick={openDetails}
-            selected={selectedIds}
-            onSelectedChange={setSelectedIds}
-            total={response?.total ?? 0}
-            page={page}
-            pageSize={limit}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setLimit(size);
-              setPage(1);
-            }}
-          />
-
-          <AttendeeDetailSheet
-            eventId={eventId}
-            registration={viewing}
-            open={sheetOpen}
-            onOpenChange={setSheetOpen}
-          />
-        </>
+        <AttendeesTable
+          data={registrations}
+          isLoading={registrationsLoading}
+          total={total}
+          getRowId={(r) => r.id}
+          getName={(r) => r.name}
+          getEmail={(r) => r.email}
+          getPhone={(r) => r.phone}
+          getCreatedAt={(r) => r.createdAt}
+          getAttended={(r) => r.attended}
+          renderStatus={(r) => <StatusSelect eventId={eventId} registration={r} />}
+          statusFilter={{ value: statusFilter, onChange: handleStatusFilter }}
+          formColumn={
+            selectedFormId === GERAL_VALUE ? { getFormName: (r) => r.formName } : undefined
+          }
+          search={search}
+          onSearchChange={handleSearchChange}
+          page={page}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setLimit(size);
+            setPage(1);
+          }}
+          selected={selectedIds}
+          onSelectedChange={setSelectedIds}
+          onRowClick={openRegistrationDetails}
+          emptyMessage={
+            search || statusFilter !== ALL_STATUS
+              ? "Nenhum inscrito encontrado — ajuste a busca ou o filtro."
+              : "Nenhum inscrito ainda — compartilhe o link público do evento."
+          }
+          formSelector={formSelector}
+          exporting={exporting}
+          onExport={handleExportRegistrations}
+          importDisabled={!activeFormId}
+          importDisabledReason={IMPORT_DISABLED_NO_FORM_REASON}
+          onImportClick={() => setCsvModalOpen(true)}
+          deleteDisabled={false}
+          onDeleteConfirmed={(ids) => deleteRegistrations.mutateAsync(ids)}
+        />
       )}
+
+      <AttendeeDetailDialog
+        eventId={eventId}
+        formId={isAnonymousView ? selectedForm?.id : undefined}
+        data={viewing}
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        onSave={isAnonymousView ? undefined : handleSaveRegistration}
+        isSaving={updateRegistration.isPending}
+        saveDisabledReason={isAnonymousView ? SAVE_DISABLED_ANONYMOUS_REASON : undefined}
+      />
 
       <CsvImportModal
         open={csvModalOpen}

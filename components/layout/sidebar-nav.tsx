@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Bot,
-  BookText,
   CalendarDays,
   LayoutDashboard,
   MessageSquare,
@@ -24,8 +22,8 @@ export const sidebarNavItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/events", label: "Eventos", icon: CalendarDays },
   { href: "/messages", label: "Mensagens", icon: MessageSquare },
-  { href: "/ai-chat", label: "AI Chat", icon: Bot },
-  { href: "/s-docs", label: "S-Docs", icon: BookText },
+  // { href: "/ai-chat", label: "AI Chat", icon: Bot },
+  // { href: "/s-docs", label: "S-Docs", icon: BookText },
   { href: "/scan", label: "Scan", icon: QrCode },
 ];
 

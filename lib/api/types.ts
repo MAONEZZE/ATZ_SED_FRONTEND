@@ -91,6 +91,7 @@ export interface Form {
 export interface Collaborator {
   profileId: string;
   eventId: string;
+  role: EventRole;
   createdAt: string;
   profile: {
     id: string;
@@ -112,6 +113,7 @@ export interface Registration {
   updatedAt: string;
   /** Nome do form de origem; null = inscrito sem form de origem (painel ou anterior à coluna). */
   formName: string | null;
+  attended: boolean;
 }
 
 export interface MessageTemplate {

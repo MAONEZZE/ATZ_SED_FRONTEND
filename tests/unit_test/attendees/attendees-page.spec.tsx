@@ -2,6 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeAll, afterEach } from "vitest";
 import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { RecordCountProvider, useRecordCount } from "@/components/common/record-count";
 
 beforeAll(() => {
   // jsdom não implementa ResizeObserver; a DataTable usa um pra remedir no resize.
@@ -29,7 +30,8 @@ const FORMS = [
 ];
 
 const REGISTRATIONS = [
-  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: {}, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", formName: "Inscrição" },
+  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: {}, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", formName: "Inscrição", attended: true },
+  { id: "r2", eventId: "evt-1", status: "pending", name: "Bruno", email: "bruno@x.com", phone: "+5511999997777", answers: {}, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "", formName: "Inscrição", attended: false },
 ];
 
 vi.mock("@/lib/api/client", () => ({
@@ -37,10 +39,10 @@ vi.mock("@/lib/api/client", () => ({
     get: vi.fn((path: string) => {
       if (path.startsWith("/events/evt-1/forms")) return Promise.resolve(FORMS);
       if (path.startsWith("/events/evt-1/registrations")) {
-        return Promise.resolve({ data: REGISTRATIONS, total: 1 });
+        return Promise.resolve({ data: REGISTRATIONS, total: REGISTRATIONS.length });
       }
       if (path.startsWith("/events/evt-1/form-responses")) {
-        return Promise.resolve({ data: [], total: 0 });
+        return Promise.resolve({ data: [], total: 3 });
       }
       if (path.startsWith("/events/evt-1/form-fields")) {
         return Promise.resolve({ data: [], total: 0 });
@@ -58,11 +60,19 @@ vi.mock("@/lib/api/client", () => ({
 import { api } from "@/lib/api/client";
 import AttendeesPage from "@/app/(dashboard)/events/[id]/attendees/page";
 
+function RecordCountProbe() {
+  const count = useRecordCount();
+  return <div data-testid="record-count">{String(count)}</div>;
+}
+
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <AttendeesPage />
+      <RecordCountProvider>
+        <AttendeesPage />
+        <RecordCountProbe />
+      </RecordCountProvider>
     </QueryClientProvider>,
   );
 }
@@ -103,7 +113,7 @@ describe("AttendeesPage — seletor de formulário", () => {
     expect(importButton.disabled).toBe(false);
   });
 
-  it("mostra FormResponsesTab e some Importar ao selecionar form anônimo", async () => {
+  it("mostra a tabela de respostas anônimas com Importar desabilitado e formulário após Exportar", async () => {
     renderPage();
     await screen.findByText("Ana");
 
@@ -113,6 +123,45 @@ describe("AttendeesPage — seletor de formulário", () => {
       const calls = (api.get as ReturnType<typeof vi.fn>).mock.calls.map((c: unknown[]) => c[0]);
       expect(calls.some((url: string) => url.includes("/events/evt-1/form-responses") && url.includes("formId=form-2"))).toBe(true);
     });
-    expect(screen.queryByRole("button", { name: /importar csv/i })).toBeNull();
+    const importButton = screen.getByRole("button", {
+      name: /importar csv/i,
+    }) as HTMLButtonElement;
+    const exportButton = screen.getByRole("button", { name: /exportar csv/i });
+    const formSelect = screen.getByRole("combobox", { name: "Formulário" });
+    expect(importButton.disabled).toBe(true);
+    expect(
+      exportButton.compareDocumentPosition(formSelect) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});
+
+describe("AttendeesPage — coluna Checkin", () => {
+  it("renderiza Feito/Não feito conforme attended e some no modo anônimo", async () => {
+    renderPage();
+    await screen.findByText("Ana");
+
+    expect(screen.getByText("Feito")).not.toBeNull();
+    expect(screen.getByText("Não feito")).not.toBeNull();
+
+    await openSelectAndPick("Pesquisa");
+    await screen.findByRole("combobox", { name: "Formulário" });
+
+    expect(screen.queryByText("Feito")).toBeNull();
+    expect(screen.queryByText("Não feito")).toBeNull();
+  });
+});
+
+describe("AttendeesPage — useSetRecordCount", () => {
+  it("escreve o total do modo ativo, sem escritor duplo ao trocar para o modo anônimo", async () => {
+    renderPage();
+    await screen.findByText("Ana");
+
+    expect(screen.getByTestId("record-count").textContent).toBe(String(REGISTRATIONS.length));
+
+    await openSelectAndPick("Pesquisa");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("record-count").textContent).toBe("3");
+    });
   });
 });

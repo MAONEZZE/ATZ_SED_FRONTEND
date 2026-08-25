@@ -53,9 +53,9 @@ describe("fetchEventsByFolder", () => {
       response([event("root", null), event("inside", "folder-1")]),
     );
 
-    await expect(fetchEventsByFolder(1, 20, "folder-1")).resolves.toEqual(
-      response([event("inside", "folder-1")], 1, 1, 20),
-    );
+    await expect(
+      fetchEventsByFolder(1, 20, "folder-1", new Set(["folder-1"])),
+    ).resolves.toEqual(response([event("inside", "folder-1")], 1, 1, 20));
     expect(getMock).toHaveBeenCalledWith("/events?page=1&limit=100");
   });
 
@@ -68,7 +68,7 @@ describe("fetchEventsByFolder", () => {
       ]),
     );
 
-    await expect(fetchEventsByFolder(2, 1, null)).resolves.toEqual(
+    await expect(fetchEventsByFolder(2, 1, null, new Set(["folder-1"]))).resolves.toEqual(
       response([event("second", null)], 2, 2, 1),
     );
   });
@@ -78,10 +78,22 @@ describe("fetchEventsByFolder", () => {
       .mockResolvedValueOnce(response([event("root", null)], 101))
       .mockResolvedValueOnce(response([event("inside", "folder-1")], 101, 2));
 
-    await expect(fetchEventsByFolder(1, 20, "folder-1")).resolves.toMatchObject({
+    await expect(
+      fetchEventsByFolder(1, 20, "folder-1", new Set(["folder-1"])),
+    ).resolves.toMatchObject({
       data: [event("inside", "folder-1")],
       total: 1,
     });
     expect(getMock).toHaveBeenNthCalledWith(2, "/events?page=2&limit=100");
+  });
+
+  it("trata evento em pasta alheia como evento da raiz", async () => {
+    getMock.mockResolvedValue(
+      response([event("mine", "folder-mine"), event("shared", "folder-from-owner")]),
+    );
+
+    await expect(
+      fetchEventsByFolder(1, 20, null, new Set(["folder-mine"])),
+    ).resolves.toEqual(response([event("shared", "folder-from-owner")], 1, 1, 20));
   });
 });

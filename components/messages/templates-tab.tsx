@@ -19,6 +19,7 @@ import {
   useDeleteTemplateGlobal,
   useMoveTemplate,
 } from "@/lib/api/global-messaging";
+import { useEvent } from "@/lib/api/events";
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -28,6 +29,7 @@ import {
 } from "@/lib/api/folders";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { Folder, MessageChannel, TemplateWithEvent } from "@/lib/api/types";
+import { canWrite } from "@/lib/permissions";
 import { ChannelBadge } from "@/components/messages/channel-badge";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
@@ -54,8 +56,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-function TemplateDragHandle({ id }: { id: string }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({ id: `template:${id}` });
+function TemplateDragHandle({ id, disabled }: { id: string; disabled: boolean }) {
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `template:${id}`,
+    disabled,
+  });
+  if (disabled) return null;
   return (
     <button
       ref={setNodeRef}
@@ -93,17 +99,18 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
     resourceType: "message_template" as const,
     ...(eventId ? { eventId } : {}),
   };
+  const { data: event } = useEvent(eventId ?? "");
+  const writable = eventId === null || Boolean(event && canWrite(event));
   const { data: folderTree = [] } = useFolders(folderScope);
   const createFolder = useCreateFolder(folderScope);
-  const renameFolder = useRenameFolder();
-  const deleteFolder = useDeleteFolder();
+  const renameFolder = useRenameFolder(folderScope);
+  const deleteFolder = useDeleteFolder(folderScope);
   const reorderFolders = useReorderFolders(folderScope);
   const { data: response, isLoading } = useAllTemplates(
     page,
     pageSize ?? 0,
     channelFilter === "all" ? undefined : channelFilter,
     eventId,
-    eventId ? false : undefined,
     folderId,
   );
 
@@ -145,7 +152,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
   );
 
   function handleDragEnd({ active, over }: DragEndEvent) {
-    if (!over || active.id === over.id) return;
+    if (!writable || !over || active.id === over.id) return;
     const activeId = String(active.id);
     const overId = String(over.id);
     if (activeId.startsWith("folder:") && overId.startsWith("folder-content:")) {
@@ -245,23 +252,27 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
           </Select>
 
           <div className="flex items-center gap-2">
-            <FolderCreateButton
-              onCreate={(name) => createFolder.mutate({ name, parentId: folderId })}
-            />
-            <DataTableDeleteButton
-              selectedCount={selected.size}
-              isPending={bulkDeleting}
-              onDelete={() => setConfirmBulkDelete(true)}
-            />
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setDialogOpen(true);
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Novo template
-            </Button>
+            {writable && (
+              <>
+                <FolderCreateButton
+                  onCreate={(name) => createFolder.mutate({ name, parentId: folderId })}
+                />
+                <DataTableDeleteButton
+                  selectedCount={selected.size}
+                  isPending={bulkDeleting}
+                  onDelete={() => setConfirmBulkDelete(true)}
+                />
+                <Button
+                  onClick={() => {
+                    setEditing(null);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo template
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -298,6 +309,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
           onOpen={openFolder}
           onRename={(id, name) => renameFolder.mutate({ id, name })}
           onDelete={(id) => deleteFolder.mutate(id)}
+          canEdit={writable}
         />
 
         <DataTable
@@ -306,7 +318,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
               key: "drag",
               header: "",
               className: "w-10",
-              cell: (t) => <TemplateDragHandle id={t.id} />,
+              cell: (t) => <TemplateDragHandle id={t.id} disabled={!writable} />,
             },
             {
               key: "name",
@@ -324,12 +336,16 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
           getRowId={(t) => t.id}
           isLoading={isLoading}
           emptyMessage="Nenhum template ainda."
-          onRowClick={(t) => {
-            setEditing(t);
-            setDialogOpen(true);
-          }}
-          selected={selected}
-          onSelectedChange={setSelected}
+          onRowClick={
+            writable
+              ? (template) => {
+                  setEditing(template);
+                  setDialogOpen(true);
+                }
+              : undefined
+          }
+          selected={writable ? selected : undefined}
+          onSelectedChange={writable ? setSelected : undefined}
           total={response?.total ?? 0}
           page={page}
           pageSize={pageSize}
@@ -342,7 +358,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
 
         <GlobalTemplateDialog
           template={editing}
-          open={dialogOpen}
+          open={dialogOpen && writable}
           onOpenChange={setDialogOpen}
           fixedEventId={eventId ?? undefined}
           fixedFolderId={folderId}
