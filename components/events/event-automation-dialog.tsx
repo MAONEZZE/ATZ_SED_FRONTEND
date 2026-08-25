@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/global-messaging";
 import { useForms } from "@/lib/api/forms";
 import { buildCron, parseCron, type CronFreq } from "@/lib/utils/automation-cron";
+import { zonedInputToUtcIso, utcIsoToZonedInput } from "@/lib/utils/date-time-picker";
 import type { Automation, AutomationTrigger } from "@/lib/api/types";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Input } from "@/components/ui/input";
@@ -27,10 +28,13 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { today, getLocalTimeZone } from "@internationalized/date";
+import { today } from "@internationalized/date";
 
 const MAX_DELAY_MINUTES = 2147483647;
 const RECURRING_TIMEZONE = "America/Sao_Paulo";
+// on_date usa o mesmo fuso fixo do recorrente: o horário digitado é sempre
+// horário de Brasília, independente do fuso do navegador de quem preenche.
+const SEND_AT_TIMEZONE = RECURRING_TIMEZONE;
 
 const FREQ_OPTIONS: { value: CronFreq; label: string }[] = [
   { value: "DAILY", label: "Diário" },
@@ -96,7 +100,9 @@ export function EventAutomationDialog({
       setTemplateId(automation?.templateId ?? "");
       setTrigger(automation?.trigger ?? "on_registration");
       setFormIds(automation?.formIds ?? []);
-      setSendAt(automation?.sendAt ?? "");
+      setSendAt(
+        automation?.sendAt ? utcIsoToZonedInput(automation.sendAt, SEND_AT_TIMEZONE) : "",
+      );
       setDelayMinutes(
         automation?.delayMinutes != null ? String(automation.delayMinutes) : "",
       );
@@ -129,9 +135,11 @@ export function EventAutomationDialog({
     if (supportsDelay && delayMinutes && Number(delayMinutes) > MAX_DELAY_MINUTES) {
       return toast.error(`Atraso máximo é ${MAX_DELAY_MINUTES} minutos`);
     }
+    let sendAtIso: string | undefined;
     if (trigger === "on_date") {
       if (!sendAt) return toast.error("Selecione a data e hora de envio");
-      if (new Date(sendAt) <= new Date()) {
+      sendAtIso = zonedInputToUtcIso(sendAt, SEND_AT_TIMEZONE);
+      if (new Date(sendAtIso) <= new Date()) {
         return toast.error("A data e hora devem estar no futuro");
       }
     }
@@ -149,7 +157,7 @@ export function EventAutomationDialog({
           })
         : undefined,
       timezone: isRecurring ? RECURRING_TIMEZONE : undefined,
-      sendAt: trigger === "on_date" ? sendAt : undefined,
+      sendAt: sendAtIso,
       active,
     };
     const onDone = {
@@ -269,7 +277,7 @@ export function EventAutomationDialog({
                 mode="datetime"
                 value={sendAt}
                 onChange={setSendAt}
-                minValue={today(getLocalTimeZone())}
+                minValue={today(SEND_AT_TIMEZONE)}
               />
             </div>
           )}

@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { CalendarDate } from "@internationalized/date";
-import { parseValue, formatValue } from "@/lib/utils/date-time-picker";
+import {
+  parseValue,
+  formatValue,
+  zonedInputToUtcIso,
+  utcIsoToZonedInput,
+} from "@/lib/utils/date-time-picker";
 
 describe("parseValue", () => {
   it("parses a datetime string into date + time", () => {
@@ -51,5 +56,25 @@ describe("formatValue", () => {
 
   it("returns empty string for null date", () => {
     expect(formatValue(null, "14:30", "datetime")).toBe("");
+  });
+});
+
+describe("zonedInputToUtcIso / utcIsoToZonedInput", () => {
+  const TZ = "America/Sao_Paulo";
+
+  it("converts a São Paulo wall-clock time to the correct UTC instant (UTC-3)", () => {
+    expect(zonedInputToUtcIso("2026-08-25T12:00", TZ)).toBe("2026-08-25T15:00:00.000Z");
+  });
+
+  it("round-trips back to the same wall-clock digits regardless of the machine's own timezone", () => {
+    const iso = zonedInputToUtcIso("2026-08-25T12:00", TZ);
+    expect(utcIsoToZonedInput(iso, TZ)).toBe("2026-08-25T12:00");
+  });
+
+  it("does not conflate UTC digits with local wall-clock digits", () => {
+    // Backend stores/returns an absolute UTC instant; naively slicing its
+    // digits (the bug) would read "15:00" as if it were already BRT.
+    const iso = "2026-08-25T15:00:00.000Z";
+    expect(utcIsoToZonedInput(iso, TZ)).toBe("2026-08-25T12:00");
   });
 });

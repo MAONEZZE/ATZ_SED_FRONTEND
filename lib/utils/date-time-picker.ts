@@ -1,4 +1,10 @@
-import { CalendarDate, parseDate } from "@internationalized/date";
+import {
+  CalendarDate,
+  CalendarDateTime,
+  parseDate,
+  parseAbsolute,
+  toZoned,
+} from "@internationalized/date";
 
 export type DateTimeMode = "datetime" | "date";
 
@@ -32,6 +38,33 @@ export function formatValue(
   return `${datePart}T${time || "00:00"}`;
 }
 
+/**
+ * Converte um valor "YYYY-MM-DDTHH:mm" (wall-clock, sem timezone) para um
+ * instante absoluto (ISO UTC), interpretando os dígitos no fuso informado —
+ * em vez do fuso do navegador, que pode divergir do fuso do evento.
+ */
+export function zonedInputToUtcIso(value: string, timeZone: string): string {
+  const [datePart, timePart] = value.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = (timePart || "00:00").split(":").map(Number);
+  const calendarDateTime = new CalendarDateTime(year, month, day, hour, minute);
+  return toZoned(calendarDateTime, timeZone).toDate().toISOString();
+}
+
+/**
+ * Inverso de `zonedInputToUtcIso`: converte um instante absoluto (ISO UTC)
+ * de volta para "YYYY-MM-DDTHH:mm" no fuso informado.
+ */
+export function utcIsoToZonedInput(iso: string, timeZone: string): string {
+  const zoned = parseAbsolute(iso, timeZone);
+  const yyyy = String(zoned.year).padStart(4, "0");
+  const mm = String(zoned.month).padStart(2, "0");
+  const dd = String(zoned.day).padStart(2, "0");
+  const hh = String(zoned.hour).padStart(2, "0");
+  const min = String(zoned.minute).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
 export type Period = "AM" | "PM";
 
 /** Converte "HH:mm" (24h) em partes 12h para exibição/edição no time field. */
@@ -41,7 +74,11 @@ export function to12Hour(time: string): { hour: string; minute: string; period: 
   const h24 = Number(hStr);
   const period: Period = h24 >= 12 ? "PM" : "AM";
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-  return { hour: String(h12).padStart(2, "0"), minute: (mStr ?? "00").padStart(2, "0"), period };
+  return {
+    hour: String(h12).padStart(2, "0"),
+    minute: (mStr ?? "00").padStart(2, "0"),
+    period,
+  };
 }
 
 /** Converte partes 12h de volta para "HH:mm" (24h) usado internamente. */
