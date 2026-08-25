@@ -81,14 +81,21 @@ export function SendMessageForm({
 
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
+  const [recipientsPage, setRecipientsPage] = useState(1);
+  const [recipientsPageSize, setRecipientsPageSize] = useState(10);
   const { data: registrationsResponse, isLoading: loadingRegs } = useRegistrations(
     effectiveEventId ?? "",
-    { limit: 100 },
+    { page: recipientsPage, limit: recipientsPageSize },
   );
   const registrations = useMemo(
     () => registrationsResponse?.data ?? [],
     [registrationsResponse?.data],
   );
+  const recipientsTotalPages = registrationsResponse
+    ? Math.max(1, Math.ceil(registrationsResponse.total / recipientsPageSize))
+    : 1;
+  // O filtro por status é aplicado no cliente, então só enxerga a página
+  // atual — a API de registrations aceita um único `status`, não um conjunto.
   const visibleRegistrations = useMemo(
     () =>
       statusFilter.size === 0
@@ -162,13 +169,12 @@ export function SendMessageForm({
 
   const appliedInitial = useRef(false);
   useEffect(() => {
-    if (appliedInitial.current || !initialRegistrationId || registrations.length === 0)
-      return;
-    if (registrations.some((r) => r.id === initialRegistrationId)) {
-      setSelected(new Set([initialRegistrationId]));
-    }
+    if (appliedInitial.current || !initialRegistrationId) return;
+    // Não depende de `registrations` estar carregado: com paginação, o
+    // destinatário inicial pode não estar na página atual.
+    setSelected(new Set([initialRegistrationId]));
     appliedInitial.current = true;
-  }, [initialRegistrationId, registrations]);
+  }, [initialRegistrationId]);
 
   const channelTemplates = useMemo(
     () => (templates ?? []).filter((t) => t.channel === channel),
@@ -561,6 +567,14 @@ export function SendMessageForm({
               onToggleStatusFilter={toggleStatusFilter}
               onClearStatusFilter={() => setStatusFilter(new Set())}
               hasEvent={Boolean(effectiveEventId)}
+              page={recipientsPage}
+              totalPages={recipientsTotalPages}
+              onPageChange={setRecipientsPage}
+              pageSize={recipientsPageSize}
+              onPageSizeChange={(size) => {
+                setRecipientsPageSize(size);
+                setRecipientsPage(1);
+              }}
             />
 
             <ManualRecipientList

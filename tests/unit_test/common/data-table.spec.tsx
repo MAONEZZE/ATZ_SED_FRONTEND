@@ -1,16 +1,7 @@
 import React, { useState } from "react";
-import { describe, it, expect, beforeAll, afterEach } from "vitest";
-import { render, screen, cleanup, within } from "@testing-library/react";
-import { DataTable } from "@/components/common/data-table";
-
-beforeAll(() => {
-  // jsdom não implementa ResizeObserver; a tabela usa um pra remedir no resize.
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  } as unknown as typeof ResizeObserver;
-});
+import { describe, it, expect, afterEach } from "vitest";
+import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
+import { DataTable, Pagination } from "@/components/common/data-table";
 
 afterEach(() => {
   cleanup();
@@ -21,11 +12,12 @@ type Row = { id: string; name: string };
 
 function Harness({ total, rows }: { total: number; rows: Row[] }) {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState(10);
 
   return (
     <>
-      <span data-testid="page-size">{pageSize ?? "não medido"}</span>
+      <span data-testid="page-size">{pageSize}</span>
+      <span data-testid="limit-requested">{rows.length}</span>
       <DataTable
         columns={[{ key: "name", header: "Nome", cell: (r: Row) => r.name }]}
         data={rows}
@@ -34,8 +26,16 @@ function Harness({ total, rows }: { total: number; rows: Row[] }) {
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={setPageSize}
       />
+      <button
+        type="button"
+        onClick={() => {
+          setPageSize(50);
+          setPage(1);
+        }}
+      >
+        Trocar para 50
+      </button>
     </>
   );
 }
@@ -45,18 +45,26 @@ function makeRows(n: number): Row[] {
 }
 
 describe("DataTable", () => {
-  it("mede quantas linhas cabem na tela e informa ao caller", () => {
+  it("usa 10 como tamanho de página default, escolhido pelo usuário — não medido", () => {
     render(<Harness total={0} rows={[]} />);
 
-    const measured = Number(screen.getByTestId("page-size").textContent);
-    expect(measured).toBeGreaterThan(0);
+    expect(screen.getByTestId("page-size").textContent).toBe("10");
+  });
+
+  it("o limit enviado é sempre o valor escolhido, nunca derivado do layout medido", () => {
+    // Regressão do bug original: a tabela não mede mais nada — o número de
+    // linhas pedidas é exatamente o pageSize escolhido, mesmo que a viewport
+    // do ambiente de teste (jsdom, sem layout real) fosse "pequena".
+    const rows = makeRows(10);
+    render(<Harness total={25} rows={rows} />);
+
+    expect(screen.getByTestId("limit-requested").textContent).toBe("10");
+    expect(screen.getByText("1/3")).toBeTruthy();
   });
 
   it("mostra 1/1 e desabilita os dois botões quando há uma página", () => {
     render(<Harness total={3} rows={makeRows(3)} />);
 
-    // Garante que há apenas uma página porque todos os registros cabem nela.
-    expect(Number(screen.getByTestId("page-size").textContent)).toBeGreaterThan(3);
     expect(screen.getByText("1/1")).toBeTruthy();
     expect(
       (screen.getByRole("button", { name: "Anterior" }) as HTMLButtonElement).disabled,
@@ -67,8 +75,7 @@ describe("DataTable", () => {
   });
 
   it("mostra Anterior/Próxima quando há mais de uma página", () => {
-    const measured = 14; // altura da viewport do jsdom / altura da linha
-    render(<Harness total={measured * 3} rows={makeRows(measured)} />);
+    render(<Harness total={30} rows={makeRows(10)} />);
 
     expect(screen.getByRole("button", { name: "Anterior" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Próxima" })).toBeTruthy();
@@ -85,9 +92,49 @@ describe("DataTable", () => {
   });
 
   it("desabilita Anterior na primeira página", () => {
-    render(<Harness total={500} rows={makeRows(14)} />);
+    render(<Harness total={500} rows={makeRows(10)} />);
 
-    const previous = screen.getByRole("button", { name: "Anterior" }) as HTMLButtonElement;
+    const previous = screen.getByRole("button", {
+      name: "Anterior",
+    }) as HTMLButtonElement;
     expect(previous.disabled).toBe(true);
+  });
+});
+
+describe("Pagination — troca de tamanho de página", () => {
+  it("volta para a página 1 ao trocar o tamanho", () => {
+    render(<Harness total={100} rows={makeRows(10)} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Próxima" }));
+    expect(screen.getByText("2/10")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Trocar para 50" }));
+    expect(screen.getByTestId("page-size").textContent).toBe("50");
+    expect(screen.getByText("1/2")).toBeTruthy();
+  });
+});
+
+describe("Pagination — inline", () => {
+  it("não portala para o footer do dashboard quando inline", () => {
+    const footer = document.createElement("footer");
+    footer.id = "dashboard-pagination-footer";
+    document.body.appendChild(footer);
+
+    const { container } = render(
+      <Pagination page={1} totalPages={3} onPageChange={() => {}} inline />,
+    );
+
+    expect(within(footer).queryByText("1/3")).toBeNull();
+    expect(within(container).getByText("1/3")).toBeTruthy();
+  });
+
+  it("sem inline, portala para o footer do dashboard", () => {
+    const footer = document.createElement("footer");
+    footer.id = "dashboard-pagination-footer";
+    document.body.appendChild(footer);
+
+    render(<Pagination page={1} totalPages={3} onPageChange={() => {}} />);
+
+    expect(within(footer).getByText("1/3")).toBeTruthy();
   });
 });

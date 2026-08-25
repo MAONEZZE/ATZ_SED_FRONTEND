@@ -4,11 +4,15 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { AlertTriangle, Plus } from "lucide-react";
-import { useDeleteAutomationGlobal, useEventAutomations } from "@/lib/api/global-messaging";
+import {
+  useDeleteAutomationGlobal,
+  useEventAutomations,
+} from "@/lib/api/global-messaging";
 import { TRIGGER_LABELS } from "@/lib/api/automations";
 import type { Automation } from "@/lib/api/types";
 import { EventAutomationDialog } from "@/components/events/event-automation-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,8 +29,10 @@ import {
 
 export default function EventAutomationsPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: response, isLoading } = useEventAutomations(id);
-  const allAutomations = response?.data ?? [];
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const { data: response, isLoading } = useEventAutomations(id, page, pageSize);
+  const automations = response?.data ?? [];
   const deleteAutomation = useDeleteAutomationGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Automation | null>(null);
@@ -34,19 +40,11 @@ export default function EventAutomationsPage() {
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  // Sem paginação no backend (lista curta por evento) — pagina no cliente.
-  const [page, setPage] = useState(1);
-  // null até a tabela medir quantas linhas cabem sem gerar scroll.
-  const [pageSize, setPageSize] = useState<number | null>(null);
-  const automations = pageSize
-    ? allAutomations.slice((page - 1) * pageSize, page * pageSize)
-    : [];
-
-  useSetRecordCount(allAutomations.length);
+  useSetRecordCount(response?.total ?? 0);
 
   async function handleBulkDelete() {
     setBulkDeleting(true);
-    const targets = allAutomations.filter((a) => selected.has(a.id));
+    const targets = automations.filter((a) => selected.has(a.id));
     const results = await Promise.allSettled(
       targets.map((a) => deleteAutomation.mutateAsync({ eventId: id, id: a.id })),
     );
@@ -63,21 +61,30 @@ export default function EventAutomationsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex h-9 items-center justify-end gap-2">
-        <DataTableDeleteButton
-          selectedCount={selected.size}
-          isPending={bulkDeleting}
-          onDelete={() => setConfirmBulkDelete(true)}
-        />
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setDialogOpen(true);
+      <div className="flex h-9 items-center justify-between gap-2">
+        <PageSizeSelect
+          value={pageSize}
+          onChange={(size) => {
+            setPageSize(size);
+            setPage(1);
           }}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Nova automação
-        </Button>
+        />
+        <div className="flex items-center gap-2">
+          <DataTableDeleteButton
+            selectedCount={selected.size}
+            isPending={bulkDeleting}
+            onDelete={() => setConfirmBulkDelete(true)}
+          />
+          <Button
+            onClick={() => {
+              setEditing(null);
+              setDialogOpen(true);
+            }}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nova automação
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -138,14 +145,10 @@ export default function EventAutomationsPage() {
         }}
         selected={selected}
         onSelectedChange={setSelected}
-        total={allAutomations.length}
+        total={response?.total ?? 0}
         page={page}
         pageSize={pageSize}
         onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
       />
 
       <EventAutomationDialog

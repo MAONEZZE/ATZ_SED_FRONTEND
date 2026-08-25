@@ -32,8 +32,7 @@ export function useFormResponses(
       api.get<PaginatedResponse<FormResponseRow>>(
         `/events/${eventId}/form-responses?${qs.toString()}`,
       ),
-    // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
-    enabled: Boolean(eventId) && Boolean(formId) && limit > 0,
+    enabled: Boolean(eventId) && Boolean(formId),
     placeholderData: keepPreviousData,
   });
 }

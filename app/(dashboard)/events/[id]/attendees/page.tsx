@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import {
   exportRegistrationsCsv,
   useDeleteRegistrations,
@@ -56,8 +57,7 @@ export default function AttendeesPage() {
   const [statusFilter, setStatusFilter] = useState<string>(ALL_STATUS);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  // null até a tabela medir quantas linhas cabem sem gerar scroll.
-  const [limit, setLimit] = useState<number | null>(null);
+  const [limit, setLimit] = useState(10);
   const [viewing, setViewing] = useState<AttendeeDetailData | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -73,14 +73,20 @@ export default function AttendeesPage() {
     reader.onload = () => {
       const { recipients } = parseRecipientsCsv(reader.result as string);
       if (recipients.length === 0) {
-        toast.error("Nenhum inscrito válido no CSV (verifique colunas Nome, Telefone, Email).");
+        toast.error(
+          "Nenhum inscrito válido no CSV (verifique colunas Nome, Telefone, Email).",
+        );
         return;
       }
       if (!activeFormId) return;
       importRegistrations.mutate(
         {
           formId: activeFormId,
-          registrations: recipients.map((r) => ({ nome: r.name, telefone: r.phone, email: r.email })),
+          registrations: recipients.map((r) => ({
+            nome: r.name,
+            telefone: r.phone,
+            email: r.email,
+          })),
         },
         {
           onSuccess: (result) =>
@@ -134,33 +140,41 @@ export default function AttendeesPage() {
     setPage(1);
   }
 
-  const { data: registrationsResponse, isLoading: registrationsLoading } = useRegistrations(
-    eventId,
-    {
-      status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
-      search: search.trim() || undefined,
-      formId: activeFormId,
-      page,
-      limit: isAnonymousView ? 0 : (limit ?? 0),
-    },
-  );
+  const {
+    data: registrationsResponse,
+    isLoading: registrationsLoading,
+    isError: registrationsError,
+    error: registrationsErrorObj,
+  } = useRegistrations(eventId, {
+    status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
+    search: search.trim() || undefined,
+    formId: activeFormId,
+    page,
+    limit,
+    enabled: !isAnonymousView,
+  });
   const registrations = registrationsResponse?.data ?? [];
 
-  const { data: formResponsesResponse, isLoading: formResponsesLoading } = useFormResponses(
-    eventId,
-    {
-      formId: isAnonymousView ? selectedForm?.id : undefined,
-      search: search.trim() || undefined,
-      page,
-      limit: isAnonymousView ? (limit ?? 0) : 0,
-    },
-  );
+  const {
+    data: formResponsesResponse,
+    isLoading: formResponsesLoading,
+    isError: formResponsesError,
+    error: formResponsesErrorObj,
+  } = useFormResponses(eventId, {
+    formId: isAnonymousView ? selectedForm?.id : undefined,
+    search: search.trim() || undefined,
+    page,
+    limit,
+  });
   const formResponses = formResponsesResponse?.data ?? [];
 
   const total = isAnonymousView
     ? (formResponsesResponse?.total ?? 0)
     : (registrationsResponse?.total ?? 0);
   useSetRecordCount(total);
+
+  const isError = isAnonymousView ? formResponsesError : registrationsError;
+  const loadError = isAnonymousView ? formResponsesErrorObj : registrationsErrorObj;
 
   function openRegistrationDetails(r: Registration) {
     setViewing({
@@ -229,8 +243,21 @@ export default function AttendeesPage() {
 
   return (
     <div className="min-w-0 space-y-4">
-      {isAnonymousView && selectedForm ? (
+      {isError ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed p-12 text-center text-muted-foreground">
+          <AlertTriangle className="h-8 w-8" />
+          <p className="font-medium text-foreground">
+            Não foi possível carregar os inscritos
+          </p>
+          <p className="text-sm">
+            {loadError instanceof Error
+              ? loadError.message
+              : "Tente novamente mais tarde."}
+          </p>
+        </div>
+      ) : isAnonymousView && selectedForm ? (
         <AttendeesTable
+          key={selectedFormId}
           data={formResponses}
           isLoading={formResponsesLoading}
           total={total}
@@ -253,7 +280,9 @@ export default function AttendeesPage() {
           selected={selectedIds}
           onSelectedChange={setSelectedIds}
           onRowClick={openResponseDetails}
-          emptyMessage={search ? "Nenhum resultado — ajuste a busca." : "Nenhuma resposta ainda."}
+          emptyMessage={
+            search ? "Nenhum resultado — ajuste a busca." : "Nenhuma resposta ainda."
+          }
           formSelector={formSelector}
           exporting={exporting}
           onExport={handleExportResponses}
@@ -266,6 +295,7 @@ export default function AttendeesPage() {
         />
       ) : (
         <AttendeesTable
+          key={selectedFormId}
           data={registrations}
           isLoading={registrationsLoading}
           total={total}
@@ -278,7 +308,9 @@ export default function AttendeesPage() {
           renderStatus={(r) => <StatusSelect eventId={eventId} registration={r} />}
           statusFilter={{ value: statusFilter, onChange: handleStatusFilter }}
           formColumn={
-            selectedFormId === GERAL_VALUE ? { getFormName: (r) => r.formName } : undefined
+            selectedFormId === GERAL_VALUE
+              ? { getFormName: (r) => r.formName }
+              : undefined
           }
           search={search}
           onSearchChange={handleSearchChange}

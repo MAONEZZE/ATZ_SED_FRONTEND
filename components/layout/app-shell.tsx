@@ -42,10 +42,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     "?";
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="fixed inset-0 flex overflow-hidden">
       <AppSidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4">
           <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
             <Button
@@ -114,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           <main className="mx-auto w-full max-w-7xl px-4 py-6">{children}</main>
         </div>
         <footer

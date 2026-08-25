@@ -13,11 +13,6 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import {
-  RESERVED_BELOW,
-  TABLE_ROW_HEIGHT,
-  useFitPageSize,
-} from "@/components/common/use-fit-page-size";
 import { cn } from "@/lib/utils";
 
 export interface DataTableColumn<T> {
@@ -40,11 +35,8 @@ export interface DataTableProps<T> {
   onSelectedChange?: (selected: Set<string>) => void;
   total: number;
   page: number;
-  /** `null` enquanto a tabela ainda não mediu quantas linhas cabem na tela. */
-  pageSize: number | null;
+  pageSize: number;
   onPageChange: (page: number) => void;
-  /** A tabela mede a si mesma e informa quantas linhas cabem sem gerar scroll. */
-  onPageSizeChange: (pageSize: number) => void;
 }
 
 export function DataTable<T>({
@@ -60,21 +52,8 @@ export function DataTable<T>({
   page,
   pageSize,
   onPageChange,
-  onPageSizeChange,
 }: DataTableProps<T>) {
-  const { ref: bodyRef, pageSize: fittedPageSize } =
-    useFitPageSize<HTMLTableSectionElement>({
-      itemHeight: TABLE_ROW_HEIGHT,
-      reserved: RESERVED_BELOW,
-    });
-
-  useEffect(() => {
-    if (fittedPageSize !== null && fittedPageSize !== pageSize) {
-      onPageSizeChange(fittedPageSize);
-    }
-  }, [fittedPageSize, pageSize, onPageSizeChange]);
-
-  const totalPages = pageSize ? Math.max(1, Math.ceil(total / pageSize)) : 1;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const selectable = Boolean(selected && onSelectedChange);
   const ids = data.map(getRowId);
   const allChecked = ids.length > 0 && ids.every((id) => selected?.has(id));
@@ -101,125 +80,133 @@ export function DataTable<T>({
 
   return (
     <div>
-      <div className="overflow-hidden rounded-lg border border-border">
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              {selectable && (
-                <TableHead className="w-10 pl-4 pr-0 text-center">
-                  <Checkbox
-                    checked={allChecked ? true : someChecked ? "indeterminate" : false}
-                    onCheckedChange={toggleAll}
-                    aria-label="Selecionar todos os registros desta página"
-                  />
-                </TableHead>
-              )}
-              {columns.map((col) => (
-                <TableHead
-                  key={col.key}
-                  className={cn(
-                    col.align === "left"
-                      ? "text-left"
-                      : col.align === "right"
-                        ? "text-right"
-                        : "text-center",
-                    col.className,
-                  )}
-                >
-                  {col.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody ref={bodyRef}>
-            {isLoading ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (selectable ? 1 : 0)}
-                  className="h-24 text-center"
-                >
-                  <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
-                </TableCell>
-              </TableRow>
-            ) : data.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length + (selectable ? 1 : 0)}
-                  className="h-24 text-center text-sm text-muted-foreground"
-                >
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.map((row) => {
-                const id = getRowId(row);
-                return (
-                  <TableRow
-                    key={id}
-                    data-state={selected?.has(id) ? "selected" : undefined}
-                    className={cn("h-12", onRowClick && "cursor-pointer")}
-                    onClick={() => onRowClick?.(row)}
-                  >
-                    {selectable && (
-                      <TableCell
-                        className="w-10 pl-4 pr-0 text-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
-                          checked={selected?.has(id) ?? false}
-                          onCheckedChange={() => toggleOne(id)}
-                          aria-label="Selecionar registro"
-                        />
-                      </TableCell>
-                    )}
-                    {columns.map((col) => (
-                      <TableCell
-                        key={col.key}
-                        className={cn(
-                          // A linha tem altura fixa (TABLE_ROW_HEIGHT); conteúdo longo é
-                          // cortado em vez de quebrar linha e estourar a medida.
-                          "truncate",
-                          col.align === "left"
-                            ? "text-left"
-                            : col.align === "right"
-                              ? "text-right"
-                              : "text-center",
-                          col.className,
-                        )}
-                      >
-                        {col.cell(row)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
+      <Table
+        className="table-fixed"
+        containerClassName="max-h-[60vh] rounded-lg border border-border"
+      >
+        <TableHeader>
+          <TableRow>
+            {selectable && (
+              <TableHead className="w-10 pl-4 pr-0 text-center">
+                <Checkbox
+                  checked={allChecked ? true : someChecked ? "indeterminate" : false}
+                  onCheckedChange={toggleAll}
+                  aria-label="Selecionar todos os registros desta página"
+                />
+              </TableHead>
             )}
-          </TableBody>
-        </Table>
-      </div>
+            {columns.map((col) => (
+              <TableHead
+                key={col.key}
+                className={cn(
+                  col.align === "left"
+                    ? "text-left"
+                    : col.align === "right"
+                      ? "text-right"
+                      : "text-center",
+                  col.className,
+                )}
+              >
+                {col.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length + (selectable ? 1 : 0)}
+                className="h-24 text-center"
+              >
+                <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
+              </TableCell>
+            </TableRow>
+          ) : data.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length + (selectable ? 1 : 0)}
+                className="h-24 text-center text-sm text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((row) => {
+              const id = getRowId(row);
+              return (
+                <TableRow
+                  key={id}
+                  data-state={selected?.has(id) ? "selected" : undefined}
+                  className={cn("h-12", onRowClick && "cursor-pointer")}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {selectable && (
+                    <TableCell
+                      className="w-10 pl-4 pr-0 text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Checkbox
+                        checked={selected?.has(id) ?? false}
+                        onCheckedChange={() => toggleOne(id)}
+                        aria-label="Selecionar registro"
+                      />
+                    </TableCell>
+                  )}
+                  {columns.map((col) => (
+                    <TableCell
+                      key={col.key}
+                      className={cn(
+                        // A linha tem altura fixa (TABLE_ROW_HEIGHT); conteúdo longo é
+                        // cortado em vez de quebrar linha e estourar a medida.
+                        "truncate",
+                        col.align === "left"
+                          ? "text-left"
+                          : col.align === "right"
+                            ? "text-right"
+                            : "text-center",
+                        col.className,
+                      )}
+                    >
+                      {col.cell(row)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
 
       <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} />
     </div>
   );
 }
 
-/** Anterior/Próxima no footer fixo do dashboard, inclusive quando há uma página. */
+/**
+ * Anterior/Próxima no footer fixo do dashboard, inclusive quando há uma página.
+ * `inline` pula o portal — usado quando a tabela vive dentro de outro fluxo
+ * (ex.: um formulário) e a paginação precisa ficar junto dela.
+ */
 export function Pagination({
   page,
   totalPages,
   onPageChange,
+  inline = false,
 }: {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  inline?: boolean;
 }) {
   const [footer, setFooter] = useState<HTMLElement | null>(null);
   const safeTotalPages = Math.max(1, totalPages);
   const safePage = Math.min(Math.max(1, page), safeTotalPages);
 
   useEffect(() => {
+    if (inline) return;
     setFooter(document.getElementById("dashboard-pagination-footer"));
-  }, []);
+  }, [inline]);
 
   const pagination = (
     <div className="flex items-center justify-center gap-2">

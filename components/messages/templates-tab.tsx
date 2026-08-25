@@ -33,6 +33,7 @@ import { canWrite } from "@/lib/permissions";
 import { ChannelBadge } from "@/components/messages/channel-badge";
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Button } from "@/components/ui/button";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
@@ -92,8 +93,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
   const searchParams = useSearchParams();
   const folderId = searchParams.get("folderId");
   const [page, setPage] = useState(1);
-  // null até a tabela medir quantas linhas cabem sem gerar scroll.
-  const [pageSize, setPageSize] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState(10);
   const [channelFilter, setChannelFilter] = useState<MessageChannel | "all">("all");
   const folderScope = {
     resourceType: "message_template" as const,
@@ -108,7 +108,7 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
   const reorderFolders = useReorderFolders(folderScope);
   const { data: response, isLoading } = useAllTemplates(
     page,
-    pageSize ?? 0,
+    pageSize,
     channelFilter === "all" ? undefined : channelFilter,
     eventId,
     folderId,
@@ -234,22 +234,31 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
     >
       <div className="space-y-4">
         <div className="flex h-9 items-center justify-between">
-          <Select
-            value={channelFilter}
-            onValueChange={(v) => {
-              setChannelFilter(v as MessageChannel | "all");
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="h-8 w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os canais</SelectItem>
-              <SelectItem value="whatsapp">WhatsApp</SelectItem>
-              <SelectItem value="email">E-mail</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select
+              value={channelFilter}
+              onValueChange={(v) => {
+                setChannelFilter(v as MessageChannel | "all");
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-8 w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os canais</SelectItem>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="email">E-mail</SelectItem>
+              </SelectContent>
+            </Select>
+            <PageSizeSelect
+              value={pageSize}
+              onChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
+          </div>
 
           <div className="flex items-center gap-2">
             {writable && (
@@ -350,10 +359,6 @@ export function TemplatesTab({ eventId }: { eventId: string | null }) {
           page={page}
           pageSize={pageSize}
           onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
         />
 
         <GlobalTemplateDialog

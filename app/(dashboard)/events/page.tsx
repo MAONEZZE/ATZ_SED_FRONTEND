@@ -31,17 +31,13 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
 import { Pagination } from "@/components/common/data-table";
-import { RESERVED_BELOW, useFitPageSize } from "@/components/common/use-fit-page-size";
+import { PageSizeSelect } from "@/components/common/page-size-select";
 import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
 import { Button } from "@/components/ui/button";
 
-/** Altura fixa do EventCard (`h-[260px]`) — a medição depende dela ser constante. */
-const EVENT_CARD_HEIGHT = 260;
-/** `gap-4` do grid. */
-const GRID_GAP = 16;
-
 export default function EventsPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [activeEvent, setActiveEvent] = useState<EventObject | null>(null);
   const { data: profile } = useProfile();
   const folderScope = { resourceType: "event" as const };
@@ -52,26 +48,18 @@ export default function EventsPage() {
   const reorderFolders = useReorderFolders(folderScope);
   const moveEvent = useMoveEvent();
   const folders = folderTree.filter((folder) => folder.parentId === null);
-  // O grid é medido vazio; o fetch só dispara com a quantidade que cabe na tela.
-  // Todos os estados (carregando, erro, vazio) ficam DENTRO dele, senão o topo
-  // do grid se desloca a cada troca de estado e a medição oscila.
-  const { ref: gridRef, pageSize } = useFitPageSize<HTMLDivElement>({
-    itemHeight: EVENT_CARD_HEIGHT,
-    gap: GRID_GAP,
-    reserved: RESERVED_BELOW,
-  });
   const {
     data: response,
     isLoading,
     isError,
     refetch,
     isRefetching,
-  } = useEventsByFolder(page, pageSize ?? 0, null);
+  } = useEventsByFolder(page, pageSize, null);
   const events = response?.data ?? [];
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
-  const totalPages = pageSize && response ? Math.ceil(response.total / pageSize) : 0;
+  const totalPages = response ? Math.max(1, Math.ceil(response.total / pageSize)) : 1;
 
   function handleDragStart({ active }: DragStartEvent) {
     const activeId = String(active.id);
@@ -158,6 +146,13 @@ export default function EventsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Eventos</h1>
         <div className="flex items-center gap-2">
+          <PageSizeSelect
+            value={pageSize}
+            onChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
           <FolderCreateButton onCreate={(name) => createFolder.mutate({ name })} />
           <Button asChild>
             <Link href="/events/new">
@@ -186,7 +181,7 @@ export default function EventsPage() {
           items={events.map((event) => `event:${event.id}`)}
           strategy={rectSortingStrategy}
         >
-          <div ref={gridRef} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {isLoading && (
               <div className="col-span-full">
                 <LoadingSpinner />
