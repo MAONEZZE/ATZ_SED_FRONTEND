@@ -45,7 +45,7 @@ function formatDate(iso: string | null): string | null {
   if (!iso) return null;
   return new Date(iso).toLocaleDateString("pt-BR", {
     day: "2-digit",
-    month: "long",
+    month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
@@ -104,11 +104,6 @@ export default async function PublicEventPage({ params }: PageProps) {
       label: "Dress code",
       value: event.dressCode,
     },
-    event.capacity != null && {
-      icon: <Users className="h-5 w-5" />,
-      label: "Vagas",
-      value: `${event.capacity}`,
-    },
   ].filter(Boolean) as { icon: ReactNode; label: string; value: string }[];
 
   const coverSrc = event.coverUrl
@@ -130,7 +125,7 @@ export default async function PublicEventPage({ params }: PageProps) {
             <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
 
             {infoCards.length > 0 && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {infoCards.map((card) => (
                   <InfoCard
                     key={card.label}
