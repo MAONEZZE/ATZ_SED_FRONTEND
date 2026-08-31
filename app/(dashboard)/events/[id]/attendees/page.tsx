@@ -11,7 +11,11 @@ import {
   useRegistrations,
   useUpdateRegistration,
 } from "@/lib/api/registrations";
-import { exportFormResponsesCsv, useFormResponses } from "@/lib/api/form-responses";
+import {
+  exportFormResponsesCsv,
+  useDeleteFormResponses,
+  useFormResponses,
+} from "@/lib/api/form-responses";
 import { useForms } from "@/lib/api/forms";
 import { downloadBlob } from "@/lib/utils/download-blob";
 import { parseRecipientsCsv } from "@/lib/utils/parse-recipients-csv";
@@ -38,8 +42,6 @@ const GERAL_VALUE = "__geral__";
 const IMPORT_DISABLED_ANONYMOUS_REASON =
   "Importação não disponível para formulários anônimos";
 const IMPORT_DISABLED_NO_FORM_REASON = "Selecione um formulário para importar";
-const DELETE_DISABLED_ANONYMOUS_REASON =
-  "Exclusão não está disponível para respostas de formulário anônimo";
 const SAVE_DISABLED_ANONYMOUS_REASON =
   "Edição ainda não existe no backend para esta tabela";
 
@@ -67,6 +69,7 @@ export default function AttendeesPage() {
   const importRegistrations = useImportRegistrations(eventId);
   const updateRegistration = useUpdateRegistration(eventId);
   const deleteRegistrations = useDeleteRegistrations(eventId);
+  const deleteFormResponses = useDeleteFormResponses(eventId);
 
   function handleImportFile(file: File) {
     const reader = new FileReader();
@@ -289,9 +292,8 @@ export default function AttendeesPage() {
           importDisabled
           importDisabledReason={IMPORT_DISABLED_ANONYMOUS_REASON}
           onImportClick={() => {}}
-          deleteDisabled
-          deleteDisabledReason={DELETE_DISABLED_ANONYMOUS_REASON}
-          onDeleteConfirmed={() => Promise.resolve({ deleted: 0 })}
+          deleteDisabled={false}
+          onDeleteConfirmed={(ids) => deleteFormResponses.mutateAsync(ids)}
         />
       ) : (
         <AttendeesTable

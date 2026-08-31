@@ -1,6 +1,11 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api, apiFetchBlob } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type { FormResponseRow, PaginatedResponse } from "@/lib/api/types";
@@ -34,5 +39,17 @@ export function useFormResponses(
       ),
     enabled: Boolean(eventId) && Boolean(formId),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useDeleteFormResponses(eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) =>
+      api.delete<{ deleted: number }>(`/events/${eventId}/form-responses`, { ids }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.formResponses(eventId),
+      }),
   });
 }
