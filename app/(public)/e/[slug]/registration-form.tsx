@@ -135,9 +135,9 @@ export function RegistrationForm({
     return (
       <div className="rounded-xl border p-8 text-center">
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
-        <h3 className="mt-4 text-xl font-bold">Inscrição enviada!</h3>
+        <h3 className="mt-4 text-xl font-bold">Resposta registrada!</h3>
         <p className="mt-2 whitespace-pre-line opacity-80">
-          Recebemos sua inscrição. Você receberá novidades em breve.
+          Obrigado por sua resposta. Você receberá novidades em breve.
         </p>
       </div>
     );

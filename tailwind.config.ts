@@ -13,20 +13,23 @@ const config: Config = {
   	extend: {
   		fontFamily: {
   			// Principal — corpo do site (aplicada em <body>, ver app/layout.tsx)
-  			serif: [
-  				'var(--font-eb-garamond)',
-  				'Georgia',
-  				'"Times New Roman"',
-  				'serif'
-  			],
-  			// Secundária — títulos (h1-h6, ver app/globals.css) e uso pontual
   			sans: [
-  				'var(--font-host-grotesk)',
+  				'var(--font-inter)',
   				'-apple-system',
   				'BlinkMacSystemFont',
   				'"SF Pro Text"',
   				'"Segoe UI"',
   				'Roboto',
+  				'Helvetica',
+  				'Arial',
+  				'sans-serif'
+  			],
+  			// Secundária — títulos (h1-h6, ver app/globals.css) e uso pontual
+  			display: [
+  				'var(--font-montserrat)',
+  				'-apple-system',
+  				'BlinkMacSystemFont',
+  				'"Segoe UI"',
   				'Helvetica',
   				'Arial',
   				'sans-serif'

@@ -90,12 +90,6 @@
     --sidebar-accent-foreground: var(--color-offwhite);
     --sidebar-border: 198.3 25% 22%; /* hairline */
     --sidebar-ring: var(--color-accent);
-
-    /* Host Grotesk (secundária) carregada via <link> em app/layout.tsx —
-       fora do bundle de fontes do next/font nesta versão do Next. Fica só
-       em :root (não em .dark): é uma pilha de fontes, não uma cor — repeti-la
-       por tema é o que causava a fonte trocar ao alternar claro/escuro. */
-    --font-host-grotesk: "Host Grotesk", ui-sans-serif, system-ui, sans-serif;
   }
 
   .dark {
@@ -182,7 +176,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans;
+    @apply font-display;
   }
 }
 
