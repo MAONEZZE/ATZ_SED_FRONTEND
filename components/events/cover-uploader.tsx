@@ -142,7 +142,7 @@ export function CoverUploader({
           type="button"
           onClick={openPicker}
           disabled={disabled || upload.isPending}
-          className="flex aspect-[1200/630] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-muted-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-8 flex aspect-[1200/630] w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed text-muted-foreground transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {upload.isPending ? (
             <Loader2 className="h-10 w-10 animate-spin" />

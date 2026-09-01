@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { ChevronRight, Folder as FolderIcon, Plus } from "lucide-react";
 import {
   DndContext,
-  DragOverlay,
   PointerSensor,
   closestCenter,
   useDroppable,
@@ -35,7 +34,8 @@ import { FolderGrid } from "@/components/common/folder-grid";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Pagination } from "@/components/common/data-table";
 import { PageSizeSelect } from "@/components/common/page-size-select";
-import { EventCard, SortableEventCard } from "@/components/events/event-card";
+import { SortableEventCard } from "@/components/events/event-card";
+import { EventDragOverlay } from "@/components/events/event-drag-overlay";
 import { Button } from "@/components/ui/button";
 
 function flattenFolders(folders: Folder[]): Folder[] {
@@ -270,13 +270,7 @@ export function EventsFolderBrowser() {
           </div>
         ) : null}
 
-        <DragOverlay>
-          {activeEvent ? (
-            <div className="pointer-events-none">
-              <EventCard event={activeEvent} ownerId={profile?.id} />
-            </div>
-          ) : null}
-        </DragOverlay>
+        <EventDragOverlay event={activeEvent} ownerId={profile?.id} />
 
         <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>

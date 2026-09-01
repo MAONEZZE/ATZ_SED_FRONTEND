@@ -100,6 +100,7 @@ const config: Config = {
   				DEFAULT: 'hsl(var(--surface))',
   				'2': 'hsl(var(--surface-2))'
   			},
+  			topbar: 'hsl(var(--topbar))',
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',

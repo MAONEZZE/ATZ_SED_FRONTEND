@@ -14,7 +14,6 @@ import {
 } from "@/lib/api/folders";
 import {
   DndContext,
-  DragOverlay,
   PointerSensor,
   closestCenter,
   useSensor,
@@ -26,7 +25,8 @@ import { arrayMove, SortableContext, rectSortingStrategy } from "@dnd-kit/sortab
 import { useProfile } from "@/lib/api/profile";
 import type { EventObject } from "@/lib/api/types";
 import { canManage, canOrganize } from "@/lib/permissions";
-import { EventCard, SortableEventCard } from "@/components/events/event-card";
+import { SortableEventCard } from "@/components/events/event-card";
+import { EventDragOverlay } from "@/components/events/event-drag-overlay";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
@@ -230,13 +230,7 @@ export default function EventsPage() {
           </div>
         </SortableContext>
 
-        <DragOverlay>
-          {activeEvent ? (
-            <div className="pointer-events-none">
-              <EventCard event={activeEvent} ownerId={profile?.id} />
-            </div>
-          ) : null}
-        </DragOverlay>
+        <EventDragOverlay event={activeEvent} ownerId={profile?.id} />
       </DndContext>
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

@@ -16,9 +16,10 @@
 
     /* Design system "Marrom macOS" — claro-only.
        Tokens shadcn em HSL; paleta marrom/creme + acento âmbar. */
-    --background: var(--color-offwhite);
+    --background: 192.5 24% 96.5%; /* #F4F7F8 */
     --foreground: var(--color-ink);
     --card: 0 0% 100%; /* white */
+    --topbar: 192.5 20% 99%; /* #FCFDFD — header do app-shell */
     --card-foreground: var(--color-ink);
     --popover: 0 0% 100%;
     --popover-foreground: var(--color-ink);
@@ -82,20 +83,21 @@
     --shadow-pop: 0 18px 50px rgba(15, 26, 28, 0.22);
 
     /* Sidebar sempre escura, claro ou dark — mesmos valores nos dois blocos. */
-    --sidebar: var(--color-bg-dark);
-    --sidebar-foreground: var(--color-offwhite);
+    --sidebar: 192.5 41.4% 11.4%; /* #112429 — teal profundo do logo */
+    --sidebar-foreground: 60 6% 96.7%; /* #F7F7F6 */
     --sidebar-primary: var(--color-accent);
     --sidebar-primary-foreground: var(--color-ink);
-    --sidebar-accent: 198.3 30% 19%; /* bg-dark levantado — hover */
-    --sidebar-accent-foreground: var(--color-offwhite);
-    --sidebar-border: 198.3 25% 22%; /* hairline */
+    --sidebar-accent: 192.5 30% 19%; /* bg-dark levantado — hover */
+    --sidebar-accent-foreground: 60 6% 96.7%;
+    --sidebar-border: 192.5 25% 22%; /* hairline */
     --sidebar-ring: var(--color-accent);
   }
 
   .dark {
-    --background: var(--color-bg-dark);
+    --background: 192.5 40% 8%; /* #0C191D */
     --foreground: var(--color-offwhite);
     --card: var(--color-bg-dark-2);
+    --topbar: 192.5 33% 12%; /* #152429 — header do app-shell */
     --card-foreground: var(--color-offwhite);
     --popover: var(--color-bg-dark-2);
     --popover-foreground: var(--color-offwhite);
@@ -145,13 +147,13 @@
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
     --shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
     --shadow-pop: 0 18px 50px rgba(0, 0, 0, 0.6);
-    --sidebar: var(--color-bg-dark);
-    --sidebar-foreground: var(--color-offwhite);
+    --sidebar: 192.5 41.4% 11.4%; /* #112429 — teal profundo do logo */
+    --sidebar-foreground: 60 6% 96.7%; /* #F7F7F6 */
     --sidebar-primary: var(--color-accent);
     --sidebar-primary-foreground: var(--color-ink);
-    --sidebar-accent: 198.3 30% 19%;
-    --sidebar-accent-foreground: var(--color-offwhite);
-    --sidebar-border: 198.3 25% 22%;
+    --sidebar-accent: 192.5 30% 19%;
+    --sidebar-accent-foreground: 60 6% 96.7%;
+    --sidebar-border: 192.5 25% 22%;
     --sidebar-ring: var(--color-accent);
   }
 }
@@ -162,6 +164,10 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* O AppShell é `fixed inset-0`, então o body fica com altura 0 e o gradiente
+       abaixo — dimensionado pela caixa do body — não chegava a ser pintado,
+       deixando o dashboard com o fundo chapado. */
+    min-height: 100vh;
     /* Textura de linhas diagonais quase imperceptível — usa --foreground em
        opacidade baixíssima, então se adapta ao tema sozinha (ink no claro,
        offwhite no escuro). Só no body: cards/popovers/sheets ficam lisos. */

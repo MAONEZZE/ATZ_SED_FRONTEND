@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup, waitFor } from "@testing-library/react";
+import { render, screen, cleanup, waitFor, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 afterEach(() => cleanup());
@@ -69,6 +69,10 @@ describe("EditEventPage — seleção de instância", () => {
         <EditEventPage />
       </QueryClientProvider>,
     );
+
+    // o campo vive dentro da seção recolhível "Mensageria"
+    const secao = await screen.findByRole("button", { name: /mensageria/i });
+    fireEvent.click(secao);
 
     await waitFor(() => {
       const trigger = screen.getByRole("combobox", { name: /inst/i });
