@@ -36,7 +36,7 @@ test.describe("inscrição pública", () => {
       .first()
       .fill("11999998888");
 
-    await page.getByRole("button", { name: "Enviar inscrição" }).click();
-    await expect(page.getByText("Inscrição enviada!")).toBeVisible();
+    await page.getByRole("button", { name: "Enviar" }).click();
+    await expect(page.getByText("Resposta registrada!")).toBeVisible();
   });
 });

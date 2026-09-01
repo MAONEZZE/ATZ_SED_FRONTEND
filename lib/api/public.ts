@@ -35,7 +35,11 @@ export async function getPublicFormFields(
 export async function submitPublicFormResponse(
   slug: string,
   formSlug: string,
-  payload: { phone?: string; answers: Record<string, unknown>; image_authorization?: boolean },
+  payload: {
+    phone?: string;
+    answers: Record<string, unknown>;
+    image_authorization?: boolean;
+  },
 ): Promise<{ registrationId: string | null; created: boolean }> {
   const res = await fetch(
     `${env.NEXT_PUBLIC_API_URL}/public/events/${slug}/forms/${formSlug}/responses`,
@@ -46,7 +50,7 @@ export async function submitPublicFormResponse(
     },
   );
   if (!res.ok) {
-    let message = "Falha ao enviar inscrição";
+    let message = "Falha ao enviar";
     try {
       const body = (await res.json()) as { message?: string | string[] };
       if (body.message) {
@@ -58,10 +62,25 @@ export async function submitPublicFormResponse(
   return (await res.json()) as { registrationId: string | null; created: boolean };
 }
 
+/**
+ * Chave da resposta no payload — o backend indexa `answers` pela label literal
+ * do campo, então ela vai crua.
+ */
 export function answerKeyForField(
   field: Pick<PublicFormField, "label" | "type">,
 ): string {
   return field.label;
+}
+
+/**
+ * Nome do campo dentro do react-hook-form (register/Controller, chave do schema
+ * Zod e do defaultValues). NÃO use a label aqui: o RHF trata `name` como caminho
+ * — uma label com `.`, `[` ou `]` grava o valor aninhado, o erro do Zod fica em
+ * outro caminho (invisível no render, que lê `errors[key]` plano) e o submit
+ * morre sem feedback. O id também evita colisão entre campos de mesma label.
+ */
+export function fieldKey(field: Pick<PublicFormField, "id">): string {
+  return `f_${field.id}`;
 }
 
 /**

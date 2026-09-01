@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
+import { fieldKey } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 
 function selectField(overrides: Partial<PublicFormField> = {}): PublicFormField {
@@ -29,7 +30,7 @@ function multiselectField(overrides: Partial<PublicFormField> = {}): PublicFormF
 describe("buildSchema — select", () => {
   it("rejeita valor fora das opções configuradas", () => {
     const schema = buildSchema([selectField()]);
-    const result = schema.safeParse({ Camiseta: "XG" });
+    const result = schema.safeParse({ [fieldKey({ id: "f1" })]: "XG" });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Opção inválida");
@@ -38,17 +39,17 @@ describe("buildSchema — select", () => {
 
   it("aceita valor presente nas opções configuradas", () => {
     const schema = buildSchema([selectField()]);
-    expect(schema.safeParse({ Camiseta: "M" }).success).toBe(true);
+    expect(schema.safeParse({ [fieldKey({ id: "f1" })]: "M" }).success).toBe(true);
   });
 
   it("campo opcional aceita vazio sem cair na checagem de opções", () => {
     const schema = buildSchema([selectField({ required: false })]);
-    expect(schema.safeParse({ Camiseta: "" }).success).toBe(true);
+    expect(schema.safeParse({ [fieldKey({ id: "f1" })]: "" }).success).toBe(true);
   });
 
   it("obrigatório rejeita vazio com 'Campo obrigatório', antes de checar opções", () => {
     const schema = buildSchema([selectField()]);
-    const result = schema.safeParse({ Camiseta: "" });
+    const result = schema.safeParse({ [fieldKey({ id: "f1" })]: "" });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Campo obrigatório");
@@ -71,22 +72,26 @@ function instagramField(overrides: Partial<PublicFormField> = {}): PublicFormFie
 describe("buildSchema — instagram", () => {
   it("aceita @usuario sem exigir URL", () => {
     const schema = buildSchema([instagramField()]);
-    expect(schema.safeParse({ Instagram: "@ruan.sanchez" }).success).toBe(true);
+    expect(schema.safeParse({ [fieldKey({ id: "f3" })]: "@ruan.sanchez" }).success).toBe(
+      true,
+    );
   });
 
   it("rejeita valor com espaços ou caracteres inválidos", () => {
     const schema = buildSchema([instagramField()]);
-    expect(schema.safeParse({ Instagram: "https://instagram.com/x" }).success).toBe(
-      false,
-    );
-    expect(schema.safeParse({ Instagram: "usuario invalido" }).success).toBe(false);
+    expect(
+      schema.safeParse({ [fieldKey({ id: "f3" })]: "https://instagram.com/x" }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({ [fieldKey({ id: "f3" })]: "usuario invalido" }).success,
+    ).toBe(false);
   });
 });
 
 describe("buildSchema — multiselect", () => {
   it("rejeita quando algum valor selecionado não está nas opções", () => {
     const schema = buildSchema([multiselectField()]);
-    const result = schema.safeParse({ Interesses: ["A", "Z"] });
+    const result = schema.safeParse({ [fieldKey({ id: "f2" })]: ["A", "Z"] });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Opção inválida");
@@ -95,12 +100,12 @@ describe("buildSchema — multiselect", () => {
 
   it("aceita quando todos os valores selecionados estão nas opções", () => {
     const schema = buildSchema([multiselectField()]);
-    expect(schema.safeParse({ Interesses: ["A", "C"] }).success).toBe(true);
+    expect(schema.safeParse({ [fieldKey({ id: "f2" })]: ["A", "C"] }).success).toBe(true);
   });
 
   it("obrigatório ainda exige ao menos uma opção selecionada", () => {
     const schema = buildSchema([multiselectField()]);
-    const result = schema.safeParse({ Interesses: [] });
+    const result = schema.safeParse({ [fieldKey({ id: "f2" })]: [] });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0].message).toBe("Selecione ao menos uma opção");
@@ -125,22 +130,26 @@ describe("buildSchema — anonymous form (sem campo phone)", () => {
     // A filtragem de campos "phone" para formulário anônimo acontece no componente
     // (RegistrationForm), antes de chamar buildSchema — aqui simulamos a lista já filtrada.
     const schema = buildSchema([selectField()]);
-    expect(schema.safeParse({ Camiseta: "M" }).success).toBe(true);
-    expect(Object.keys(schema.shape)).not.toContain("Telefone");
+    expect(schema.safeParse({ [fieldKey({ id: "f1" })]: "M" }).success).toBe(true);
+    expect(Object.keys(schema.shape)).not.toContain(fieldKey({ id: "f-telefone" }));
   });
 });
 
 describe("buildSchema — on_date_automation_field", () => {
   it("exige data estrita AAAA-MM-DD", () => {
     const schema = buildSchema([dateAutomationField()]);
-    expect(schema.safeParse({ "Data do lembrete": "2026-08-21" }).success).toBe(true);
-    expect(schema.safeParse({ "Data do lembrete": "21/08/2026" }).success).toBe(false);
-    expect(schema.safeParse({ "Data do lembrete": "" }).success).toBe(false);
+    expect(schema.safeParse({ [fieldKey({ id: "f4" })]: "2026-08-21" }).success).toBe(
+      true,
+    );
+    expect(schema.safeParse({ [fieldKey({ id: "f4" })]: "21/08/2026" }).success).toBe(
+      false,
+    );
+    expect(schema.safeParse({ [fieldKey({ id: "f4" })]: "" }).success).toBe(false);
   });
 
   it("campo opcional aceita vazio", () => {
     const schema = buildSchema([dateAutomationField({ required: false })]);
-    expect(schema.safeParse({ "Data do lembrete": "" }).success).toBe(true);
+    expect(schema.safeParse({ [fieldKey({ id: "f4" })]: "" }).success).toBe(true);
   });
 });
 

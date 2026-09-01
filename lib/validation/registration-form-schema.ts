@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isValidPhoneNumber } from "react-phone-number-input/core";
 import { phoneMetadata } from "@/lib/phone/metadata";
-import { answerKeyForField } from "@/lib/api/public";
+import { fieldKey } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { fieldOptions } from "@/lib/forms/field-types";
 
@@ -11,7 +11,7 @@ export function buildSchema(
 ) {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const field of fields) {
-    const key = answerKeyForField(field);
+    const key = fieldKey(field);
     let schema: z.ZodTypeAny;
     switch (field.type) {
       case "email":
@@ -32,12 +32,15 @@ export function buildSchema(
         break;
       case "select": {
         const opts = fieldOptions(field);
-        schema = field.required
-          ? z
-              .string()
-              .min(1, "Campo obrigatório")
-              .refine((v) => opts.includes(v), "Opção inválida")
-          : z.string().refine((v) => !v || opts.includes(v), "Opção inválida");
+        // sem opções o campo não renderiza controle nenhum: exigir aqui deixaria
+        // o formulário impossível de enviar, com erro num campo não preenchível.
+        schema =
+          field.required && opts.length > 0
+            ? z
+                .string()
+                .min(1, "Campo obrigatório")
+                .refine((v) => opts.includes(v), "Opção inválida")
+            : z.string().refine((v) => !v || opts.includes(v), "Opção inválida");
         break;
       }
       case "multiselect": {
@@ -45,9 +48,10 @@ export function buildSchema(
         const base = z
           .array(z.string())
           .refine((vals) => vals.every((v) => opts.includes(v)), "Opção inválida");
-        schema = field.required
-          ? base.refine((vals) => vals.length > 0, "Selecione ao menos uma opção")
-          : base;
+        schema =
+          field.required && opts.length > 0
+            ? base.refine((vals) => vals.length > 0, "Selecione ao menos uma opção")
+            : base;
         break;
       }
       case "checkbox":
@@ -67,9 +71,7 @@ export function buildSchema(
         schema = z.string().url("URL inválida");
         break;
       case "instagram":
-        schema = z
-          .string()
-          .regex(/^@?[a-zA-Z0-9_.]+$/, "Usuário do Instagram inválido");
+        schema = z.string().regex(/^@?[a-zA-Z0-9_.]+$/, "Usuário do Instagram inválido");
         break;
       default:
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
@@ -93,7 +95,7 @@ export function defaultValues(
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const field of fields) {
-    const key = answerKeyForField(field);
+    const key = fieldKey(field);
     if (field.type === "multiselect") values[key] = [];
     else if (field.type === "checkbox") values[key] = false;
     else values[key] = "";

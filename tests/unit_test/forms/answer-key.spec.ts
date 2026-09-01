@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { answerKeyForField } from "@/lib/api/public";
+import { answerKeyForField, fieldKey } from "@/lib/api/public";
 
 describe("answerKeyForField", () => {
   it("usa a própria label como chave, independente do tipo", () => {
@@ -20,5 +20,18 @@ describe("answerKeyForField", () => {
     expect(answerKeyForField({ label: "Seu melhor e-mail", type: "email" })).toBe(
       "Seu melhor e-mail",
     );
+  });
+});
+
+describe("fieldKey", () => {
+  it("deriva do id, então campos de mesma label não colidem", () => {
+    expect(fieldKey({ id: "a" })).not.toBe(fieldKey({ id: "b" }));
+  });
+
+  it("não contém `.`/`[`/`]`, que o react-hook-form trata como caminho aninhado", () => {
+    // com a label crua como `name`, uma label tipo "Ex.: cargo" gravava o valor
+    // aninhado, o erro do Zod ficava invisível e o submit morria em silêncio.
+    const key = fieldKey({ id: "3f2a-11ee" });
+    expect(key).not.toMatch(/[.[\]]/);
   });
 });

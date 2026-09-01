@@ -1,7 +1,7 @@
 "use client";
 
 import { Controller, type UseFormReturn } from "react-hook-form";
-import { answerKeyForField } from "@/lib/api/public";
+import { fieldKey } from "@/lib/api/public";
 import { fieldOptions, rendersAsRadioGroup } from "@/lib/forms/field-types";
 import type { PublicFormField } from "@/lib/api/types";
 import { PhoneField } from "@/components/forms/phone-field";
@@ -32,7 +32,7 @@ export function FormFieldsRenderer({
   return (
     <>
       {fields.map((field) => {
-        const key = answerKeyForField(field);
+        const key = fieldKey(field);
         const error = form.formState.errors[key];
         const options = fieldOptions(field);
 

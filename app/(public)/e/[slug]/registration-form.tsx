@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2 } from "lucide-react";
-import { submitPublicFormResponse, answerKeyForField } from "@/lib/api/public";
+import { submitPublicFormResponse, answerKeyForField, fieldKey } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
@@ -62,8 +62,15 @@ export function RegistrationForm({
     try {
       const raw = localStorage.getItem(draftKey);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        form.reset(parsed);
+        // so aproveita as chaves que o formulario atual ainda tem: rascunho de
+        // uma versao anterior (campo removido/renomeado) nao pode zerar os
+        // defaults e deixar campo obrigatorio como undefined.
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const base = defaultValues(visibleFields, requireImage);
+        for (const key of Object.keys(base)) {
+          if (key in parsed) base[key] = parsed[key];
+        }
+        form.reset(base);
       }
     } catch {}
     setHydrated(true);
@@ -88,11 +95,11 @@ export function RegistrationForm({
     try {
       const answers: Record<string, unknown> = {};
       for (const field of visibleFields) {
-        answers[field.label] = values[answerKeyForField(field)];
+        answers[answerKeyForField(field)] = values[fieldKey(field)];
       }
       const phoneField = visibleFields.find((f) => f.type === "phone");
       const phone = phoneField
-        ? (values[answerKeyForField(phoneField)] as string | undefined)
+        ? (values[fieldKey(phoneField)] as string | undefined)
         : undefined;
 
       await submitPublicFormResponse(slug, formSlug, {
@@ -110,7 +117,7 @@ export function RegistrationForm({
         } catch {}
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao enviar inscrição");
+      toast.error(error instanceof Error ? error.message : "Falha no envio");
     } finally {
       setSubmitting(false);
     }
@@ -122,11 +129,11 @@ export function RegistrationForm({
         <span className="sr-only">Carregando formulario de inscricao...</span>
         {[0, 1, 2].map((i) => (
           <div key={i} className="space-y-2">
-            <div className="h-4 w-32 animate-pulse rounded bg-current/10" />
-            <div className="h-10 w-full animate-pulse rounded-md bg-current/10" />
+            <div className="bg-current/10 h-4 w-32 animate-pulse rounded" />
+            <div className="bg-current/10 h-10 w-full animate-pulse rounded-md" />
           </div>
         ))}
-        <div className="h-11 w-full animate-pulse rounded-md bg-current/10" />
+        <div className="bg-current/10 h-11 w-full animate-pulse rounded-md" />
       </div>
     );
   }
@@ -187,7 +194,7 @@ export function RegistrationForm({
 
       <Button type="submit" className="w-full" size="lg" disabled={submitting}>
         {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Enviar inscrição
+        Enviar
       </Button>
     </form>
   );

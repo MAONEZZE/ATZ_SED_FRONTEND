@@ -182,7 +182,7 @@ function FormPreview({ fields }: { fields: FormField[] }) {
       <CardContent className="space-y-5">
         <FormFieldsRenderer fields={fields} form={previewForm} disabled />
         <Button className="w-full" size="lg" disabled>
-          Enviar inscrição
+          Enviar
         </Button>
       </CardContent>
     </Card>
@@ -522,6 +522,7 @@ function FormBuilderSection({
           eventId={eventId}
           slug={slug}
           field={editing}
+          fields={localFields}
           open={editorOpen}
           onOpenChange={setEditorOpen}
           nextOrder={localFields.length}

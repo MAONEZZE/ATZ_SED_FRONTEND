@@ -65,6 +65,7 @@ export function FieldEditorDialog({
   eventId,
   slug,
   field,
+  fields,
   open,
   onOpenChange,
   nextOrder,
@@ -73,6 +74,8 @@ export function FieldEditorDialog({
   eventId: string;
   slug?: string;
   field: FormField | null;
+  /** Campos ja existentes no formulario — usados pra barrar label duplicada. */
+  fields: FormField[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nextOrder: number;
@@ -101,6 +104,16 @@ export function FieldEditorDialog({
   function handleSave() {
     if (!label.trim()) {
       toast.error("Informe a label do campo");
+      return;
+    }
+    // o backend indexa `answers` pela label: duas iguais no mesmo formulario
+    // fazem uma resposta sobrescrever a outra.
+    const duplicated = fields.some(
+      (f) =>
+        f.id !== field?.id && f.label.trim().toLowerCase() === label.trim().toLowerCase(),
+    );
+    if (duplicated) {
+      toast.error("Já existe um campo com essa label neste formulário");
       return;
     }
     const options = needsOptions
