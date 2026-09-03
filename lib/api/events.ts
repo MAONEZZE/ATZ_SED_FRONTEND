@@ -52,6 +52,12 @@ export function useEvents(page = 1, limit = 20, folderId?: string | null) {
 
 const EVENTS_FOLDER_FETCH_LIMIT = 100;
 
+/**
+ * "Página" única com todos os eventos do escopo: a listagem pagina pastas e
+ * eventos juntos no cliente, então precisa da lista inteira.
+ */
+export const ALL_EVENTS_LIMIT = 10_000;
+
 export async function fetchEventsByFolder(
   page: number,
   limit: number,

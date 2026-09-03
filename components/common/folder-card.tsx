@@ -9,17 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { FolderDeleteAlert } from "@/components/common/folder-delete-alert";
 
 export function FolderCard({
   name,
@@ -76,24 +67,7 @@ export function FolderCard({
                       Excluir
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir pasta?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Isso remove a pasta &quot;{name}&quot; e todo o conteúdo
-                        associado. Ação irreversível.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction
-                        className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
-                        onClick={onDelete}
-                      >
-                        Excluir
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
+                  <FolderDeleteAlert name={name} onDelete={onDelete} />
                 </AlertDialog>
               )}
             </DropdownMenuContent>

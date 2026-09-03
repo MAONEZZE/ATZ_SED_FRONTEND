@@ -40,8 +40,10 @@ export function EventDragOverlay({
     return () => cancelAnimationFrame(frame);
   }, [event]);
 
+  // Sem animação de soltar: a padrão leva o card de volta ao lugar antigo antes
+  // de a lista reordenar, o que faz parecer que o arraste não pegou.
   return (
-    <DragOverlay>
+    <DragOverlay dropAnimation={null}>
       {event ? (
         <div
           className={cn(

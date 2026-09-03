@@ -52,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DEFAULT_PAGE_SIZE } from "@/components/common/page-size-select";
 import {
   Select,
   SelectContent,
@@ -82,7 +83,7 @@ export function SendMessageForm({
   const [statusFilter, setStatusFilter] = useState<Set<FunnelStatus>>(new Set());
 
   const [recipientsPage, setRecipientsPage] = useState(1);
-  const [recipientsPageSize, setRecipientsPageSize] = useState(10);
+  const [recipientsPageSize, setRecipientsPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { data: registrationsResponse, isLoading: loadingRegs } = useRegistrations(
     effectiveEventId ?? "",
     { page: recipientsPage, limit: recipientsPageSize },

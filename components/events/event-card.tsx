@@ -12,11 +12,9 @@ import {
   FolderInput,
   ImageIcon,
   Link2,
-  MapPin,
   MoreVertical,
   Share2,
   Trash2,
-  Users,
 } from "lucide-react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -125,8 +123,9 @@ export function EventCard({
 
   return (
     <>
-      <Card className="flex h-[260px] flex-col overflow-hidden transition-shadow hover:shadow-md">
-        <div className="relative h-[180px] shrink-0 bg-muted">
+      <Card className="flex h-[230px] flex-col overflow-hidden transition-shadow hover:shadow-md">
+        {/* 152 + p-3 (24) + duas linhas de texto (48) = os 230px do card. */}
+        <div className="relative h-[152px] shrink-0 bg-muted">
           {event.coverUrl ? (
             <Image
               src={event.coverUrl}
@@ -140,6 +139,17 @@ export function EventCard({
               <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
             </div>
           )}
+          <div className="absolute left-2 top-2 flex flex-wrap items-center gap-1.5">
+            <EventStatusBadge status={event.status} />
+            {isShared && (
+              <Badge
+                variant="outline"
+                className="bg-background/80 text-xs backdrop-blur-sm"
+              >
+                Compartilhado
+              </Badge>
+            )}
+          </div>
           <div className="absolute right-2 top-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -252,35 +262,13 @@ export function EventCard({
 
         <CardContent className="min-h-0 flex-1 overflow-hidden p-3">
           <Link href={`/events/${event.id}/edit`} className="block">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3 className="truncate font-semibold">{event.title}</h3>
-              <EventStatusBadge status={event.status} />
-              {isShared && (
-                <Badge variant="outline" className="text-xs">
-                  Compartilhado
-                </Badge>
-              )}
-            </div>
-            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              {date && (
-                <span className="flex items-center gap-1">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  {date}
-                </span>
-              )}
-              {event.location && (
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {event.location}
-                </span>
-              )}
-              {event.capacity && (
-                <span className="flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" />
-                  {event.capacity}
-                </span>
-              )}
-            </div>
+            <h3 className="truncate font-semibold">{event.title}</h3>
+            {date && (
+              <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                {date}
+              </div>
+            )}
           </Link>
         </CardContent>
       </Card>

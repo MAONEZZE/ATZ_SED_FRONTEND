@@ -12,7 +12,7 @@ import { TRIGGER_LABELS } from "@/lib/api/automations";
 import type { Automation } from "@/lib/api/types";
 import { EventAutomationDialog } from "@/components/events/event-automation-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
-import { PageSizeSelect } from "@/components/common/page-size-select";
+import { DEFAULT_PAGE_SIZE, PageSizeSelect } from "@/components/common/page-size-select";
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ import {
 export default function EventAutomationsPage() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { data: response, isLoading } = useEventAutomations(id, page, pageSize);
   const automations = response?.data ?? [];
   const deleteAutomation = useDeleteAutomationGlobal();

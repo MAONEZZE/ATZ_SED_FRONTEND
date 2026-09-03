@@ -8,7 +8,7 @@ import { ChannelBadge } from "@/components/messages/channel-badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { MessageLogStatusBadge } from "@/components/common/status-badge";
 import { Pagination } from "@/components/common/data-table";
-import { PageSizeSelect } from "@/components/common/page-size-select";
+import { DEFAULT_PAGE_SIZE, PageSizeSelect } from "@/components/common/page-size-select";
 import { useSetRecordCount } from "@/components/common/record-count";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -23,7 +23,7 @@ import {
 /** Logs de envio. Com `eventId`, lista só os do evento e some a coluna Evento. */
 export function LogsTab({ eventId }: { eventId?: string }) {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { data: response, isLoading } = useMessageLogs({
     eventId,
     page,

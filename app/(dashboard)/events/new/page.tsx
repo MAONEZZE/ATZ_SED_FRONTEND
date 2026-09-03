@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -20,6 +21,9 @@ import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 
 export default function NewEventPage() {
   const router = useRouter();
+  // Criado a partir de uma pasta: o evento nasce dentro dela.
+  const folderId = useSearchParams().get("folderId");
+  const queryClient = useQueryClient();
   const createEvent = useCreateEvent();
   const [publishing, setPublishing] = useState(false);
 
@@ -32,6 +36,16 @@ export default function NewEventPage() {
     setPublishing(publish);
     createEvent.mutate(toEventInput(values), {
       onSuccess: async (event) => {
+        if (folderId) {
+          try {
+            await api.patch<EventObject>(`/events/${event.id}`, { folderId });
+            // useCreateEvent já invalidou antes do PATCH; sem isto a listagem da
+            // pasta segue em cache (staleTime) sem o evento recém-criado.
+            await queryClient.invalidateQueries({ queryKey: ["events"] });
+          } catch {
+            toast.error("Evento criado, mas não foi possível colocá-lo na pasta");
+          }
+        }
         if (publish) {
           try {
             await api.patch<EventObject>(`/events/${event.id}/status`, {
@@ -69,7 +83,9 @@ export default function NewEventPage() {
             type="button"
             variant="outline"
             disabled={isPending}
-            onClick={() => router.push("/events")}
+            onClick={() =>
+              router.push(folderId ? `/events/folder/${folderId}` : "/events")
+            }
           >
             Cancelar
           </Button>
@@ -91,7 +107,9 @@ export default function NewEventPage() {
               disabled={isPending}
               onClick={form.handleSubmit((v) => submit(v, true))}
             >
-              {isPending && publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isPending && publishing && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Criar e publicar
             </Button>
           </div>

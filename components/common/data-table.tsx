@@ -33,6 +33,10 @@ export interface DataTableProps<T> {
   /** Seleção controlada pelo caller — permite compor com o botão de exclusão em massa no toolbar. */
   selected?: Set<string>;
   onSelectedChange?: (selected: Set<string>) => void;
+  /** Linhas que não representam um registro (ex.: pastas) ficam sem checkbox. */
+  isRowSelectable?: (row: T) => boolean;
+  /** Classes por linha — usado para destacar o alvo do drag e o que está dentro de uma pasta. */
+  rowClassName?: (row: T) => string | undefined;
   total: number;
   page: number;
   pageSize: number;
@@ -48,6 +52,8 @@ export function DataTable<T>({
   onRowClick,
   selected,
   onSelectedChange,
+  isRowSelectable,
+  rowClassName,
   total,
   page,
   pageSize,
@@ -55,7 +61,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const selectable = Boolean(selected && onSelectedChange);
-  const ids = data.map(getRowId);
+  const ids = data.filter((row) => isRowSelectable?.(row) ?? true).map(getRowId);
   const allChecked = ids.length > 0 && ids.every((id) => selected?.has(id));
   const someChecked = !allChecked && ids.some((id) => selected?.has(id));
 
@@ -138,7 +144,11 @@ export function DataTable<T>({
                 <TableRow
                   key={id}
                   data-state={selected?.has(id) ? "selected" : undefined}
-                  className={cn("h-12", onRowClick && "cursor-pointer")}
+                  className={cn(
+                    "h-12",
+                    onRowClick && "cursor-pointer",
+                    rowClassName?.(row),
+                  )}
                   onClick={() => onRowClick?.(row)}
                 >
                   {selectable && (
@@ -146,11 +156,13 @@ export function DataTable<T>({
                       className="w-10 pl-4 pr-0 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Checkbox
-                        checked={selected?.has(id) ?? false}
-                        onCheckedChange={() => toggleOne(id)}
-                        aria-label="Selecionar registro"
-                      />
+                      {(isRowSelectable?.(row) ?? true) && (
+                        <Checkbox
+                          checked={selected?.has(id) ?? false}
+                          onCheckedChange={() => toggleOne(id)}
+                          aria-label="Selecionar registro"
+                        />
+                      )}
                     </TableCell>
                   )}
                   {columns.map((col) => (

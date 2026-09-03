@@ -4,18 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { CalendarDays, Plus } from "lucide-react";
-import { useEventsByFolder, useMoveEvent } from "@/lib/api/events";
+import { ALL_EVENTS_LIMIT, useEventsByFolder, useMoveEvent } from "@/lib/api/events";
 import {
   useCreateFolder,
   useDeleteFolder,
   useFolders,
+  useMoveFolder,
   useRenameFolder,
   useReorderFolders,
 } from "@/lib/api/folders";
 import {
   DndContext,
   PointerSensor,
-  closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -31,13 +31,15 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { FolderCreateButton } from "@/components/common/folder-create-button";
 import { FolderGrid } from "@/components/common/folder-grid";
 import { Pagination } from "@/components/common/data-table";
-import { PageSizeSelect } from "@/components/common/page-size-select";
+import { DEFAULT_PAGE_SIZE, PageSizeSelect } from "@/components/common/page-size-select";
 import { beforeIdAfterMove } from "@/lib/utils/sortable-move";
+import { paginateFoldersAndItems } from "@/lib/utils/paginate-folders";
+import { folderAwareCollision } from "@/lib/utils/folder-collision";
 import { Button } from "@/components/ui/button";
 
 export default function EventsPage() {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [activeEvent, setActiveEvent] = useState<EventObject | null>(null);
   const { data: profile } = useProfile();
   const folderScope = { resourceType: "event" as const };
@@ -46,20 +48,26 @@ export default function EventsPage() {
   const renameFolder = useRenameFolder(folderScope);
   const deleteFolder = useDeleteFolder(folderScope);
   const reorderFolders = useReorderFolders(folderScope);
+  const moveFolder = useMoveFolder(folderScope);
   const moveEvent = useMoveEvent();
-  const folders = folderTree.filter((folder) => folder.parentId === null);
+  const allFolders = folderTree.filter((folder) => folder.parentId === null);
   const {
     data: response,
     isLoading,
     isError,
     refetch,
     isRefetching,
-  } = useEventsByFolder(page, pageSize, null);
-  const events = response?.data ?? [];
+  } = useEventsByFolder(1, ALL_EVENTS_LIMIT, null);
+  // Pastas e eventos ocupam as mesmas vagas da página.
+  const {
+    folders,
+    items: events,
+    total,
+  } = paginateFoldersAndItems(allFolders, response?.data ?? [], page, pageSize);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
-  const totalPages = response ? Math.max(1, Math.ceil(response.total / pageSize)) : 1;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   function handleDragStart({ active }: DragStartEvent) {
     const activeId = String(active.id);
@@ -116,12 +124,10 @@ export default function EventsPage() {
       const source = activeId.slice("folder:".length);
       const target = overId.slice("folder-content:".length);
       if (source === target) return;
-      const targetFolder = folderTree.find((folder) => folder.id === target);
-      reorderFolders.mutate(
-        {
-          ids: [...(targetFolder?.children.map((folder) => folder.id) ?? []), source],
-          parentId: target,
-        },
+      // Mudar de nível é PATCH na pasta: `/reorder` só reescreve `order` e ignora
+      // id que não é irmão do `parentId` enviado.
+      moveFolder.mutate(
+        { id: source, parentId: target },
         { onError: (error) => toast.error(`Falha ao mover pasta: ${error.message}`) },
       );
       return;
@@ -130,7 +136,7 @@ export default function EventsPage() {
     if (activeId.startsWith("folder:") && overId.startsWith("folder:")) {
       const source = activeId.slice("folder:".length);
       const target = overId.slice("folder:".length);
-      const current = folders.map((folder) => folder.id);
+      const current = allFolders.map((folder) => folder.id);
       const next = arrayMove(current, current.indexOf(source), current.indexOf(target));
       reorderFolders.mutate(
         { ids: next, parentId: null },
@@ -165,7 +171,7 @@ export default function EventsPage() {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={folderAwareCollision}
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveEvent(null)}
         onDragEnd={handleDragEnd}
@@ -208,7 +214,7 @@ export default function EventsPage() {
               </div>
             )}
 
-            {response && events?.length === 0 && (
+            {response && total === 0 && (
               <div className="col-span-full rounded-xl border border-dashed p-12 text-center">
                 <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h2 className="mt-4 font-semibold">Nenhum evento ainda</h2>

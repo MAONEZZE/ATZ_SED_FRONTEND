@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api/client";
 import { useEvents, useMoveEvent } from "@/lib/api/events";
-import { useFolders, useReorderFolders } from "@/lib/api/folders";
+import { useFolders, useMoveFolder, useReorderFolders } from "@/lib/api/folders";
 import { useFormFields, useReorderFormFields } from "@/lib/api/form-fields";
 import { useForms, useReorderForms } from "@/lib/api/forms";
 import { useAllTemplates, useMoveTemplate } from "@/lib/api/global-messaging";
@@ -187,6 +187,29 @@ describe("cache otimista do drag-and-drop", () => {
     expect(getMock).not.toHaveBeenCalled();
   });
 
+  it("não manda folderId para /move — a rota o rejeita (forbidNonWhitelisted)", async () => {
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useMoveTemplate(), { wrapper });
+
+    await act(() =>
+      result.current.mutateAsync({ id: "b", folderId: "folder-1", beforeId: "a" }),
+    );
+
+    expect(patchMock).toHaveBeenCalledWith("/templates/b", { folderId: "folder-1" });
+    expect(patchMock).toHaveBeenCalledWith("/templates/b/move", { beforeId: "a" });
+  });
+
+  it("só chama a rota da pasta quando não há reordenação", async () => {
+    const { wrapper } = setup();
+    const { result } = renderHook(() => useMoveTemplate(), { wrapper });
+
+    await act(() => result.current.mutateAsync({ id: "b", folderId: null }));
+
+    expect(patchMock).toHaveBeenCalledExactlyOnceWith("/templates/b", {
+      folderId: null,
+    });
+  });
+
   it("mantém o template nas consultas sem filtro ao movê-lo para uma pasta", async () => {
     const { queryClient, wrapper } = setup();
     const filteredKey = queryKeys.allTemplates({ folderId: null });
@@ -293,7 +316,7 @@ describe("cache otimista do drag-and-drop", () => {
     await act(async () => resolvePatch());
   });
 
-  it("move uma pasta para dentro de outra sem mostrar a árvore antiga", async () => {
+  it("aninha a pasta com PATCH — /reorder ignora id de outro pai", async () => {
     const { queryClient, wrapper } = setup();
     const scope = { resourceType: "event" as const };
     const key = queryKeys.folders(scope);
@@ -301,18 +324,22 @@ describe("cache otimista do drag-and-drop", () => {
       folder("source", null),
       folder("target", null, [folder("child", "target")]),
     ]);
+    getMock.mockResolvedValue([
+      folder("target", null, [folder("child", "target"), folder("source", "target")]),
+    ]);
+    let resolvePatch!: () => void;
+    patchMock.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePatch = () => resolve(undefined);
+      }),
+    );
 
     const { result } = renderHook(
-      () => ({ query: useFolders(scope), reorder: useReorderFolders(scope) }),
+      () => ({ query: useFolders(scope), move: useMoveFolder(scope) }),
       { wrapper },
     );
 
-    await act(() =>
-      result.current.reorder.mutateAsync({
-        ids: ["child", "source"],
-        parentId: "target",
-      }),
-    );
+    act(() => result.current.move.mutate({ id: "source", parentId: "target" }));
 
     await waitFor(() => {
       expect(result.current.query.data?.map(({ id }) => id)).toEqual(["target"]);
@@ -321,7 +348,78 @@ describe("cache otimista do drag-and-drop", () => {
         "source",
       ]);
     });
-    expect(getMock).not.toHaveBeenCalled();
+    // O aninhamento só sobrevive ao reload se for no PATCH da própria pasta.
+    expect(patchMock).toHaveBeenCalledExactlyOnceWith("/folders/source", {
+      parentId: "target",
+    });
+    await act(async () => resolvePatch());
+  });
+
+  it("reordena o destino depois de trocar a pasta de nível", async () => {
+    const { queryClient, wrapper } = setup();
+    const scope = { resourceType: "event" as const };
+    const key = queryKeys.folders(scope);
+    queryClient.setQueryData<Folder[]>(key, [
+      folder("a", null, [folder("source", "a")]),
+      folder("b", null),
+      folder("c", null),
+    ]);
+
+    const { result } = renderHook(() => useMoveFolder(scope), { wrapper });
+
+    await act(() =>
+      result.current.mutateAsync({
+        id: "source",
+        parentId: null,
+        siblingIds: ["b", "source", "c"],
+      }),
+    );
+
+    expect(patchMock).toHaveBeenCalledWith("/folders/source", { parentId: null });
+    expect(patchMock).toHaveBeenCalledWith("/folders/reorder", {
+      resourceType: "event",
+      ids: ["b", "source", "c"],
+      parentId: null,
+    });
+    expect(queryClient.getQueryData<Folder[]>(key)?.map(({ id }) => id)).toEqual([
+      "a",
+      "b",
+      "source",
+      "c",
+    ]);
+  });
+
+  it("reconcilia com o servidor quando o template muda de pasta", async () => {
+    const { queryClient, wrapper } = setup();
+    const params = {
+      page: 1,
+      limit: 20,
+      channel: undefined,
+      eventId: null,
+      folderId: null,
+    };
+    const previous: PaginatedResponse<TemplateWithEvent> = {
+      data: [{ id: "a", folderId: null } as TemplateWithEvent],
+      total: 1,
+      page: 1,
+      limit: 20,
+    };
+    queryClient.setQueryData(queryKeys.allTemplates(params), previous);
+    getMock.mockResolvedValue({ data: [], total: 0, page: 1, limit: 20 });
+
+    const { result } = renderHook(
+      () => ({
+        query: useAllTemplates(1, 20, undefined, null, null),
+        move: useMoveTemplate(),
+      }),
+      { wrapper },
+    );
+
+    // A pasta de destino pode nem ter sido buscada ainda — só o servidor sabe
+    // como as listas ficam depois do movimento.
+    await act(() => result.current.move.mutateAsync({ id: "a", folderId: "folder-1" }));
+
+    await waitFor(() => expect(getMock).toHaveBeenCalled());
   });
 
   it("restaura e reconcilia a lista quando a API rejeita o drop", async () => {

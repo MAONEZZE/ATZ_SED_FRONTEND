@@ -29,6 +29,7 @@ import { AttendeesTable, ALL_STATUS } from "@/components/attendees/attendees-tab
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { CsvImportModal } from "@/components/common/csv-import-modal";
 import { useSetRecordCount } from "@/components/common/record-count";
+import { DEFAULT_PAGE_SIZE } from "@/components/common/page-size-select";
 import {
   Select,
   SelectContent,
@@ -59,7 +60,7 @@ export default function AttendeesPage() {
   const [statusFilter, setStatusFilter] = useState<string>(ALL_STATUS);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
   const [viewing, setViewing] = useState<AttendeeDetailData | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [exporting, setExporting] = useState(false);

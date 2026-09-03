@@ -8,7 +8,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const PAGE_SIZES = [10, 50, 100] as const;
+const PAGE_SIZES = [12, 60, 120] as const;
+
+/** Padrão de todas as listagens — precisa ser uma das opções acima. */
+export const DEFAULT_PAGE_SIZE: number = PAGE_SIZES[0];
 
 /** Tamanho de página escolhido pelo usuário — volta a página para 1 ao trocar. */
 export function PageSizeSelect({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
 import type {
@@ -26,6 +26,27 @@ export interface TemplateInput {
   folderId?: string | null;
 }
 
+interface TemplatesQuery {
+  page: number;
+  limit: number;
+  channel?: MessageChannel;
+  eventId?: string | null;
+  folderId?: string | null;
+}
+
+function templatesQuery({ page, limit, channel, eventId, folderId }: TemplatesQuery) {
+  return {
+    queryKey: queryKeys.allTemplates({ page, limit, channel, eventId, folderId }),
+    queryFn: () => {
+      const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (channel) qs.set("channel", channel);
+      if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
+      if (folderId !== undefined) qs.set("folderId", folderId ?? "null");
+      return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
+    },
+  };
+}
+
 // eventId: undefined = sem filtro (todos os templates); null = envia o literal
 // "null" ao backend (apenas templates globais); string = filtra exclusivamente
 // pelo evento informado.
@@ -37,23 +58,34 @@ export function useAllTemplates(
   folderId?: string | null,
 ) {
   return useQuery({
-    queryKey: queryKeys.allTemplates({
-      page,
-      limit,
-      channel,
-      eventId,
-      folderId,
-    }),
-    queryFn: () => {
-      const qs = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (channel) qs.set("channel", channel);
-      if (eventId !== undefined) qs.set("eventId", eventId === null ? "null" : eventId);
-      if (folderId !== undefined) qs.set("folderId", folderId ?? "null");
-      return api.get<PaginatedResponse<TemplateWithEvent>>(`/templates?${qs.toString()}`);
-    },
+    ...templatesQuery({ page, limit, channel, eventId, folderId }),
     // limit 0 = a lista ainda não mediu quantas linhas cabem na tela.
     enabled: limit > 0,
   });
+}
+
+/** Conteúdo das pastas abertas na tabela — uma consulta por pasta expandida. */
+const FOLDER_TEMPLATES_LIMIT = 100;
+
+export function useTemplatesInFolders(
+  folderIds: string[],
+  channel?: MessageChannel,
+  eventId?: string | null,
+) {
+  const results = useQueries({
+    queries: folderIds.map((folderId) =>
+      templatesQuery({
+        page: 1,
+        limit: FOLDER_TEMPLATES_LIMIT,
+        channel,
+        eventId,
+        folderId,
+      }),
+    ),
+  });
+  return new Map(
+    folderIds.map((folderId, index) => [folderId, results[index]?.data?.data ?? []]),
+  );
 }
 
 export function useEventAutomations(eventId: string, page = 1, limit = 10) {
@@ -132,7 +164,10 @@ export function useDeleteTemplateGlobal() {
 export function useMoveTemplate() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    // `/move` roda sob `forbidNonWhitelisted` e só aceita `beforeId` — mandar
+    // `folderId` ali devolve "property folderId should not exist". A pasta vai
+    // no PATCH do próprio template, como em `useMoveEvent`.
+    mutationFn: async ({
       id,
       folderId,
       beforeId,
@@ -140,11 +175,10 @@ export function useMoveTemplate() {
       id: string;
       folderId: string | null;
       beforeId?: string;
-    }) =>
-      api.patch<void>(`/templates/${id}/move`, {
-        folderId,
-        ...(beforeId ? { beforeId } : {}),
-      }),
+    }) => {
+      await api.patch<TemplateWithEvent>(`/templates/${id}`, { folderId });
+      if (beforeId) await api.patch<void>(`/templates/${id}/move`, { beforeId });
+    },
     onMutate: async ({ id, folderId, beforeId }) => {
       await queryClient.cancelQueries({ queryKey: ["global", "templates"] });
       const previous = queryClient.getQueriesData<PaginatedResponse<TemplateWithEvent>>({
@@ -153,7 +187,10 @@ export function useMoveTemplate() {
       const moved = previous
         .flatMap(([, data]) => data?.data ?? [])
         .find((template) => template.id === id);
-      if (!moved) return { previous };
+      // Sem o template em mãos não dá para atualizar o cache: reconcilia com o
+      // servidor no fim.
+      if (!moved) return { previous, changedFolder: true };
+      const changedFolder = (moved.folderId ?? null) !== folderId;
 
       for (const [key, data] of previous) {
         if (!data || !Array.isArray(data.data)) continue;
@@ -186,12 +223,19 @@ export function useMoveTemplate() {
           data: next,
         });
       }
-      return { previous };
+      return { previous, changedFolder };
     },
     onError: (_error, _input, context) => {
       context?.previous.forEach(([key, data]) => queryClient.setQueryData(key, data));
-      void queryClient.invalidateQueries({ queryKey: ["global", "templates"] });
     },
+    // Reordenar dentro da lista já fica exato no cache. Trocar de pasta pode
+    // envolver uma lista que nem foi buscada ainda (a pasta abre no mesmo
+    // gesto), então espera o servidor e reconcilia — é o que faz o template
+    // aparecer na pasta sem depender de um refetch futuro.
+    onSettled: (_data, error, _input, context) =>
+      error || context?.changedFolder
+        ? queryClient.invalidateQueries({ queryKey: ["global", "templates"] })
+        : undefined,
   });
 }
 
