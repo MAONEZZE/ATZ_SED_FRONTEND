@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -114,15 +113,6 @@ function LoginPageInner() {
                 Entrar
               </Button>
             </form>
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Não tem conta?{" "}
-              <Link
-                href="/signup"
-                className="text-primary underline-offset-4 hover:underline"
-              >
-                Criar conta
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </div>

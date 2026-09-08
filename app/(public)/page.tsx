@@ -18,9 +18,6 @@ export default function Home() {
         <Button asChild>
           <Link href="/login">Entrar</Link>
         </Button>
-        <Button asChild variant="outline">
-          <Link href="/signup">Criar conta</Link>
-        </Button>
       </div>
     </main>
   );

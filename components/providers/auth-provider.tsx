@@ -17,7 +17,6 @@ interface AuthContextValue {
   session: AuthSession | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<AuthSession>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -72,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       return s;
     },
-    signUp: (name, email, password) => authClient.signUp(name, email, password),
     signOut: async () => {
       await authClient.signOut();
       queryClient.clear();

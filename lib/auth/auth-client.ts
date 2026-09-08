@@ -57,15 +57,6 @@ export const authClient = {
     return session;
   },
 
-  async signUp(name: string, email: string, password: string): Promise<void> {
-    const { error } = await getSupabase().auth.signUp({
-      email,
-      password,
-      options: { data: { name } },
-    });
-    if (error) throw new Error(error.message);
-  },
-
   async signOut(): Promise<void> {
     await getSupabase().auth.signOut();
   },
