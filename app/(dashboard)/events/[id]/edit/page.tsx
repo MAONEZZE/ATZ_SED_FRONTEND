@@ -13,6 +13,7 @@ import {
   toEventInput,
   type EventFormValues,
 } from "@/lib/validation/event-schema";
+import { APP_TIME_ZONE, utcIsoToZonedInput } from "@/lib/utils/date-time-picker";
 import { canTransitionEvent } from "@/lib/utils/transition-maps";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import { EventFormFields } from "@/components/events/event-form-fields";
@@ -22,11 +23,6 @@ import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
 import type { EventObject } from "@/lib/api/types";
 
-function utcIsoToLocalInput(iso: string): string {
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-}
-
 function toFormValues(event: EventObject): EventFormValues {
   return {
     title: event.title,
@@ -34,13 +30,13 @@ function toFormValues(event: EventObject): EventFormValues {
     capacity: event.capacity != null ? String(event.capacity) : "",
     dressCode: event.dressCode ?? "",
     groupLink: event.groupLink ?? "",
-    eventDate: event.eventDate ? utcIsoToLocalInput(event.eventDate) : "",
-    endDate: event.endDate ? utcIsoToLocalInput(event.endDate) : "",
+    eventDate: event.eventDate ? utcIsoToZonedInput(event.eventDate, APP_TIME_ZONE) : "",
+    endDate: event.endDate ? utcIsoToZonedInput(event.endDate, APP_TIME_ZONE) : "",
     recurrenceFreq: event.recurrenceFreq ?? "",
     recurrenceInterval:
       event.recurrenceInterval != null ? String(event.recurrenceInterval) : "",
     recurrenceUntil: event.recurrenceUntil
-      ? utcIsoToLocalInput(event.recurrenceUntil)
+      ? utcIsoToZonedInput(event.recurrenceUntil, APP_TIME_ZONE)
       : "",
     whatsappInstanceId: event.whatsappInstanceId ?? "",
   };

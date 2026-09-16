@@ -6,6 +6,15 @@ import {
   toZoned,
 } from "@internationalized/date";
 
+/**
+ * Fuso em que os campos de data/hora do evento são interpretados e exibidos.
+ *
+ * Fixo, e não o do navegador: a data de um evento significa a mesma coisa para
+ * todo mundo que a lê. Usar `getTimezoneOffset()` fazia um organizador fora de
+ * Brasília ver (e gravar) um horário deslocado.
+ */
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
 export type DateTimeMode = "datetime" | "date";
 
 export function parseValue(

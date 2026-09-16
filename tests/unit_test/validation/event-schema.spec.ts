@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { eventSchema, toEventInput } from "@/lib/validation/event-schema";
+import { APP_TIME_ZONE, utcIsoToZonedInput } from "@/lib/utils/date-time-picker";
 
 const base = { title: "Meu evento" };
 
@@ -43,9 +44,41 @@ describe("toEventInput — campos novos", () => {
       eventDate: "2026-07-01T19:00",
       endDate: "2026-07-01T22:00",
     });
-    expect(input.endDate).toBe(new Date("2026-07-01T22:00").toISOString());
+    // Valor absoluto e não `new Date(...).toISOString()`: aquela forma lê o
+    // fuso da máquina que roda o teste, escondendo justamente o bug que os
+    // campos interpretavam no fuso do navegador. 22:00 em São Paulo (UTC-3)
+    // é 01:00 UTC do dia seguinte.
+    expect(input.endDate).toBe("2026-07-02T01:00:00.000Z");
 
     const empty = toEventInput({ title: "Meu evento" });
     expect(empty.endDate).toBeUndefined();
+  });
+});
+
+// O organizador pode abrir o painel de qualquer fuso; a data do evento tem que
+// significar a mesma coisa para todos. Antes, ler e gravar passavam pelo fuso
+// do navegador.
+describe("toEventInput — fuso fixo da aplicação", () => {
+  it("interpreta o wall-clock digitado em São Paulo, não no fuso do navegador", () => {
+    const input = toEventInput({ title: "x", eventDate: "2026-07-01T19:00" });
+    expect(input.eventDate).toBe("2026-07-01T22:00:00.000Z");
+  });
+
+  it("recurrenceUntil (só data) vira meia-noite de São Paulo", () => {
+    const input = toEventInput({
+      title: "x",
+      recurrenceFreq: "weekly",
+      recurrenceUntil: "2026-07-01",
+    });
+    expect(input.recurrenceUntil).toBe("2026-07-01T03:00:00.000Z");
+  });
+
+  // O que de fato quebrava: abrir o evento e salvar sem editar deslocava a
+  // data para quem não estava em Brasília.
+  it("round-trip leitura→escrita não desloca o instante", () => {
+    const original = "2026-07-01T22:00:00.000Z";
+    const noFormulario = utcIsoToZonedInput(original, APP_TIME_ZONE);
+    const devolta = toEventInput({ title: "x", eventDate: noFormulario });
+    expect(devolta.eventDate).toBe(original);
   });
 });

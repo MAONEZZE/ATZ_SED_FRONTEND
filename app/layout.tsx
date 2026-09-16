@@ -28,7 +28,16 @@ export const metadata: Metadata = {
   description:
     "SED — plataforma de gestão de eventos curados: landing pages, inscrições, mensagens e automações.",
   icons: {
-    icon: "/logos/reduzido/logo-verde.svg",
+    // Ícones quadrados com fundo ink: #8edd65 é "só sobre escuro" (globals.css),
+    // e o Google renderiza o favicon sobre branco. O .ico existe na raiz porque
+    // o Googlebot-favicon cai em /favicon.ico quando não aproveita o <link>.
+    icon: [
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
   },
 };
 

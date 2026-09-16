@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { APP_TIME_ZONE, zonedInputToUtcIso } from "@/lib/utils/date-time-picker";
 
 export const eventSchema = z
   .object({
@@ -46,8 +47,8 @@ export function toEventInput(values: EventFormValues) {
     capacity: values.capacity ? Number(values.capacity) : undefined,
     dressCode: values.dressCode || undefined,
     groupLink: values.groupLink || undefined,
-    eventDate: values.eventDate ? new Date(values.eventDate).toISOString() : undefined,
-    endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
+    eventDate: values.eventDate ? zonedInputToUtcIso(values.eventDate, APP_TIME_ZONE) : undefined,
+    endDate: values.endDate ? zonedInputToUtcIso(values.endDate, APP_TIME_ZONE) : undefined,
     recurrenceFreq: values.recurrenceFreq ? values.recurrenceFreq : null,
     recurrenceInterval: hasRecurrence
       ? values.recurrenceInterval
@@ -56,7 +57,7 @@ export function toEventInput(values: EventFormValues) {
       : null,
     recurrenceUntil:
       hasRecurrence && values.recurrenceUntil
-        ? new Date(values.recurrenceUntil).toISOString()
+        ? zonedInputToUtcIso(values.recurrenceUntil, APP_TIME_ZONE)
         : null,
     whatsappInstanceId: values.whatsappInstanceId || undefined,
     whatsappToken: values.whatsappToken || undefined,
