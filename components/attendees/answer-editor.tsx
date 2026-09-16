@@ -94,11 +94,14 @@ export function AnswerEditor({
           />
           {strVal && (
             <div className="flex justify-end">
-              <Button asChild variant="outline" size="sm">
-                <a href={strVal} download={imageFileName(field.label, strVal)}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Baixar imagem
-                </a>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => downloadImage(strVal, imageFileName(field.label, strVal))}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Baixar imagem
               </Button>
             </div>
           )}
@@ -126,6 +129,19 @@ export function AnswerEditor({
         />
       );
   }
+}
+
+/** Baixa direto via blob para o arquivo não abrir numa nova aba. */
+async function downloadImage(value: string, fileName: string) {
+  const blob = await fetch(value).then((r) => r.blob());
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 /** Nome do arquivo ao baixar: rótulo do campo + extensão inferida do data URL. */
