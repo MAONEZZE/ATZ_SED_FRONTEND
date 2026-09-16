@@ -1,7 +1,9 @@
 "use client";
 
+import { Download } from "lucide-react";
 import type { FormField } from "@/lib/api/types";
 import { fieldOptions } from "@/lib/forms/field-types";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,11 +86,23 @@ export function AnswerEditor({
       );
     case "image":
       return (
-        <ImageField
-          inputId={`answer-image-${field.id}`}
-          value={strVal}
-          onChange={onChange}
-        />
+        <div className="space-y-2">
+          <ImageField
+            inputId={`answer-image-${field.id}`}
+            value={strVal}
+            onChange={onChange}
+          />
+          {strVal && (
+            <div className="flex justify-end">
+              <Button asChild variant="outline" size="sm">
+                <a href={strVal} download={imageFileName(field.label, strVal)}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Baixar imagem
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
       );
     case "linkedin":
     case "instagram":
@@ -112,4 +126,12 @@ export function AnswerEditor({
         />
       );
   }
+}
+
+/** Nome do arquivo ao baixar: rótulo do campo + extensão inferida do data URL. */
+function imageFileName(label: string, value: string) {
+  const mime = value.match(/^data:image\/([a-z0-9.+-]+)/i)?.[1];
+  const ext = mime ? (mime === "jpeg" ? "jpg" : mime) : "png";
+  const slug = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return `${slug || "imagem"}.${ext}`;
 }
