@@ -88,3 +88,43 @@ describe("RegistrationForm — envio", () => {
     expect(submitMock.mock.calls[0][2]).toMatchObject({ answers: { Nome: "Ruan" } });
   });
 });
+
+describe("RegistrationForm — telefone", () => {
+  it("formulário não-anônimo sem campo de telefone envia sem `phone`", async () => {
+    // regressão: o backend exigia `phone` em todo formulário não-anônimo e
+    // devolvia 400 "Telefone é obrigatório" num formulário que nem pede o
+    // campo. Hoje `phone` é opcional — o front tem que omiti-lo, não inventar
+    // um valor nem bloquear o envio.
+    const fields = [textField("1", "Nome")];
+    render(<RegistrationForm slug="ev" formSlug="sem-tel" fields={fields} />);
+    await waitFor(() => screen.getByText("Enviar"));
+
+    fireEvent.change(byKey(fields[0]), { target: { value: "Ruan" } });
+    fireEvent.click(screen.getByText("Enviar"));
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock.mock.calls[0][2]).toMatchObject({ answers: { Nome: "Ruan" } });
+    expect(submitMock.mock.calls[0][2].phone).toBeUndefined();
+  });
+
+  it("formulário com campo de telefone manda o valor no `phone` de primeiro nível", async () => {
+    // o backend não lê o telefone de dentro de `answers`: sem o campo no topo
+    // do corpo ele não casa com o inscrito e duplica a cada envio.
+    const fields: PublicFormField[] = [
+      textField("1", "Nome"),
+      { id: "2", label: "Telefone", type: "phone", required: true, options: null, order: 1 },
+    ];
+    render(<RegistrationForm slug="ev" formSlug="com-tel" fields={fields} />);
+    await waitFor(() => screen.getByText("Enviar"));
+
+    fireEvent.change(byKey(fields[0]), { target: { value: "Ruan" } });
+    fireEvent.change(byKey(fields[1]), { target: { value: "+5511999998888" } });
+    fireEvent.click(screen.getByText("Enviar"));
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock.mock.calls[0][2]).toMatchObject({
+      phone: "+5511999998888",
+      answers: { Nome: "Ruan", Telefone: "+5511999998888" },
+    });
+  });
+});
