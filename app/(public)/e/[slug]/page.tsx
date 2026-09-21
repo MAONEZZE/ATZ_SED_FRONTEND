@@ -153,7 +153,7 @@ export default async function PublicEventPage({ params }: PageProps) {
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
         <div className="flex items-center justify-center gap-3">
           <a
-            href="https://instagram.com/by.atlaz"
+            href="https://instagram.com/somos.akeel"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Instagram"
@@ -162,7 +162,7 @@ export default async function PublicEventPage({ params }: PageProps) {
             <FaInstagram className="h-5 w-5" />
           </a>
           <a
-            href="https://www.youtube.com/@AtlazLearningBrandVenture"
+            href="https://www.youtube.com/@somosakeel"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="YouTube"

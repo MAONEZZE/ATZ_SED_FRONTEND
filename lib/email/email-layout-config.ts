@@ -132,9 +132,9 @@ export const DEFAULTS: EmailLayoutConfig = Object.freeze({
   farewell: "Abraços,",
   signature: "Equipe Atlaz",
   showInstagram: true,
-  instagramUrl: "https://www.instagram.com/by.atlaz",
+  instagramUrl: "https://www.instagram.com/somos.akeel",
   showYoutube: true,
-  youtubeUrl: "https://www.youtube.com/@AtlazLearningBrandVenture",
+  youtubeUrl: "https://www.youtube.com/@somosakeel",
   autoNotice:
     "Por favor, pedimos que você não responda esse e-mail, pois se trata de uma mensagem automática.",
 
