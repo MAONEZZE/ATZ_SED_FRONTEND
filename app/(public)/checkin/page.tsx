@@ -10,14 +10,11 @@ import { phoneMetadata } from "@/lib/phone/metadata";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
-
-const SUBMITTED_FLAG = "checkin_submitted";
 
 export default function CheckinPage() {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(() => isSubmitted(SUBMITTED_FLAG));
+  const [done, setDone] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +26,6 @@ export default function CheckinPage() {
     setSubmitting(true);
     try {
       await submitPublicCheckin(phone);
-      markSubmitted(SUBMITTED_FLAG);
       setDone(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao fazer check-in");

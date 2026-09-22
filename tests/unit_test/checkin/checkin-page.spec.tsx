@@ -39,7 +39,7 @@ describe("página pública de check-in", () => {
     expect(submitPublicCheckin).not.toHaveBeenCalled();
   });
 
-  it("sucesso troca para a confirmação e persiste a flag", async () => {
+  it("sucesso troca para a confirmação sem gravar nada no navegador", async () => {
     render(<CheckinPage />);
     typePhone("+5511999998888");
 
@@ -47,7 +47,7 @@ describe("página pública de check-in", () => {
 
     expect(await screen.findByText("Check-in confirmado")).toBeTruthy();
     expect(submitPublicCheckin).toHaveBeenCalledWith("+5511999998888");
-    expect(localStorage.getItem("checkin_submitted")).toBe("true");
+    expect(localStorage.length).toBe(0);
   });
 
   it("erro do backend aparece no toast e mantém o formulário utilizável", async () => {
@@ -61,14 +61,13 @@ describe("página pública de check-in", () => {
       expect(toastError).toHaveBeenCalledWith("Nenhuma inscrição com esse telefone"),
     );
     expect(screen.getByRole("button", { name: "Checkin" })).toBeTruthy();
-    expect(localStorage.getItem("checkin_submitted")).toBeNull();
   });
 
-  it("flag já gravada abre direto na confirmação, sem formulário", () => {
+  it("sempre abre com o formulário, mesmo com flag antiga gravada", () => {
     localStorage.setItem("checkin_submitted", "true");
     render(<CheckinPage />);
 
-    expect(screen.getByText("Check-in confirmado")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Checkin" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Checkin" })).toBeTruthy();
+    expect(screen.queryByText("Check-in confirmado")).toBeNull();
   });
 });
