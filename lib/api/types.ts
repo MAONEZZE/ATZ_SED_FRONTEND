@@ -111,6 +111,8 @@ export interface Registration {
   answers: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  /** Form de origem; null = inscrito sem form de origem (painel ou anterior à coluna). */
+  originFormId: string | null;
   /** Nome do form de origem; null = inscrito sem form de origem (painel ou anterior à coluna). */
   formName: string | null;
   attended: boolean;

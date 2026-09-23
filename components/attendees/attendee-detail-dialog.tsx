@@ -19,13 +19,14 @@ export interface AttendeeDetailData {
   createdAt: string;
   /** null = sem funil (resposta de formulário anônimo). */
   status: FunnelStatus | null;
+  /** Form de origem: escopa os campos exibidos. null = origem desconhecida (legado). */
+  formId: string | null;
   /** Nome do form de origem, quando houver. */
   formName: string | null;
 }
 
 export function AttendeeDetailDialog({
   eventId,
-  formId,
   data,
   open,
   onOpenChange,
@@ -34,8 +35,6 @@ export function AttendeeDetailDialog({
   saveDisabledReason,
 }: {
   eventId: string;
-  /** Presente = campos escopados a um form específico (modo anônimo). */
-  formId?: string;
   data: AttendeeDetailData | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,8 +45,23 @@ export function AttendeeDetailDialog({
 }) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
+  const formId = data?.formId ?? undefined;
   const { data: fields = [] } = useFormFields(eventId, formId);
-  const sortedFields = useMemo(() => [...fields].sort((a, b) => a.order - b.order), [fields]);
+  const sortedFields = useMemo(() => {
+    let visible = fields;
+    // Sem form de origem a API devolve os campos de todos os forms do evento:
+    // mostra só os que a pessoa respondeu (e os fixos), sem repetir rótulo.
+    if (!formId) {
+      const seen = new Set<string>();
+      visible = fields.filter((f) => {
+        if (seen.has(f.label)) return false;
+        if (!f.isFixed && !(f.label in (data?.answers ?? {}))) return false;
+        seen.add(f.label);
+        return true;
+      });
+    }
+    return [...visible].sort((a, b) => a.order - b.order);
+  }, [fields, formId, data?.answers]);
 
   useEffect(() => {
     if (!open || !data) return;

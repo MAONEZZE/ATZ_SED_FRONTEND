@@ -30,8 +30,13 @@ const FORMS = [
 ];
 
 const REGISTRATIONS = [
-  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: {}, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", formName: "Inscrição", attended: true },
-  { id: "r2", eventId: "evt-1", status: "pending", name: "Bruno", email: "bruno@x.com", phone: "+5511999997777", answers: {}, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "", formName: "Inscrição", attended: false },
+  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: { Cidade: "São Paulo" }, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", originFormId: "form-1", formName: "Inscrição", attended: true },
+  { id: "r2", eventId: "evt-1", status: "pending", name: "Bruno", email: "bruno@x.com", phone: "+5511999997777", answers: { Cidade: "Recife" }, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "", originFormId: null, formName: null, attended: false },
+];
+
+const FIELDS = [
+  { id: "f1", formId: "form-1", label: "Cidade", type: "text", required: false, options: null, order: 0, isFixed: false, createdAt: "" },
+  { id: "f2", formId: "form-2", label: "Nota NPS", type: "text", required: false, options: null, order: 0, isFixed: false, createdAt: "" },
 ];
 
 vi.mock("@/lib/api/client", () => ({
@@ -45,7 +50,9 @@ vi.mock("@/lib/api/client", () => ({
         return Promise.resolve({ data: [], total: 3 });
       }
       if (path.startsWith("/events/evt-1/form-fields")) {
-        return Promise.resolve({ data: [], total: 0 });
+        const formId = new URLSearchParams(path.split("?")[1]).get("formId");
+        const data = formId ? FIELDS.filter((f) => f.formId === formId) : FIELDS;
+        return Promise.resolve({ data, total: data.length });
       }
       throw new Error(`unexpected GET ${path}`);
     }),
@@ -92,7 +99,7 @@ describe("AttendeesPage — seletor de formulário", () => {
     await screen.findByText("Ana");
     expect(screen.getByText("Formulário")).not.toBeNull();
     // "Inscrição" aparece 2x: nome do form (coluna Formulário) e cabeçalho da coluna de data.
-    expect(screen.getAllByText("Inscrição").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText("Inscrição").length).toBeGreaterThanOrEqual(1);
 
     const importButton = screen.getByRole("button", { name: /importar csv/i }) as HTMLButtonElement;
     expect(importButton.disabled).toBe(true);
@@ -163,5 +170,25 @@ describe("AttendeesPage — useSetRecordCount", () => {
     await waitFor(() => {
       expect(screen.getByTestId("record-count").textContent).toBe("3");
     });
+  });
+});
+
+describe("AttendeesPage — detalhe da inscrição", () => {
+  it("mostra só os campos do formulário de origem da inscrição", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText("Ana"));
+
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(dialog.textContent).toContain("Cidade"));
+    expect(dialog.textContent).not.toContain("Nota NPS");
+  });
+
+  it("sem formulário de origem, mostra só os campos que a pessoa respondeu", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText("Bruno"));
+
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(dialog.textContent).toContain("Cidade"));
+    expect(dialog.textContent).not.toContain("Nota NPS");
   });
 });

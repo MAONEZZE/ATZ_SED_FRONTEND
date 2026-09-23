@@ -189,6 +189,7 @@ export default function AttendeesPage() {
       answers: r.answers,
       createdAt: r.createdAt,
       status: r.status,
+      formId: r.originFormId,
       formName: r.formName,
     });
     setDetailOpen(true);
@@ -203,6 +204,7 @@ export default function AttendeesPage() {
       answers: r.answers,
       createdAt: r.createdAt,
       status: r.status,
+      formId: selectedForm?.id ?? null,
       formName: selectedForm?.name ?? null,
     });
     setDetailOpen(true);
@@ -345,7 +347,6 @@ export default function AttendeesPage() {
 
       <AttendeeDetailDialog
         eventId={eventId}
-        formId={isAnonymousView ? selectedForm?.id : undefined}
         data={viewing}
         open={detailOpen}
         onOpenChange={setDetailOpen}
