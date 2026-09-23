@@ -31,6 +31,13 @@ import {
 import { cn } from "@/lib/utils";
 
 export const ALL_STATUS = "all";
+export const ALL_ATTENDED = "all";
+export type AttendedFilterValue = typeof ALL_ATTENDED | "done" | "notDone";
+const ATTENDED_OPTIONS: { value: AttendedFilterValue; label: string }[] = [
+  { value: ALL_ATTENDED, label: "Geral" },
+  { value: "done", label: "Feito" },
+  { value: "notDone", label: "Não feito" },
+];
 const MAX_BULK_DELETE = 500;
 const MAX_NAMES_SHOWN = 10;
 
@@ -49,6 +56,11 @@ export interface AttendeesTableProps<T> {
   statusFilter?: {
     value: string;
     onChange: (value: string) => void;
+  };
+  /** Presente = coluna Checkin vira filtro (modo inscritos). Ausente = cabeçalho fixo. */
+  attendedFilter?: {
+    value: AttendedFilterValue;
+    onChange: (value: AttendedFilterValue) => void;
   };
   /** Presente só na view "Geral", entre Telefone e Inscrição. */
   formColumn?: {
@@ -95,6 +107,7 @@ export function AttendeesTable<T>({
   getAttended,
   renderStatus,
   statusFilter,
+  attendedFilter,
   formColumn,
   search,
   onSearchChange,
@@ -186,40 +199,19 @@ export function AttendeesTable<T>({
     {
       key: "status",
       header: statusFilter ? (
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className={cn(
-                "inline-flex items-center gap-1.5 hover:text-foreground",
-                statusFilter.value !== ALL_STATUS && "text-primary",
-              )}
-            >
-              <ChevronDown className="h-3.5 w-3.5" />
-              {statusFilter.value === ALL_STATUS
-                ? "Status"
-                : funnelStatusConfig[statusFilter.value as FunnelStatus].label}
-            </button>
-          </PopoverTrigger>
-          <PopoverContent className="w-56" align="center">
-            <RadioGroup value={statusFilter.value} onValueChange={statusFilter.onChange}>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value={ALL_STATUS} id="status-filter-all" />
-                <Label htmlFor="status-filter-all" className="font-normal">
-                  Todos os status
-                </Label>
-              </div>
-              {(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => (
-                <div key={status} className="flex items-center gap-2">
-                  <RadioGroupItem value={status} id={`status-filter-${status}`} />
-                  <Label htmlFor={`status-filter-${status}`} className="font-normal">
-                    {funnelStatusConfig[status].label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </PopoverContent>
-        </Popover>
+        <ColumnFilter
+          id="status-filter"
+          title="Status"
+          value={statusFilter.value}
+          onChange={statusFilter.onChange}
+          options={[
+            { value: ALL_STATUS, label: "Todos os status" },
+            ...(Object.keys(funnelStatusConfig) as FunnelStatus[]).map((status) => ({
+              value: status,
+              label: funnelStatusConfig[status].label,
+            })),
+          ]}
+        />
       ) : (
         "Status"
       ),
@@ -231,7 +223,17 @@ export function AttendeesTable<T>({
     },
     {
       key: "attended",
-      header: "Checkin",
+      header: attendedFilter ? (
+        <ColumnFilter
+          id="attended-filter"
+          title="Checkin"
+          value={attendedFilter.value}
+          onChange={(v) => attendedFilter.onChange(v as AttendedFilterValue)}
+          options={ATTENDED_OPTIONS}
+        />
+      ) : (
+        "Checkin"
+      ),
       className: "w-24",
       cell: (r) => {
         const attended = getAttended(r);
@@ -333,5 +335,51 @@ export function AttendeesTable<T>({
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+/** Cabeçalho de coluna com filtro de escolha única; a 1ª opção é o "sem filtro". */
+function ColumnFilter({
+  id,
+  title,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  title: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const isFiltered = value !== options[0].value;
+  const current = options.find((o) => o.value === value);
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "inline-flex items-center gap-1.5 hover:text-foreground",
+            isFiltered && "text-primary",
+          )}
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+          {isFiltered && current ? current.label : title}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56" align="center">
+        <RadioGroup value={value} onValueChange={onChange}>
+          {options.map((opt) => (
+            <div key={opt.value} className="flex items-center gap-2">
+              <RadioGroupItem value={opt.value} id={`${id}-${opt.value}`} />
+              <Label htmlFor={`${id}-${opt.value}`} className="font-normal">
+                {opt.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -43,7 +43,7 @@ export function fieldHasOptions(type: FieldType): boolean {
  */
 export function fieldOptions(field: { options?: unknown }): string[] {
   return Array.isArray(field.options)
-    ? field.options.filter((o): o is string => typeof o === "string")
+    ? field.options.filter((o): o is string => typeof o === "string" && o.trim() !== "")
     : [];
 }
 

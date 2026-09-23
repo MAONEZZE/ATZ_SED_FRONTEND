@@ -27,6 +27,7 @@ export const queryKeys = {
       status?: string;
       search?: string;
       formId?: string;
+      attended?: boolean;
       page?: number;
       limit?: number;
     },

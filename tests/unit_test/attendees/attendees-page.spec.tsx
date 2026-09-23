@@ -158,6 +158,31 @@ describe("AttendeesPage — coluna Checkin", () => {
   });
 });
 
+describe("AttendeesPage — filtro de Checkin", () => {
+  it("filtra por Feito / Não feito e volta ao Geral sem o parâmetro", async () => {
+    renderPage();
+    await screen.findByText("Ana");
+    const registrationCalls = () =>
+      (api.get as ReturnType<typeof vi.fn>).mock.calls
+        .map((c: unknown[]) => c[0] as string)
+        .filter((url) => url.startsWith("/events/evt-1/registrations"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Checkin" }));
+    fireEvent.click(await screen.findByLabelText("Feito"));
+    await waitFor(() =>
+      expect(registrationCalls().some((url) => url.includes("attended=true"))).toBe(true),
+    );
+
+    fireEvent.click(screen.getByLabelText("Não feito"));
+    await waitFor(() =>
+      expect(registrationCalls().some((url) => url.includes("attended=false"))).toBe(true),
+    );
+
+    fireEvent.click(screen.getByLabelText("Geral"));
+    await waitFor(() => expect(registrationCalls().at(-1)).not.toContain("attended="));
+  });
+});
+
 describe("AttendeesPage — useSetRecordCount", () => {
   it("escreve o total do modo ativo, sem escritor duplo ao trocar para o modo anônimo", async () => {
     renderPage();

@@ -4,11 +4,15 @@ import { useState, useEffect, useMemo } from "react";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
 import { useFormFields } from "@/lib/api/form-fields";
-import type { FunnelStatus } from "@/lib/api/types";
+import type { FormField, FunnelStatus } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format-date";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Referência estável: um `= []` no destructuring cria array novo a cada render
+// enquanto os campos carregam e o efeito do draft entra em loop infinito.
+const NO_FIELDS: FormField[] = [];
 
 export interface AttendeeDetailData {
   id: string;
@@ -46,7 +50,7 @@ export function AttendeeDetailDialog({
   const [draft, setDraft] = useState<Record<string, unknown>>({});
 
   const formId = data?.formId ?? undefined;
-  const { data: fields = [] } = useFormFields(eventId, formId);
+  const { data: fields = NO_FIELDS } = useFormFields(eventId, formId);
   const sortedFields = useMemo(() => {
     let visible = fields;
     // Sem form de origem a API devolve os campos de todos os forms do evento:

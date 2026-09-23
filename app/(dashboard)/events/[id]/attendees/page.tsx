@@ -25,7 +25,12 @@ import {
   AttendeeDetailDialog,
   type AttendeeDetailData,
 } from "@/components/attendees/attendee-detail-dialog";
-import { AttendeesTable, ALL_STATUS } from "@/components/attendees/attendees-table";
+import {
+  AttendeesTable,
+  ALL_ATTENDED,
+  ALL_STATUS,
+  type AttendedFilterValue,
+} from "@/components/attendees/attendees-table";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { CsvImportModal } from "@/components/common/csv-import-modal";
 import { useSetRecordCount } from "@/components/common/record-count";
@@ -58,6 +63,8 @@ export default function AttendeesPage() {
   const activeFormId = selectedFormId === GERAL_VALUE ? undefined : selectedFormId;
 
   const [statusFilter, setStatusFilter] = useState<string>(ALL_STATUS);
+  const [attendedFilter, setAttendedFilter] = useState<AttendedFilterValue>(ALL_ATTENDED);
+  const attended = attendedFilter === ALL_ATTENDED ? undefined : attendedFilter === "done";
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
@@ -110,6 +117,7 @@ export default function AttendeesPage() {
         status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
         search: search.trim() || undefined,
         formId: activeFormId,
+        attended,
       });
       downloadBlob(blob, `inscritos-${eventId}.csv`);
     } catch (e) {
@@ -139,6 +147,11 @@ export default function AttendeesPage() {
     setPage(1);
   }
 
+  function handleAttendedFilter(value: AttendedFilterValue) {
+    setAttendedFilter(value);
+    setPage(1);
+  }
+
   function handleSearchChange(value: string) {
     setSearch(value);
     setPage(1);
@@ -153,6 +166,7 @@ export default function AttendeesPage() {
     status: statusFilter === ALL_STATUS ? undefined : (statusFilter as FunnelStatus),
     search: search.trim() || undefined,
     formId: activeFormId,
+    attended,
     page,
     limit,
     enabled: !isAnonymousView,
@@ -312,6 +326,7 @@ export default function AttendeesPage() {
           getAttended={(r) => r.attended}
           renderStatus={(r) => <StatusSelect eventId={eventId} registration={r} />}
           statusFilter={{ value: statusFilter, onChange: handleStatusFilter }}
+          attendedFilter={{ value: attendedFilter, onChange: handleAttendedFilter }}
           formColumn={
             selectedFormId === GERAL_VALUE
               ? { getFormName: (r) => r.formName }
@@ -330,7 +345,7 @@ export default function AttendeesPage() {
           onSelectedChange={setSelectedIds}
           onRowClick={openRegistrationDetails}
           emptyMessage={
-            search || statusFilter !== ALL_STATUS
+            search || statusFilter !== ALL_STATUS || attendedFilter !== ALL_ATTENDED
               ? "Nenhum inscrito encontrado — ajuste a busca ou o filtro."
               : "Nenhum inscrito ainda — compartilhe o link público do evento."
           }

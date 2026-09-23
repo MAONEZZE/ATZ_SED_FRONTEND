@@ -12,13 +12,14 @@ import type { FunnelStatus, PaginatedResponse, Registration } from "@/lib/api/ty
 
 export function exportRegistrationsCsv(
   eventId: string,
-  filters: { status?: FunnelStatus; search?: string; formId?: string } = {},
+  filters: { status?: FunnelStatus; search?: string; formId?: string; attended?: boolean } = {},
 ): Promise<Blob> {
   const params = new URLSearchParams();
   params.set("format", "csv");
   if (filters.status) params.set("status", filters.status);
   if (filters.search) params.set("search", filters.search);
   if (filters.formId) params.set("formId", filters.formId);
+  if (filters.attended !== undefined) params.set("attended", String(filters.attended));
   return apiFetchBlob(`/events/${eventId}/registrations?${params.toString()}`);
 }
 
@@ -28,21 +29,23 @@ export function useRegistrations(
     status?: FunnelStatus;
     search?: string;
     formId?: string;
+    attended?: boolean;
     page?: number;
     limit?: number;
     enabled?: boolean;
   } = {},
 ) {
-  const { status, search, formId, page = 1, limit = 30, enabled = true } = params;
+  const { status, search, formId, attended, page = 1, limit = 30, enabled = true } = params;
   const qs = new URLSearchParams();
   if (status) qs.set("status", status);
   if (search) qs.set("search", search);
   if (formId) qs.set("formId", formId);
+  if (attended !== undefined) qs.set("attended", String(attended));
   qs.set("page", String(page));
   qs.set("limit", String(limit));
 
   return useQuery({
-    queryKey: queryKeys.registrations(eventId, { status, search, formId, page, limit }),
+    queryKey: queryKeys.registrations(eventId, { status, search, formId, attended, page, limit }),
     queryFn: () =>
       api.get<PaginatedResponse<Registration>>(
         `/events/${eventId}/registrations?${qs.toString()}`,
