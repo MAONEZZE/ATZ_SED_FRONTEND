@@ -29,11 +29,6 @@ export default async function PublicFormPage({ params }: PageProps) {
   const form = forms.find((f) => f.slug === formSlug);
   if (!event || !form) notFound();
 
-  // O endpoint público do evento expõe a mensagem e o link do formulário
-  // principal (o primeiro pela ordem). Não os reutilize em outro formulário.
-  const primaryForm = [...forms].sort((a, b) => a.order - b.order)[0];
-  const isPrimaryForm = primaryForm?.id === form.id;
-
   const coverSrc = event.coverUrl
     ? `${event.coverUrl}${event.coverUrl.includes("?") ? "&" : "?"}v=${Date.now()}`
     : null;
@@ -65,12 +60,8 @@ export default async function PublicFormPage({ params }: PageProps) {
                 fields={fields}
                 requireImageAuthorization={form.requireImageAuthorization}
                 anonymous={form.anonymous}
-                successMessage={
-                  isPrimaryForm ? (event.postRegistrationMessage ?? undefined) : undefined
-                }
-                postSubscriptionLink={
-                  isPrimaryForm ? (event.linkPostSubscription ?? undefined) : undefined
-                }
+                successMessage={form.postRegistrationMessage ?? undefined}
+                postSubscriptionLink={form.linkPostSubscription ?? undefined}
               />
             </CardContent>
           </Card>

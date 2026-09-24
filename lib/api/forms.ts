@@ -8,8 +8,8 @@ import type { Form } from "@/lib/api/types";
 export interface CreateFormInput {
   name: string;
   description?: string;
-  postRegistrationMessage?: string;
-  linkPostSubscription?: string;
+  postRegistrationMessage?: string | null;
+  linkPostSubscription?: string | null;
   requireImageAuthorization?: boolean;
   sendToPipedrive?: boolean;
   anonymous?: boolean;

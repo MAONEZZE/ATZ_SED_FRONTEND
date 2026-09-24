@@ -215,17 +215,13 @@ export interface PublicEvent {
   id: string;
   title: string;
   slug: string;
-  description: string | null;
   coverUrl: string | null;
   location: string | null;
   capacity: number | null;
   dressCode: string | null;
   eventDate: string | null;
   endDate: string | null;
-  postRegistrationMessage: string | null;
-  linkPostSubscription: string | null;
-  requireImageAuthorization: boolean;
-  status: "published";
+  status: "published" | "ended";
 }
 
 /** `GET /public/events/:slug/forms` — só os campos que o backend expõe publicamente. */
@@ -235,6 +231,8 @@ export interface PublicFormSummary {
   slug: string;
   order: number;
   description: string | null;
+  postRegistrationMessage: string | null;
+  linkPostSubscription: string | null;
   requireImageAuthorization: boolean;
   anonymous: boolean;
 }

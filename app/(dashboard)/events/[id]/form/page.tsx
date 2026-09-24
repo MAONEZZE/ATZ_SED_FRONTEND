@@ -298,10 +298,8 @@ function FormMetaEditor({
     update.mutate(
       {
         description,
-        postRegistrationMessage,
-        // Backend valida com @IsUrl; string vazia não é URL válida, então só
-        // manda a chave quando há valor — não dá pra "limpar" o link por aqui.
-        ...(linkPostSubscription ? { linkPostSubscription } : {}),
+        postRegistrationMessage: postRegistrationMessage || null,
+        linkPostSubscription: linkPostSubscription || null,
       },
       {
         onSuccess: () => {

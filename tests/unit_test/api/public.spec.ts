@@ -22,7 +22,17 @@ describe("getPublicForms", () => {
 
   it("busca a lista de formulários públicos do evento", async () => {
     const forms = [
-      { id: "f1", name: "Inscrição", slug: "inscricao", order: 0, description: null, requireImageAuthorization: false, anonymous: false },
+      {
+        id: "f1",
+        name: "Inscrição",
+        slug: "inscricao",
+        order: 0,
+        description: null,
+        postRegistrationMessage: "Obrigado!",
+        linkPostSubscription: "https://example.com/proximos-passos",
+        requireImageAuthorization: false,
+        anonymous: false,
+      },
     ];
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, forms));
     vi.stubGlobal("fetch", fetchMock);
@@ -72,7 +82,9 @@ describe("submitPublicFormResponse", () => {
   it("formulário anônimo: registrationId vem null", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(201, { registrationId: null, created: true })),
+      vi
+        .fn()
+        .mockResolvedValue(jsonResponse(201, { registrationId: null, created: true })),
     );
 
     const result = await submitPublicFormResponse("evt-1", "feedback", {
@@ -85,7 +97,9 @@ describe("submitPublicFormResponse", () => {
   it("repassa body.message em erro", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(400, { message: "Campo obrigatório ausente" })),
+      vi
+        .fn()
+        .mockResolvedValue(jsonResponse(400, { message: "Campo obrigatório ausente" })),
     );
 
     await expect(
@@ -114,7 +128,11 @@ describe("submitPublicCheckin", () => {
   it("repassa body.message do backend em erro", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(jsonResponse(404, { message: "Nenhuma inscrição com esse telefone" })),
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(404, { message: "Nenhuma inscrição com esse telefone" }),
+        ),
     );
 
     await expect(submitPublicCheckin("+5511999998888")).rejects.toThrow(
@@ -134,6 +152,8 @@ describe("submitPublicCheckin", () => {
       }),
     );
 
-    await expect(submitPublicCheckin("+5511999998888")).rejects.toThrow("Falha ao fazer check-in");
+    await expect(submitPublicCheckin("+5511999998888")).rejects.toThrow(
+      "Falha ao fazer check-in",
+    );
   });
 });

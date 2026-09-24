@@ -4,9 +4,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, MapPin, Shirt } from "lucide-react";
 import { getPublicEvent } from "@/lib/api/public";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { EventCoverHero } from "@/components/forms/event-cover-hero";
-import { renderRichText } from "@/components/ui/rich-text";
 import { FaInstagram, FaYoutube } from "react-icons/fa";
 
 export const revalidate = 300;
@@ -19,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const event = await getPublicEvent(params.slug);
   if (!event) return { title: "Evento não encontrado" };
 
-  const description = event.description ?? `Inscreva-se no evento ${event.title}`;
+  const description = `Inscreva-se no evento ${event.title}`;
 
   return {
     title: event.title,
@@ -113,41 +111,32 @@ export default async function PublicEventPage({ params }: PageProps) {
   return (
     <main className="force-light flex min-h-screen flex-col bg-background text-foreground">
       <div className="flex-1">
-      <EventCoverHero coverUrl={coverSrc} title={event.title} />
+        <EventCoverHero coverUrl={coverSrc} title={event.title} />
 
-      <div
-        className={`mx-auto max-w-2xl space-y-6 px-4 pb-10 ${
-          event.coverUrl ? "relative -mt-20 pt-0" : "pt-10"
-        }`}
-      >
-        <Card className="shadow-sm">
-          <CardContent className="space-y-6 p-6 sm:p-8">
-            <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
+        <div
+          className={`mx-auto max-w-2xl space-y-6 px-4 pb-10 ${
+            event.coverUrl ? "relative -mt-20 pt-0" : "pt-10"
+          }`}
+        >
+          <Card className="shadow-sm">
+            <CardContent className="space-y-6 p-6 sm:p-8">
+              <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
 
-            {infoCards.length > 0 && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                {infoCards.map((card) => (
-                  <InfoCard
-                    key={card.label}
-                    icon={card.icon}
-                    label={card.label}
-                    value={card.value}
-                  />
-                ))}
-              </div>
-            )}
-
-            {event.description && (
-              <>
-                <Separator />
-                <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">
-                  {renderRichText(event.description)}
-                </p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              {infoCards.length > 0 && (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                  {infoCards.map((card) => (
+                    <InfoCard
+                      key={card.label}
+                      icon={card.icon}
+                      label={card.label}
+                      value={card.value}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <footer className="border-t py-6 text-center text-sm text-muted-foreground">
