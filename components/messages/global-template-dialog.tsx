@@ -9,6 +9,7 @@ import {
   useCreateTemplateGlobal,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
+import { ApiError } from "@/lib/api/client";
 import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
 import {
   EMAIL_PREVIEW_MIN_HEIGHT,
@@ -48,6 +49,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const TEMPLATE_EVENT_CONFLICT_MESSAGE =
+  "Template em uso por automação; não pode trocar de evento";
+
+function isTemplateEventConflict(error: unknown): error is ApiError {
+  return (
+    error instanceof ApiError &&
+    error.status === 400 &&
+    error.message === TEMPLATE_EVENT_CONFLICT_MESSAGE
+  );
+}
+
 export function GlobalTemplateDialog({
   template,
   open,
@@ -58,7 +70,7 @@ export function GlobalTemplateDialog({
   template: TemplateWithEvent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Dentro de um evento: some o campo Evento e o template nasce vinculado a ele. */
+  /** Dentro de um evento: cria o template vinculado e move um global ao editá-lo. */
   fixedEventId?: string;
   /** Pasta atual da listagem; só é aplicada na criação. */
   fixedFolderId?: string | null;
@@ -90,9 +102,11 @@ export function GlobalTemplateDialog({
   const { textareaRef: bodyRef, insertVariable } = useVariableInsertion(body, setBody);
 
   const [name, setName] = useState("");
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
+      setSaveError(null);
       setName(template?.name ?? "");
       reset({
         channel: template?.channel ?? "whatsapp",
@@ -117,6 +131,7 @@ export function GlobalTemplateDialog({
   }
 
   function handleSave() {
+    setSaveError(null);
     if (!name.trim() || !body.trim()) {
       toast.error("Nome e corpo da mensagem são obrigatórios");
       return;
@@ -132,8 +147,8 @@ export function GlobalTemplateDialog({
       body,
       layoutConfig: channel === "email" ? layoutConfig : null,
       styleKey: channel === "email" ? activeStyle : null,
-      // A tela global cria somente templates globais. Dentro de um evento, o
-      // vínculo é fixado pela rota e nunca pode ser alterado neste modal.
+      // Na tela global o vínculo é null. No contexto de evento, uma criação já
+      // nasce vinculada e editar um template global tenta movê-lo para o evento.
       eventId: fixedEventId ?? null,
       ...(template ? {} : { folderId: fixedFolderId ?? null }),
     };
@@ -142,7 +157,13 @@ export function GlobalTemplateDialog({
         toast.success(isEdit ? "Template atualizado" : "Template criado");
         onOpenChange(false);
       },
-      onError: (e: Error) => toast.error(e.message),
+      onError: (error: Error) => {
+        const message = isTemplateEventConflict(error)
+          ? TEMPLATE_EVENT_CONFLICT_MESSAGE
+          : error.message;
+        setSaveError(message);
+        toast.error(message);
+      },
     };
     if (template) update.mutate({ id: template.id, input }, onDone);
     else create.mutate({ input }, onDone);
@@ -316,6 +337,12 @@ export function GlobalTemplateDialog({
             </CardContent>
           </Card>
         </div>
+
+        {saveError && (
+          <p role="alert" className="text-sm text-destructive">
+            {saveError}
+          </p>
+        )}
 
         <EditDialogFooter
           onCancel={() => onOpenChange(false)}

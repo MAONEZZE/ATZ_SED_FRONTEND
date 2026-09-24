@@ -1,9 +1,14 @@
 import * as React from "react";
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { act, render, screen, cleanup } from "@testing-library/react";
 
 const updateMutate = vi.fn();
 const createMutate = vi.fn();
+const toastError = vi.fn();
+
+vi.mock("sonner", () => ({
+  toast: { error: (message: string) => toastError(message), success: vi.fn() },
+}));
 
 vi.mock("@/lib/api/global-messaging", () => ({
   useCreateTemplateGlobal: () => ({ mutate: createMutate, isPending: false }),
@@ -13,12 +18,14 @@ vi.mock("@/lib/api/global-messaging", () => ({
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
 import { EMAIL_LAYOUT_PRESETS } from "@/lib/email/presets";
 import { buildEmail } from "@/lib/email/build-email";
+import { ApiError } from "@/lib/api/client";
 import type { TemplateWithEvent } from "@/lib/api/types";
 
 afterEach(() => cleanup());
 beforeEach(() => {
   updateMutate.mockClear();
   createMutate.mockClear();
+  toastError.mockClear();
 });
 
 const emailTpl: TemplateWithEvent = {
@@ -74,6 +81,25 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     screen.getByRole("button", { name: /^salvar$/i }).click();
     const arg = updateMutate.mock.calls[0][0];
     expect(arg.input.eventId).toBeNull();
+  });
+
+  it("exibe o 400 ao tentar mover um template usado por automação", () => {
+    render(
+      <GlobalTemplateDialog
+        template={emailTpl}
+        open
+        onOpenChange={() => {}}
+        fixedEventId="evt-1"
+      />,
+    );
+    screen.getByRole("button", { name: /^salvar$/i }).click();
+
+    const options = updateMutate.mock.calls[0][1];
+    const message = "Template em uso por automação; não pode trocar de evento";
+    act(() => options.onError(new ApiError(400, message)));
+
+    expect(toastError).toHaveBeenCalledWith(message);
+    expect(screen.getByRole("alert").textContent).toBe(message);
   });
 
   it("não salva template de e-mail sem assunto", () => {

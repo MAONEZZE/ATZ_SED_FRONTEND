@@ -118,7 +118,14 @@ export function EventAutomationDialog({
 
   // Automações de evento usam estritamente os templates vinculados ao evento.
   const { data: templatesResponse } = useAllTemplates(1, 100, undefined, eventId);
-  const templates = templatesResponse?.data ?? [];
+  // A API inclui também os templates globais do usuário quando recebe eventId.
+  // Eles continuam úteis em outros fluxos, mas o backend de automações exige
+  // que o template pertença ao próprio evento.
+  const templates = useMemo(
+    () =>
+      (templatesResponse?.data ?? []).filter((template) => template.eventId === eventId),
+    [eventId, templatesResponse?.data],
+  );
 
   useEffect(() => {
     if (open) {
@@ -151,7 +158,9 @@ export function EventAutomationDialog({
   }
 
   function handleSave() {
-    if (!templateId) return toast.error("Selecione o template");
+    if (!templates.some((template) => template.id === templateId)) {
+      return toast.error("Selecione um template deste evento");
+    }
 
     const selectedForms = formIds
       .map((id) => sortedForms.find((f) => f.id === id))
@@ -250,7 +259,7 @@ export function EventAutomationDialog({
                 <SelectValue placeholder="Selecione o template" />
               </SelectTrigger>
               <SelectContent>
-                {templates?.map((t) => (
+                {templates.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.name} ({t.channel === "whatsapp" ? "WhatsApp" : "E-mail"})
                   </SelectItem>

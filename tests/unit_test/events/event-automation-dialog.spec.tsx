@@ -89,7 +89,11 @@ vi.mock("@/lib/api/form-fields", () => ({
 vi.mock("@/lib/api/global-messaging", () => ({
   useAllTemplates: () => ({
     data: {
-      data: [{ id: "tpl-1", name: "Template A", channel: "email" }],
+      data: [
+        { id: "tpl-1", eventId: "evt-1", name: "Template A", channel: "email" },
+        { id: "tpl-global", eventId: null, name: "Template global", channel: "email" },
+        { id: "tpl-other", eventId: "evt-2", name: "Outro evento", channel: "email" },
+      ],
     },
   }),
   useCreateAutomationGlobal: () => ({ mutate: createMutate, isPending: false }),
@@ -104,7 +108,9 @@ beforeEach(() => {
 });
 
 function openFormsPopover() {
-  fireEvent.click(screen.getByRole("button", { name: /selecionar formulários|formulário/i }));
+  fireEvent.click(
+    screen.getByRole("button", { name: /selecionar formulários|formulário/i }),
+  );
 }
 
 function pickTrigger(label: string) {
@@ -126,10 +132,34 @@ const ALL_TRIGGER_LABELS = [
   "Em uma data informada no formulário",
 ];
 
+describe("EventAutomationDialog — seletor de templates", () => {
+  it("exibe somente templates que pertencem ao evento atual", () => {
+    render(
+      <EventAutomationDialog
+        eventId="evt-1"
+        automation={null}
+        open
+        onOpenChange={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByRole("combobox")[0]);
+
+    expect(screen.getByRole("option", { name: /Template A/ })).toBeTruthy();
+    expect(screen.queryByRole("option", { name: /Template global/ })).toBeNull();
+    expect(screen.queryByRole("option", { name: /Outro evento/ })).toBeNull();
+  });
+});
+
 describe("EventAutomationDialog — seletor de formulários por gatilho", () => {
   it("renderiza o seletor de formulários nos 7 gatilhos", () => {
     render(
-      <EventAutomationDialog eventId="evt-1" automation={null} open onOpenChange={() => {}} />,
+      <EventAutomationDialog
+        eventId="evt-1"
+        automation={null}
+        open
+        onOpenChange={() => {}}
+      />,
     );
 
     for (const label of ALL_TRIGGER_LABELS) {
@@ -143,11 +173,18 @@ describe("EventAutomationDialog — seletor de formulários por gatilho", () => 
 
   it("formulário anônimo aparece desabilitado com motivo, em qualquer gatilho", () => {
     render(
-      <EventAutomationDialog eventId="evt-1" automation={null} open onOpenChange={() => {}} />,
+      <EventAutomationDialog
+        eventId="evt-1"
+        automation={null}
+        open
+        onOpenChange={() => {}}
+      />,
     );
     openFormsPopover();
 
-    const option = screen.getByText("Pesquisa Anônima").closest("label") as HTMLLabelElement;
+    const option = screen
+      .getByText("Pesquisa Anônima")
+      .closest("label") as HTMLLabelElement;
     const checkbox = within(option).getByRole("checkbox");
     expect(checkbox.hasAttribute("disabled")).toBe(true);
     expect(within(option).getByText(/anônimo/i)).toBeTruthy();
@@ -155,21 +192,34 @@ describe("EventAutomationDialog — seletor de formulários por gatilho", () => 
 
   it("formulário sem campo de data só é bloqueado em on_date_form_field", () => {
     render(
-      <EventAutomationDialog eventId="evt-1" automation={null} open onOpenChange={() => {}} />,
+      <EventAutomationDialog
+        eventId="evt-1"
+        automation={null}
+        open
+        onOpenChange={() => {}}
+      />,
     );
 
     openFormsPopover();
     let feedbackRow = screen.getByText("Feedback").closest("label") as HTMLLabelElement;
-    expect(within(feedbackRow).getByRole("checkbox").hasAttribute("disabled")).toBe(false);
+    expect(within(feedbackRow).getByRole("checkbox").hasAttribute("disabled")).toBe(
+      false,
+    );
 
     pickTrigger("Em uma data informada no formulário");
     openFormsPopover();
     feedbackRow = screen.getByText("Feedback").closest("label") as HTMLLabelElement;
     expect(within(feedbackRow).getByRole("checkbox").hasAttribute("disabled")).toBe(true);
-    expect(within(feedbackRow).getByText(/sem campo de automação por data/i)).toBeTruthy();
+    expect(
+      within(feedbackRow).getByText(/sem campo de automação por data/i),
+    ).toBeTruthy();
 
-    const inscricaoRow = screen.getByText("Inscrição").closest("label") as HTMLLabelElement;
-    expect(within(inscricaoRow).getByRole("checkbox").hasAttribute("disabled")).toBe(false);
+    const inscricaoRow = screen
+      .getByText("Inscrição")
+      .closest("label") as HTMLLabelElement;
+    expect(within(inscricaoRow).getByRole("checkbox").hasAttribute("disabled")).toBe(
+      false,
+    );
   });
 });
 
