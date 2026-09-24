@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { renderRichText } from "@/components/ui/rich-text";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
+import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
 
 export function RegistrationForm({
   slug,
@@ -30,12 +31,13 @@ export function RegistrationForm({
   successMessage?: string;
   postSubscriptionLink?: string;
 }) {
-  const draftKey = `reg_draft_${slug}_${formSlug}`;
-  const legacySubmittedKey = `reg_submitted_${slug}_${formSlug}`;
+  const legacyDraftKey = `reg_draft_${slug}_${formSlug}`;
+  const submittedKey = `reg_submitted_${slug}_${formSlug}`;
   const requireImage = requireImageAuthorization && !anonymous;
 
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   const visibleFields = useMemo(
@@ -55,42 +57,19 @@ export function RegistrationForm({
     defaultValues: defaultValues(visibleFields, requireImage),
   });
 
-  // localStorage nao existe no server: ler so apos a montagem, e so entao
-  // liberar o render real (ver skeleton abaixo) para nao quebrar a hidratacao.
+  // localStorage não existe no server: verifica a flag só após a montagem e
+  // libera o render real em seguida para não quebrar a hidratação.
   useEffect(() => {
+    // A flag serve apenas para informar: respostas anteriores nunca impedem
+    // que a pessoa preencha e envie o formulário novamente.
+    setAlreadySubmitted(!anonymous && isSubmitted(submittedKey));
+    // Limpa rascunhos deixados pela versão que persistia os campos. Os valores
+    // do formulário devem sempre começar vazios após recarregar a página.
     try {
-      // Versões anteriores bloqueavam novas respostas com esta flag. Ela não é
-      // mais gravada nem consultada; remova também o valor legado do navegador.
-      localStorage.removeItem(legacySubmittedKey);
-      const raw = localStorage.getItem(draftKey);
-      if (raw) {
-        // so aproveita as chaves que o formulario atual ainda tem: rascunho de
-        // uma versao anterior (campo removido/renomeado) nao pode zerar os
-        // defaults e deixar campo obrigatorio como undefined.
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const base = defaultValues(visibleFields, requireImage);
-        for (const key of Object.keys(base)) {
-          if (key in parsed) base[key] = parsed[key];
-        }
-        form.reset(base);
-      }
+      localStorage.removeItem(legacyDraftKey);
     } catch {}
     setHydrated(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey, legacySubmittedKey]);
-
-  const hasMounted = useRef(false);
-  const watchedValues = form.watch();
-
-  useEffect(() => {
-    if (!hasMounted.current) {
-      hasMounted.current = true;
-      return;
-    }
-    try {
-      localStorage.setItem(draftKey, JSON.stringify(watchedValues));
-    } catch {}
-  }, [watchedValues, draftKey]);
+  }, [anonymous, legacyDraftKey, submittedKey]);
 
   async function onSubmit(values: Record<string, unknown>) {
     setSubmitting(true);
@@ -112,9 +91,7 @@ export function RegistrationForm({
           : undefined,
       });
       setSuccess(true);
-      try {
-        localStorage.removeItem(draftKey);
-      } catch {}
+      if (!anonymous) markSubmitted(submittedKey);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha no envio");
     } finally {
@@ -160,6 +137,19 @@ export function RegistrationForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      {alreadySubmitted && (
+        <div
+          role="status"
+          className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-left text-green-900"
+        >
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600" />
+          <p className="text-sm">
+            Você já enviou este formulário antes. Se quiser, pode enviar uma nova
+            resposta.
+          </p>
+        </div>
+      )}
+
       {visibleFields.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Este evento ainda não possui campos de inscrição.

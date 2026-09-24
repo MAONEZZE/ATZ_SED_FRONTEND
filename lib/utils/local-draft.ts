@@ -13,8 +13,16 @@ export function setDraft<T>(key: string, value: T): void {
   } catch {}
 }
 
-export function removeDraft(key: string): void {
+export function isSubmitted(flagKey: string): boolean {
   try {
-    localStorage.removeItem(key);
+    return localStorage.getItem(flagKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function markSubmitted(flagKey: string): void {
+  try {
+    localStorage.setItem(flagKey, "true");
   } catch {}
 }

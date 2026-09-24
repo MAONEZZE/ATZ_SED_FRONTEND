@@ -32,15 +32,20 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("RegistrationForm — envio", () => {
-  it("ignora e remove a flag antiga de formulário já respondido", async () => {
+  it("avisa sobre resposta anterior sem bloquear um novo envio", async () => {
     localStorage.setItem("reg_submitted_ev_repetivel", "true");
     const fields = [textField("1", "Nome")];
 
     render(<RegistrationForm slug="ev" formSlug="repetivel" fields={fields} />);
 
     await waitFor(() => expect(screen.getByText("Enviar")).toBeTruthy());
-    expect(localStorage.getItem("reg_submitted_ev_repetivel")).toBeNull();
-    expect(screen.queryByText("Resposta registrada!")).toBeNull();
+    expect(screen.getByText(/você já enviou este formulário antes/i)).toBeTruthy();
+    expect(localStorage.getItem("reg_submitted_ev_repetivel")).toBe("true");
+
+    fireEvent.change(byKey(fields[0]), { target: { value: "Outra resposta" } });
+    fireEvent.click(screen.getByText("Enviar"));
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
   });
 
   it("mostra a mensagem e o botão configurados depois do envio", async () => {
@@ -109,17 +114,18 @@ describe("RegistrationForm — envio", () => {
     expect(submitMock).not.toHaveBeenCalled();
   });
 
-  it("rascunho de uma versão anterior do formulário não zera os campos atuais", async () => {
-    localStorage.setItem("reg_draft_ev_old", JSON.stringify({ "Campo Antigo": "x" }));
+  it("começa com os campos vazios e remove rascunhos antigos ao recarregar", async () => {
     const fields = [textField("1", "Nome")];
+    localStorage.setItem(
+      "reg_draft_ev_old",
+      JSON.stringify({ [fieldKey(fields[0])]: "Valor persistido" }),
+    );
+
     render(<RegistrationForm slug="ev" formSlug="old" fields={fields} anonymous />);
     await waitFor(() => screen.getByText("Enviar"));
 
-    fireEvent.change(byKey(fields[0]), { target: { value: "Ruan" } });
-    fireEvent.click(screen.getByText("Enviar"));
-
-    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
-    expect(submitMock.mock.calls[0][2]).toMatchObject({ answers: { Nome: "Ruan" } });
+    expect(byKey(fields[0]).value).toBe("");
+    expect(localStorage.getItem("reg_draft_ev_old")).toBeNull();
   });
 });
 
@@ -139,6 +145,7 @@ describe("RegistrationForm — telefone", () => {
     await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
     expect(submitMock.mock.calls[0][2]).toMatchObject({ answers: { Nome: "Ruan" } });
     expect(submitMock.mock.calls[0][2].phone).toBeUndefined();
+    expect(localStorage.getItem("reg_submitted_ev_sem-tel")).toBe("true");
   });
 
   it("formulário com campo de telefone manda o valor no `phone` de primeiro nível", async () => {
