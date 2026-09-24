@@ -18,17 +18,3 @@ export function removeDraft(key: string): void {
     localStorage.removeItem(key);
   } catch {}
 }
-
-export function isSubmitted(flagKey: string): boolean {
-  try {
-    return localStorage.getItem(flagKey) === "true";
-  } catch {
-    return false;
-  }
-}
-
-export function markSubmitted(flagKey: string): void {
-  try {
-    localStorage.setItem(flagKey, "true");
-  } catch {}
-}

@@ -32,6 +32,40 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("RegistrationForm — envio", () => {
+  it("ignora e remove a flag antiga de formulário já respondido", async () => {
+    localStorage.setItem("reg_submitted_ev_repetivel", "true");
+    const fields = [textField("1", "Nome")];
+
+    render(<RegistrationForm slug="ev" formSlug="repetivel" fields={fields} />);
+
+    await waitFor(() => expect(screen.getByText("Enviar")).toBeTruthy());
+    expect(localStorage.getItem("reg_submitted_ev_repetivel")).toBeNull();
+    expect(screen.queryByText("Resposta registrada!")).toBeNull();
+  });
+
+  it("mostra a mensagem e o botão configurados depois do envio", async () => {
+    const fields = [textField("1", "Nome")];
+    render(
+      <RegistrationForm
+        slug="ev"
+        formSlug="f"
+        fields={fields}
+        anonymous
+        successMessage="Inscrição concluída!"
+        postSubscriptionLink="https://example.com/proximos-passos"
+      />,
+    );
+    await waitFor(() => screen.getByText("Enviar"));
+
+    fireEvent.change(byKey(fields[0]), { target: { value: "Ruan" } });
+    fireEvent.click(screen.getByText("Enviar"));
+
+    expect(await screen.findByText("Inscrição concluída!")).toBeTruthy();
+    const link = screen.getByRole("link", { name: "Acessar link" });
+    expect(link.getAttribute("href")).toBe("https://example.com/proximos-passos");
+    expect(link.getAttribute("target")).toBe("_blank");
+  });
+
   it("envia mesmo com label contendo ponto/colchete", async () => {
     // regressão: a label era usada como `name` do react-hook-form, que trata
     // `.`/`[`/`]` como caminho — o valor ia parar aninhado, o erro do Zod ficava
@@ -112,7 +146,14 @@ describe("RegistrationForm — telefone", () => {
     // do corpo ele não casa com o inscrito e duplica a cada envio.
     const fields: PublicFormField[] = [
       textField("1", "Nome"),
-      { id: "2", label: "Telefone", type: "phone", required: true, options: null, order: 1 },
+      {
+        id: "2",
+        label: "Telefone",
+        type: "phone",
+        required: true,
+        options: null,
+        order: 1,
+      },
     ];
     render(<RegistrationForm slug="ev" formSlug="com-tel" fields={fields} />);
     await waitFor(() => screen.getByText("Enviar"));

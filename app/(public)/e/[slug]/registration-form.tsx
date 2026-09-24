@@ -10,8 +10,8 @@ import type { PublicFormField } from "@/lib/api/types";
 import { FormFieldsRenderer } from "@/components/forms/form-fields-renderer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { renderRichText } from "@/components/ui/rich-text";
 import { buildSchema, defaultValues } from "@/lib/validation/registration-form-schema";
-import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
 
 export function RegistrationForm({
   slug,
@@ -19,15 +19,19 @@ export function RegistrationForm({
   fields,
   requireImageAuthorization = false,
   anonymous = false,
+  successMessage,
+  postSubscriptionLink,
 }: {
   slug: string;
   formSlug: string;
   fields: PublicFormField[];
   requireImageAuthorization?: boolean;
   anonymous?: boolean;
+  successMessage?: string;
+  postSubscriptionLink?: string;
 }) {
   const draftKey = `reg_draft_${slug}_${formSlug}`;
-  const submittedKey = `reg_submitted_${slug}_${formSlug}`;
+  const legacySubmittedKey = `reg_submitted_${slug}_${formSlug}`;
   const requireImage = requireImageAuthorization && !anonymous;
 
   const [submitting, setSubmitting] = useState(false);
@@ -54,12 +58,10 @@ export function RegistrationForm({
   // localStorage nao existe no server: ler so apos a montagem, e so entao
   // liberar o render real (ver skeleton abaixo) para nao quebrar a hidratacao.
   useEffect(() => {
-    if (!anonymous && isSubmitted(submittedKey)) {
-      setSuccess(true);
-      setHydrated(true);
-      return;
-    }
     try {
+      // Versões anteriores bloqueavam novas respostas com esta flag. Ela não é
+      // mais gravada nem consultada; remova também o valor legado do navegador.
+      localStorage.removeItem(legacySubmittedKey);
       const raw = localStorage.getItem(draftKey);
       if (raw) {
         // so aproveita as chaves que o formulario atual ainda tem: rascunho de
@@ -75,7 +77,7 @@ export function RegistrationForm({
     } catch {}
     setHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftKey, submittedKey, anonymous]);
+  }, [draftKey, legacySubmittedKey]);
 
   const hasMounted = useRef(false);
   const watchedValues = form.watch();
@@ -110,12 +112,9 @@ export function RegistrationForm({
           : undefined,
       });
       setSuccess(true);
-      if (!anonymous) {
-        markSubmitted(submittedKey);
-        try {
-          localStorage.removeItem(draftKey);
-        } catch {}
-      }
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {}
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha no envio");
     } finally {
@@ -144,8 +143,17 @@ export function RegistrationForm({
         <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" />
         <h3 className="mt-4 text-xl font-bold">Resposta registrada!</h3>
         <p className="mt-2 whitespace-pre-line opacity-80">
-          Obrigado por sua resposta. Você receberá novidades em breve.
+          {successMessage
+            ? renderRichText(successMessage)
+            : "Obrigado por sua resposta. Você receberá novidades em breve."}
         </p>
+        {postSubscriptionLink && (
+          <Button asChild className="mt-6">
+            <a href={postSubscriptionLink} target="_blank" rel="noopener noreferrer">
+              Acessar link
+            </a>
+          </Button>
+        )}
       </div>
     );
   }
