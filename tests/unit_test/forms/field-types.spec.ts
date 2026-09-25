@@ -23,10 +23,10 @@ describe("field-types registry", () => {
     expect(fieldOptions({ options: "nope" })).toEqual([]);
   });
 
-  it("normaliza maxFiles de document e usa 1 para dados legados", () => {
-    expect(documentMaxFiles({ options: { maxFiles: 3 } })).toBe(3);
-    expect(documentMaxFiles({ options: null })).toBe(1);
-    expect(documentMaxFiles({ options: { maxFiles: 0 } })).toBe(1);
+  it("usa limite fixo de 5 arquivos para document", () => {
+    expect(documentMaxFiles({ options: { maxFiles: 3 } })).toBe(5);
+    expect(documentMaxFiles({ options: null })).toBe(5);
+    expect(documentMaxFiles({ options: { maxFiles: 0 } })).toBe(5);
   });
 
   it("usa radio até o limite e dropdown acima dele", () => {

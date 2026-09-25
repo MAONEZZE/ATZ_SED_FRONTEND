@@ -2,10 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FileUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
-import { documentMaxFiles, fieldHasOptions, fieldOptions } from "@/lib/forms/field-types";
+import {
+  DOCUMENT_MAX_FILES,
+  fieldHasOptions,
+  fieldOptions,
+} from "@/lib/forms/field-types";
 import type { FieldType, FormField } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +39,7 @@ const fieldTypeLabels: Record<FieldType, string> = {
   select: "Escolha única",
   multiselect: "Múltipla escolha",
   checkbox: "Caixa de seleção",
-  document: "Arquivo / Documento",
+  document: "Arquivos",
   date: "Data",
   linkedin: "LinkedIn",
   instagram: "Instagram",
@@ -88,7 +92,6 @@ export function FieldEditorDialog({
   const [type, setType] = useState<FieldType>("text");
   const [required, setRequired] = useState(true);
   const [optionsText, setOptionsText] = useState("");
-  const [maxFiles, setMaxFiles] = useState(1);
 
   useEffect(() => {
     if (open) {
@@ -96,7 +99,6 @@ export function FieldEditorDialog({
       setType(field?.type ?? "text");
       setRequired(field?.required ?? true);
       setOptionsText(optionsToText(field?.options));
-      setMaxFiles(field ? documentMaxFiles(field) : 1);
     }
   }, [open, field]);
 
@@ -124,14 +126,11 @@ export function FieldEditorDialog({
           .map((o) => o.trim())
           .filter(Boolean)
       : undefined;
-    const options = type === "document" ? { maxFiles } : choiceOptions;
+    const options =
+      type === "document" ? { maxFiles: DOCUMENT_MAX_FILES } : choiceOptions;
 
     if (needsOptions && (!choiceOptions || choiceOptions.length < 2)) {
       toast.error("Informe ao menos 2 opções (uma por linha)");
-      return;
-    }
-    if (type === "document" && (!Number.isInteger(maxFiles) || maxFiles < 1)) {
-      toast.error("Máximo de arquivos deve ser um inteiro maior ou igual a 1");
       return;
     }
 
@@ -183,10 +182,7 @@ export function FieldEditorDialog({
               <SelectContent>
                 {creatableTypes.map((t) => (
                   <SelectItem key={t} value={t}>
-                    <span className="flex items-center gap-2">
-                      {t === "document" && <FileUp className="h-4 w-4" />}
-                      {fieldTypeLabels[t]}
-                    </span>
+                    {fieldTypeLabels[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -202,20 +198,6 @@ export function FieldEditorDialog({
                 value={optionsText}
                 onChange={(e) => setOptionsText(e.target.value)}
                 placeholder={"Opção A\nOpção B"}
-              />
-            </div>
-          )}
-
-          {type === "document" && (
-            <div className="space-y-2">
-              <Label htmlFor="field-max-files">Máximo de arquivos</Label>
-              <Input
-                id="field-max-files"
-                type="number"
-                min={1}
-                step={1}
-                value={maxFiles}
-                onChange={(event) => setMaxFiles(Number(event.target.value))}
               />
             </div>
           )}

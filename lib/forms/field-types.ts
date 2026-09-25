@@ -47,17 +47,12 @@ export function fieldOptions(field: { options?: unknown }): string[] {
     : [];
 }
 
-/** Limite configurado para um campo de documento; legado/ausente equivale a 1. */
-export function documentMaxFiles(field: { options?: unknown }): number {
-  if (
-    !field.options ||
-    typeof field.options !== "object" ||
-    Array.isArray(field.options)
-  ) {
-    return 1;
-  }
-  const value = (field.options as { maxFiles?: unknown }).maxFiles;
-  return typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : 1;
+/** Limite único de arquivos por campo. */
+export const DOCUMENT_MAX_FILES = 5;
+
+export function documentMaxFiles(field?: { options?: unknown }): number {
+  void field;
+  return DOCUMENT_MAX_FILES;
 }
 
 /** Escolha única com poucas opções vira radio; com muitas, dropdown. */

@@ -1,44 +1,65 @@
 "use client";
 
 /* eslint-disable @next/next/no-img-element */
-import { FileText } from "lucide-react";
+import { Download, FileText, Trash2 } from "lucide-react";
 import type { FileReference } from "@/lib/api/types";
 import {
+  documentDownloadUrl,
   fileReferences,
-  isImageReference,
   isLegacyDocumentValue,
 } from "@/lib/forms/documents";
 import { formatBytes } from "@/lib/messages/attachments";
 
-function FileLink({ file }: { file: FileReference }) {
-  if (isImageReference(file)) {
-    return (
+export function DocumentFileReference({
+  file,
+  downloadable = false,
+  onRemove,
+  removeDisabled = false,
+}: {
+  file: FileReference;
+  downloadable?: boolean;
+  onRemove?: () => void;
+  removeDisabled?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-md border px-2.5 py-1.5">
+      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
       <a
         href={file.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-fit overflow-hidden rounded-lg border"
-        title={`Abrir ${file.name}`}
+        title={file.name}
+        className="min-w-0 flex-1 hover:underline"
       >
-        <img src={file.url} alt={file.name} className="h-28 w-40 object-cover" />
-      </a>
-    );
-  }
-  return (
-    <a
-      href={file.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex min-w-0 items-center gap-2 rounded-lg border p-2 hover:bg-muted/50"
-    >
-      <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-      <span className="min-w-0">
-        <span className="block truncate font-medium">{file.name}</span>
+        <span className="block truncate text-sm font-medium">{file.name}</span>
         <span className="block text-xs text-muted-foreground">
           {file.size == null ? "Tamanho indisponível" : formatBytes(file.size)}
         </span>
-      </span>
-    </a>
+      </a>
+      {downloadable && (
+        <a
+          href={documentDownloadUrl(file)}
+          download={file.name}
+          aria-label={`Baixar ${file.name}`}
+          title="Baixar"
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Download className="h-4 w-4" />
+        </a>
+      )}
+      {onRemove && (
+        <button
+          type="button"
+          aria-label={`Remover ${file.name}`}
+          title="Remover"
+          disabled={removeDisabled}
+          onClick={onRemove}
+          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -49,7 +70,7 @@ export function DocumentValueRenderer({ value }: { value: unknown }) {
     return (
       <div className="grid gap-2 sm:grid-cols-2">
         {files.map((file, index) => (
-          <FileLink key={`${file.url}-${index}`} file={file} />
+          <DocumentFileReference key={`${file.url}-${index}`} file={file} />
         ))}
       </div>
     );

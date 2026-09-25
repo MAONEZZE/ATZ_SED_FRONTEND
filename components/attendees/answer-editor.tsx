@@ -95,6 +95,7 @@ export function AnswerEditor({
           onChange={onChange}
           maxFiles={documentMaxFiles(field)}
           disabled={disabled}
+          downloadable
           onUploadingChange={onUploadingChange}
           upload={async (file, onProgress) => {
             onProgress(10);

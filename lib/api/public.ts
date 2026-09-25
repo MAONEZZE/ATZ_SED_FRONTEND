@@ -88,7 +88,7 @@ export function uploadPublicDocument(
     const request = new XMLHttpRequest();
     request.open(
       "POST",
-      `${env.NEXT_PUBLIC_API_URL}/public/forms/${formId}/fields/${fieldId}`,
+      `${env.NEXT_PUBLIC_API_URL}/public/forms/${formId}/fields/${fieldId}/uploads`,
     );
     request.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable)

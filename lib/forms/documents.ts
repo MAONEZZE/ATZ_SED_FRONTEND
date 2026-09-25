@@ -1,6 +1,20 @@
 import type { FileReference } from "@/lib/api/types";
 
 export const DOCUMENT_ACCEPT = [
+  ".txt",
+  ".csv",
+  ".rtf",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".odt",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".mp4",
+  ".mov",
+  ".webm",
   "text/plain",
   "text/csv",
   "application/csv",
@@ -18,7 +32,9 @@ export const DOCUMENT_ACCEPT = [
   "video/webm",
 ].join(",");
 
-const DOCUMENT_TYPES = new Set(DOCUMENT_ACCEPT.split(","));
+const DOCUMENT_TYPES = new Set(
+  DOCUMENT_ACCEPT.split(",").filter((item) => !item.startsWith(".")),
+);
 const TEN_MB = 10 * 1024 * 1024;
 const FIFTY_MB = 50 * 1024 * 1024;
 
@@ -51,6 +67,20 @@ export function isLegacyDocumentValue(value: unknown): value is string {
       value.startsWith("https://") ||
       value.startsWith("data:image/"))
   );
+}
+
+/**
+ * URL que força o download com o nome original. O storage (Supabase) responde
+ * com Content-Disposition: attachment quando recebe `?download=<nome>`.
+ */
+export function documentDownloadUrl(file: FileReference): string {
+  try {
+    const url = new URL(file.url);
+    url.searchParams.set("download", file.name);
+    return url.toString();
+  } catch {
+    return file.url;
+  }
 }
 
 export function isImageReference(file: FileReference): boolean {

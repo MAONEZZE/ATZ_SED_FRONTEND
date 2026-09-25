@@ -119,7 +119,7 @@ describe("buildSchema — document", () => {
     label: "Documentos",
     type: "document",
     required: true,
-    options: { maxFiles: 3 },
+    options: { maxFiles: 5 },
     order: 0,
   };
   const reference = {
@@ -133,11 +133,14 @@ describe("buildSchema — document", () => {
     const schema = buildSchema([documentField]);
     const key = fieldKey(documentField);
     expect(schema.safeParse({ [key]: [] }).success).toBe(false);
-    expect(schema.safeParse({ [key]: [reference, reference, reference] }).success).toBe(
-      true,
-    );
     expect(
-      schema.safeParse({ [key]: [reference, reference, reference, reference] }).success,
+      schema.safeParse({ [key]: [reference, reference, reference, reference, reference] })
+        .success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({
+        [key]: [reference, reference, reference, reference, reference, reference],
+      }).success,
     ).toBe(false);
   });
 
