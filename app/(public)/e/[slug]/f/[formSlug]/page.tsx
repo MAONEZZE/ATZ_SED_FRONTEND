@@ -57,6 +57,7 @@ export default async function PublicFormPage({ params }: PageProps) {
               <RegistrationForm
                 slug={slug}
                 formSlug={formSlug}
+                formId={form.id}
                 fields={fields}
                 requireImageAuthorization={form.requireImageAuthorization}
                 anonymous={form.anonymous}

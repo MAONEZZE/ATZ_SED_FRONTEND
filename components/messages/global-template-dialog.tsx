@@ -1,16 +1,26 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Braces, ChevronDown, LayoutTemplate } from "lucide-react";
+import { Braces, ChevronDown, FileUp, LayoutTemplate, Trash2 } from "lucide-react";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import {
   useCreateTemplateGlobal,
+  useUploadTemplateAttachment,
   useUpdateTemplateGlobal,
 } from "@/lib/api/global-messaging";
 import { ApiError } from "@/lib/api/client";
-import type { MessageChannel, TemplateWithEvent } from "@/lib/api/types";
+import type {
+  MessageChannel,
+  TemplateAttachment,
+  TemplateWithEvent,
+} from "@/lib/api/types";
+import {
+  TEMPLATE_ATTACHMENT_ACCEPT,
+  formatBytes,
+  validateTemplateAttachment,
+} from "@/lib/messages/attachments";
 import {
   EMAIL_PREVIEW_MIN_HEIGHT,
   STEP_LABEL_CLASS,
@@ -77,6 +87,8 @@ export function GlobalTemplateDialog({
 }) {
   const create = useCreateTemplateGlobal();
   const update = useUpdateTemplateGlobal();
+  const uploadAttachment = useUploadTemplateAttachment();
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const composer = useEmailComposer();
   const {
@@ -103,11 +115,15 @@ export function GlobalTemplateDialog({
 
   const [name, setName] = useState("");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<TemplateAttachment | null>(null);
+  const [attachmentDirty, setAttachmentDirty] = useState(false);
 
   useEffect(() => {
     if (open) {
       setSaveError(null);
       setName(template?.name ?? "");
+      setAttachment(template?.attachment ?? null);
+      setAttachmentDirty(false);
       reset({
         channel: template?.channel ?? "whatsapp",
         subject: template?.subject ?? "",
@@ -118,7 +134,7 @@ export function GlobalTemplateDialog({
     }
   }, [open, template, reset]);
 
-  const isPending = create.isPending || update.isPending;
+  const isPending = create.isPending || update.isPending || uploadAttachment.isPending;
   const isEdit = Boolean(template);
 
   function changeChannel(next: MessageChannel) {
@@ -151,6 +167,13 @@ export function GlobalTemplateDialog({
       // nasce vinculada e editar um template global tenta movê-lo para o evento.
       eventId: fixedEventId ?? null,
       ...(template ? {} : { folderId: fixedFolderId ?? null }),
+      ...(!template
+        ? attachment
+          ? { attachment }
+          : {}
+        : attachmentDirty
+          ? { attachment }
+          : {}),
     };
     const onDone = {
       onSuccess: () => {
@@ -167,6 +190,23 @@ export function GlobalTemplateDialog({
     };
     if (template) update.mutate({ id: template.id, input }, onDone);
     else create.mutate({ input }, onDone);
+  }
+
+  async function handleAttachment(file: File | undefined) {
+    if (attachmentInputRef.current) attachmentInputRef.current.value = "";
+    if (!file) return;
+    const validationError = validateTemplateAttachment(file);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+    try {
+      const uploaded = await uploadAttachment.mutateAsync(file);
+      setAttachment(uploaded);
+      setAttachmentDirty(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao enviar o anexo");
+    }
   }
 
   return (
@@ -334,6 +374,74 @@ export function GlobalTemplateDialog({
                   )}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className={STEP_LABEL_CLASS}>3 · Anexo (opcional)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {attachment ? (
+                <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="min-w-0 text-sm">
+                    <p className="truncate font-medium">{attachment.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {attachment.mimetype} · {formatBytes(attachment.size)}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => attachmentInputRef.current?.click()}
+                    >
+                      Trocar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAttachment(null);
+                        setAttachmentDirty(true);
+                      }}
+                    >
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      Remover
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={uploadAttachment.isPending}
+                  onClick={() => attachmentInputRef.current?.click()}
+                >
+                  <FileUp className="mr-2 h-4 w-4" />
+                  Selecionar anexo
+                </Button>
+              )}
+              <input
+                ref={attachmentInputRef}
+                type="file"
+                accept={TEMPLATE_ATTACHMENT_ACCEPT}
+                className="hidden"
+                onChange={(event) => void handleAttachment(event.target.files?.[0])}
+              />
+              {channel === "email" && (
+                <p className="text-xs text-muted-foreground">
+                  Em e-mails, o anexo aparece como link “Baixar …” no corpo da mensagem, e
+                  não como anexo tradicional.
+                </p>
+              )}
+              {channel === "whatsapp" && (
+                <p className="text-xs text-muted-foreground">
+                  No WhatsApp, o arquivo será enviado como imagem, vídeo ou documento.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>

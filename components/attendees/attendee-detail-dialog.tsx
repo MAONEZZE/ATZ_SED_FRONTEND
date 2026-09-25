@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { FunnelStatusBadge } from "@/components/common/status-badge";
 import { AnswerEditor } from "@/components/attendees/answer-editor";
 import { useFormFields } from "@/lib/api/form-fields";
@@ -48,6 +48,15 @@ export function AttendeeDetailDialog({
   saveDisabledReason?: string;
 }) {
   const [draft, setDraft] = useState<Record<string, unknown>>({});
+  const [uploadingFields, setUploadingFields] = useState<Set<string>>(new Set());
+  const handleUploadingChange = useCallback((fieldId: string, uploading: boolean) => {
+    setUploadingFields((current) => {
+      const next = new Set(current);
+      if (uploading) next.add(fieldId);
+      else next.delete(fieldId);
+      return next;
+    });
+  }, []);
 
   const formId = data?.formId ?? undefined;
   const { data: fields = NO_FIELDS } = useFormFields(eventId, formId);
@@ -85,7 +94,18 @@ export function AttendeeDetailDialog({
 
   function save() {
     if (!data || !onSave) return;
-    onSave(draft);
+    const answers = { ...draft };
+    sortedFields.forEach((field) => {
+      const value = answers[field.label];
+      if (
+        field.type === "document" &&
+        typeof value === "string" &&
+        value.startsWith("data:image/")
+      ) {
+        delete answers[field.label];
+      }
+    });
+    onSave(answers);
   }
 
   return (
@@ -107,16 +127,14 @@ export function AttendeeDetailDialog({
                 <div key={field.id} className="space-y-1.5">
                   <Label>
                     {field.label}
-                    {field.required && (
-                      <span className="ml-0.5 text-destructive">*</span>
-                    )}
+                    {field.required && <span className="ml-0.5 text-destructive">*</span>}
                   </Label>
                   <AnswerEditor
                     field={field}
                     value={draft[field.label]}
-                    onChange={(v) =>
-                      setDraft((prev) => ({ ...prev, [field.label]: v }))
-                    }
+                    eventId={eventId}
+                    onChange={(v) => setDraft((prev) => ({ ...prev, [field.label]: v }))}
+                    onUploadingChange={handleUploadingChange}
                   />
                 </div>
               ))}
@@ -126,8 +144,12 @@ export function AttendeeDetailDialog({
               onCancel={() => onOpenChange(false)}
               onSave={save}
               isSaving={isSaving}
-              saveDisabled={!onSave}
-              saveDisabledReason={saveDisabledReason}
+              saveDisabled={!onSave || uploadingFields.size > 0}
+              saveDisabledReason={
+                uploadingFields.size > 0
+                  ? "Aguarde o envio dos arquivos"
+                  : saveDisabledReason
+              }
             />
           </>
         )}

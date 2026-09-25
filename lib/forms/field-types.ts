@@ -25,7 +25,7 @@ export const FIELD_TYPES: Record<FieldType, FieldTypeSpec> = {
   select: { hasOptions: true },
   multiselect: { hasOptions: true },
   checkbox: { hasOptions: false },
-  image: { hasOptions: false },
+  document: { hasOptions: false },
   date: { hasOptions: false },
   linkedin: { hasOptions: false },
   instagram: { hasOptions: false },
@@ -47,6 +47,19 @@ export function fieldOptions(field: { options?: unknown }): string[] {
     : [];
 }
 
+/** Limite configurado para um campo de documento; legado/ausente equivale a 1. */
+export function documentMaxFiles(field: { options?: unknown }): number {
+  if (
+    !field.options ||
+    typeof field.options !== "object" ||
+    Array.isArray(field.options)
+  ) {
+    return 1;
+  }
+  const value = (field.options as { maxFiles?: unknown }).maxFiles;
+  return typeof value === "number" && Number.isInteger(value) && value >= 1 ? value : 1;
+}
+
 /** Escolha única com poucas opções vira radio; com muitas, dropdown. */
 export function rendersAsRadioGroup(options: string[]): boolean {
   return options.length <= SELECT_RADIO_MAX;
@@ -54,7 +67,15 @@ export function rendersAsRadioGroup(options: string[]): boolean {
 
 /** Formata o valor de uma resposta de formulário para exibição. */
 export function formatAnswer(value: unknown): string {
-  if (Array.isArray(value)) return value.join(", ");
+  if (Array.isArray(value)) {
+    return value
+      .map((item) =>
+        item && typeof item === "object" && "name" in item
+          ? String((item as { name: unknown }).name)
+          : String(item),
+      )
+      .join(", ");
+  }
   if (typeof value === "boolean") return value ? "Sim" : "Não";
   if (value == null || value === "") return "—";
   return String(value);

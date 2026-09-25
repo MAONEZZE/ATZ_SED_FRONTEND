@@ -113,6 +113,42 @@ describe("buildSchema — multiselect", () => {
   });
 });
 
+describe("buildSchema — document", () => {
+  const documentField: PublicFormField = {
+    id: "doc-1",
+    label: "Documentos",
+    type: "document",
+    required: true,
+    options: { maxFiles: 3 },
+    order: 0,
+  };
+  const reference = {
+    url: "https://cdn.example.com/file.pdf",
+    name: "file.pdf",
+    mimetype: "application/pdf",
+    size: 123,
+  };
+
+  it("exige ao menos um arquivo quando obrigatório e respeita maxFiles", () => {
+    const schema = buildSchema([documentField]);
+    const key = fieldKey(documentField);
+    expect(schema.safeParse({ [key]: [] }).success).toBe(false);
+    expect(schema.safeParse({ [key]: [reference, reference, reference] }).success).toBe(
+      true,
+    );
+    expect(
+      schema.safeParse({ [key]: [reference, reference, reference, reference] }).success,
+    ).toBe(false);
+  });
+
+  it("campo opcional aceita lista vazia e o default sempre é lista", () => {
+    const optional = { ...documentField, required: false };
+    const key = fieldKey(optional);
+    expect(buildSchema([optional]).safeParse({ [key]: [] }).success).toBe(true);
+    expect(defaultValues([optional])[key]).toEqual([]);
+  });
+});
+
 function dateAutomationField(overrides: Partial<PublicFormField> = {}): PublicFormField {
   return {
     id: "f4",

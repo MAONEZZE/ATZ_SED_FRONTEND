@@ -17,6 +17,7 @@ import { isSubmitted, markSubmitted } from "@/lib/utils/local-draft";
 export function RegistrationForm({
   slug,
   formSlug,
+  formId = "",
   fields,
   requireImageAuthorization = false,
   anonymous = false,
@@ -25,6 +26,7 @@ export function RegistrationForm({
 }: {
   slug: string;
   formSlug: string;
+  formId?: string;
   fields: PublicFormField[];
   requireImageAuthorization?: boolean;
   anonymous?: boolean;
@@ -39,6 +41,7 @@ export function RegistrationForm({
   const [success, setSuccess] = useState(false);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const visibleFields = useMemo(
     () =>
@@ -93,7 +96,12 @@ export function RegistrationForm({
       setSuccess(true);
       if (!anonymous) markSubmitted(submittedKey);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha no envio");
+      const message = error instanceof Error ? error.message : "Falha no envio";
+      toast.error(
+        /Documento não pertence|URL de documento inválida/i.test(message)
+          ? "Um arquivo expirou ou não pertence a este formulário. Remova-o e envie novamente."
+          : message,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -155,7 +163,12 @@ export function RegistrationForm({
           Este evento ainda não possui campos de inscrição.
         </p>
       ) : (
-        <FormFieldsRenderer fields={visibleFields} form={form} />
+        <FormFieldsRenderer
+          fields={visibleFields}
+          form={form}
+          formId={formId}
+          onUploadingChange={setUploading}
+        />
       )}
 
       {requireImage && (
@@ -190,9 +203,14 @@ export function RegistrationForm({
         />
       )}
 
-      <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+      <Button
+        type="submit"
+        className="w-full"
+        size="lg"
+        disabled={submitting || uploading}
+      >
         {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Enviar
+        {uploading ? "Aguarde o envio dos arquivos" : "Enviar"}
       </Button>
     </form>
   );

@@ -13,6 +13,7 @@ vi.mock("sonner", () => ({
 vi.mock("@/lib/api/global-messaging", () => ({
   useCreateTemplateGlobal: () => ({ mutate: createMutate, isPending: false }),
   useUpdateTemplateGlobal: () => ({ mutate: updateMutate, isPending: false }),
+  useUploadTemplateAttachment: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 import { GlobalTemplateDialog } from "@/components/messages/global-template-dialog";
@@ -37,6 +38,7 @@ const emailTpl: TemplateWithEvent = {
   body: buildEmail(EMAIL_LAYOUT_PRESETS.minimalista),
   layoutConfig: EMAIL_LAYOUT_PRESETS.minimalista,
   styleKey: "minimalista",
+  attachment: null,
   createdAt: "",
   updatedAt: "",
   event: null,
@@ -107,6 +109,41 @@ describe("GlobalTemplateDialog (e-mail)", () => {
     render(<GlobalTemplateDialog template={noSubject} open onOpenChange={() => {}} />);
     screen.getByRole("button", { name: /^salvar$/i }).click();
     expect(updateMutate).not.toHaveBeenCalled();
+  });
+
+  it("omite attachment no PATCH quando ele não foi alterado", () => {
+    const withAttachment: TemplateWithEvent = {
+      ...emailTpl,
+      attachment: {
+        path: "templates/manual.pdf",
+        name: "manual.pdf",
+        mimetype: "application/pdf",
+        size: 2048,
+      },
+    };
+    render(
+      <GlobalTemplateDialog template={withAttachment} open onOpenChange={() => {}} />,
+    );
+    screen.getByRole("button", { name: /^salvar$/i }).click();
+    expect(updateMutate.mock.calls[0][0].input).not.toHaveProperty("attachment");
+  });
+
+  it("envia attachment null no PATCH ao remover", () => {
+    const withAttachment: TemplateWithEvent = {
+      ...emailTpl,
+      attachment: {
+        path: "templates/manual.pdf",
+        name: "manual.pdf",
+        mimetype: "application/pdf",
+        size: 2048,
+      },
+    };
+    render(
+      <GlobalTemplateDialog template={withAttachment} open onOpenChange={() => {}} />,
+    );
+    act(() => screen.getByRole("button", { name: /^remover$/i }).click());
+    screen.getByRole("button", { name: /^salvar$/i }).click();
+    expect(updateMutate.mock.calls[0][0].input.attachment).toBeNull();
   });
 });
 

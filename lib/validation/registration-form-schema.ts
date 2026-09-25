@@ -3,7 +3,8 @@ import { isValidPhoneNumber } from "react-phone-number-input/core";
 import { phoneMetadata } from "@/lib/phone/metadata";
 import { fieldKey } from "@/lib/api/public";
 import type { PublicFormField } from "@/lib/api/types";
-import { fieldOptions } from "@/lib/forms/field-types";
+import { documentMaxFiles, fieldOptions } from "@/lib/forms/field-types";
+import { isFileReference } from "@/lib/forms/documents";
 
 export function buildSchema(
   fields: PublicFormField[],
@@ -59,6 +60,16 @@ export function buildSchema(
           ? z.boolean().refine((v) => v, "Campo obrigatório")
           : z.boolean();
         break;
+      case "document": {
+        const base = z
+          .array(z.custom(isFileReference, "Arquivo inválido"))
+          .max(
+            documentMaxFiles(field),
+            `Máximo de ${documentMaxFiles(field)} arquivo(s)`,
+          );
+        schema = field.required ? base.min(1, "Envie ao menos um arquivo") : base;
+        break;
+      }
       case "date":
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
         break;
@@ -76,7 +87,12 @@ export function buildSchema(
       default:
         schema = field.required ? z.string().min(1, "Campo obrigatório") : z.string();
     }
-    if (!field.required && field.type !== "checkbox" && field.type !== "multiselect") {
+    if (
+      !field.required &&
+      field.type !== "checkbox" &&
+      field.type !== "multiselect" &&
+      field.type !== "document"
+    ) {
       schema = schema.optional().or(z.literal(""));
     }
     shape[key] = schema;
@@ -96,7 +112,7 @@ export function defaultValues(
   const values: Record<string, unknown> = {};
   for (const field of fields) {
     const key = fieldKey(field);
-    if (field.type === "multiselect") values[key] = [];
+    if (field.type === "multiselect" || field.type === "document") values[key] = [];
     else if (field.type === "checkbox") values[key] = false;
     else values[key] = "";
   }

@@ -1,5 +1,10 @@
 import { env } from "@/lib/env";
-import type { PublicEvent, PublicFormField, PublicFormSummary } from "@/lib/api/types";
+import type {
+  FileReference,
+  PublicEvent,
+  PublicFormField,
+  PublicFormSummary,
+} from "@/lib/api/types";
 
 const REVALIDATE_SECONDS = 300;
 
@@ -60,6 +65,63 @@ export async function submitPublicFormResponse(
     throw new Error(message);
   }
   return (await res.json()) as { registrationId: string | null; created: boolean };
+}
+
+function publicUploadError(status: number, rawMessage?: string): string {
+  if (status === 429) return "Muitos envios, aguarde alguns minutos.";
+  if (status === 413) return "O arquivo excede o limite máximo de 50 MB.";
+  if (rawMessage === "Event is not accepting form responses") {
+    return "Este evento não está aceitando respostas no momento.";
+  }
+  if (status === 404) return "Formulário ou campo de documento não encontrado.";
+  return rawMessage || "Falha ao enviar o arquivo.";
+}
+
+/** Upload público com progresso real, sem autenticação e um request por arquivo. */
+export function uploadPublicDocument(
+  formId: string,
+  fieldId: string,
+  file: File,
+  onProgress: (percent: number) => void,
+): Promise<FileReference> {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open(
+      "POST",
+      `${env.NEXT_PUBLIC_API_URL}/public/forms/${formId}/fields/${fieldId}`,
+    );
+    request.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable)
+        onProgress(Math.round((event.loaded / event.total) * 100));
+    });
+    request.addEventListener("load", () => {
+      let body: { message?: string | string[] } | FileReference | null = null;
+      try {
+        body = JSON.parse(request.responseText) as typeof body;
+      } catch {}
+      if (request.status >= 200 && request.status < 300 && body) {
+        onProgress(100);
+        resolve(body as FileReference);
+        return;
+      }
+      const errorBody = body as { message?: string | string[] } | null;
+      const message = errorBody?.message;
+      reject(
+        new Error(
+          publicUploadError(
+            request.status,
+            Array.isArray(message) ? message.join("; ") : message,
+          ),
+        ),
+      );
+    });
+    request.addEventListener("error", () =>
+      reject(new Error("Não foi possível enviar o arquivo. Verifique sua conexão.")),
+    );
+    const formData = new FormData();
+    formData.append("file", file);
+    request.send(formData);
+  });
 }
 
 /**

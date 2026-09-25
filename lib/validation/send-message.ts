@@ -73,6 +73,7 @@ export function toSendMessageInput(
   const body = draft.body.trim();
 
   return {
+    templateId: draft.templateId || undefined,
     channel: draft.channel,
     subject:
       draft.channel === "email" && draft.subject.trim()
@@ -88,10 +89,11 @@ export function toSendMessageInput(
     instanceId: draft.instanceId || undefined,
     attachments:
       draft.attachments && draft.attachments.length > 0
-        ? draft.attachments.map(({ path, filename, mimetype }) => ({
+        ? draft.attachments.map(({ path, filename, mimetype, size }) => ({
             path,
             filename,
             mimetype,
+            size,
           }))
         : undefined,
   };

@@ -8,6 +8,7 @@ import type {
   MessageChannel,
   MessageLogWithEvent,
   PaginatedResponse,
+  TemplateAttachment,
   TemplateWithEvent,
 } from "@/lib/api/types";
 import type { AutomationInput } from "@/lib/api/automations";
@@ -24,6 +25,17 @@ export interface TemplateInput {
   /** Vincula o template a um evento. null = global (sem evento). */
   eventId?: string | null;
   folderId?: string | null;
+  attachment?: TemplateAttachment | null;
+}
+
+export function useUploadTemplateAttachment() {
+  return useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return api.post<TemplateAttachment>(`/messaging/templates/attachments`, formData);
+    },
+  });
 }
 
 interface TemplatesQuery {

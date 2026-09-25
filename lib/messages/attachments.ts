@@ -37,3 +37,25 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+export const TEMPLATE_ATTACHMENT_ACCEPT = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+].join(",");
+
+const TEMPLATE_ATTACHMENT_TYPES = new Set(TEMPLATE_ATTACHMENT_ACCEPT.split(","));
+
+/** Validação local dos limites específicos do anexo único de template. */
+export function validateTemplateAttachment(file: File): string | null {
+  if (!TEMPLATE_ATTACHMENT_TYPES.has(file.type)) {
+    return "Template aceita PDF, JPEG, PNG, WebP ou vídeo MP4.";
+  }
+  const limitMb = file.type === "video/mp4" ? 60 : 30;
+  if (file.size > limitMb * 1024 * 1024) {
+    return `Anexo excede o limite de ${limitMb} MB.`;
+  }
+  return null;
+}

@@ -76,7 +76,7 @@ const typeLabels: Record<string, string> = {
   select: "Escolha única",
   multiselect: "Múltipla escolha",
   checkbox: "Caixa de seleção",
-  image: "Imagem",
+  document: "Arquivo / Documento",
   date: "Data",
   linkedin: "LinkedIn",
   instagram: "Instagram",

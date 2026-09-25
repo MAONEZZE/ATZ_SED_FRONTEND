@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Download, Trash2 } from "lucide-react";
+import { Download, Paperclip, Trash2 } from "lucide-react";
 import { type EmailTemplateKey } from "@/lib/email-templates";
 import { useEvent } from "@/lib/api/events";
 import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
@@ -482,6 +482,22 @@ export function SendMessageForm({
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                 />
+              </div>
+            )}
+
+            {selectedTemplate?.attachment && (
+              <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    Anexo do template: <strong>{selectedTemplate.attachment.name}</strong>
+                  </span>
+                </div>
+                {attachments.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Os anexos adicionados abaixo substituem o anexo do template.
+                  </p>
+                )}
               </div>
             )}
 

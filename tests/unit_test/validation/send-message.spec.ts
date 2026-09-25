@@ -44,9 +44,9 @@ describe("validateSendMessage", () => {
   });
 
   it("exige body quando sem template", () => {
-    expect(
-      validateSendMessage({ ...base, registrationIds: ["a"], body: "  " }),
-    ).toMatch(/mensagem|template/);
+    expect(validateSendMessage({ ...base, registrationIds: ["a"], body: "  " })).toMatch(
+      /mensagem|template/,
+    );
   });
 
   it("exige body mesmo com template selecionado", () => {
@@ -92,7 +92,7 @@ describe("validateManualRecipient", () => {
 });
 
 describe("toSendMessageInput", () => {
-  it("nunca envia templateId; envia o body preenchido", () => {
+  it("envia templateId e o body preenchido", () => {
     const input = toSendMessageInput(
       {
         ...base,
@@ -104,7 +104,7 @@ describe("toSendMessageInput", () => {
       },
       { hasEventId: true },
     );
-    expect(input.templateId).toBeUndefined();
+    expect(input.templateId).toBe("t1");
     expect(input.subject).toBe("Assunto");
     expect(input.body).toBe("<p>Olá</p>");
   });
@@ -155,5 +155,24 @@ describe("toSendMessageInput", () => {
       { hasEventId: true },
     );
     expect(input.groupIds).toBeUndefined();
+  });
+
+  it("repassa size dos anexos próprios para o backend", () => {
+    const input = toSendMessageInput(
+      {
+        ...base,
+        registrationIds: ["a"],
+        attachments: [
+          {
+            path: "uploads/a.pdf",
+            filename: "a.pdf",
+            mimetype: "application/pdf",
+            size: 2048,
+          },
+        ],
+      },
+      { hasEventId: true },
+    );
+    expect(input.attachments?.[0].size).toBe(2048);
   });
 });

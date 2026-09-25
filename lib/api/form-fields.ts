@@ -3,15 +3,36 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { queryKeys } from "@/lib/api/query-keys";
-import type { FieldType, FormField, PaginatedResponse } from "@/lib/api/types";
+import type {
+  DocumentFieldOptions,
+  FieldType,
+  FileReference,
+  FormField,
+  PaginatedResponse,
+} from "@/lib/api/types";
 
 export interface FormFieldInput {
   formId: string;
   label: string;
   type: FieldType;
   required?: boolean;
-  options?: string[];
+  options?: string[] | DocumentFieldOptions;
   order?: number;
+}
+
+/** Upload autenticado usado ao editar a resposta de uma inscrição. */
+export async function uploadRegistrationDocument(
+  eventId: string,
+  formId: string,
+  fieldId: string,
+  file: File,
+): Promise<FileReference> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return api.post<FileReference>(
+    `/events/${eventId}/forms/${formId}/fields/${fieldId}/uploads`,
+    formData,
+  );
 }
 
 export type FormFieldUpdateInput = Partial<Omit<FormFieldInput, "formId">>;

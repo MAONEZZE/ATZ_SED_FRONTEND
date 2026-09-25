@@ -1,11 +1,16 @@
 "use client";
 
+import { useCallback, useRef } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
-import { fieldKey } from "@/lib/api/public";
-import { fieldOptions, rendersAsRadioGroup } from "@/lib/forms/field-types";
+import { fieldKey, uploadPublicDocument } from "@/lib/api/public";
+import {
+  documentMaxFiles,
+  fieldOptions,
+  rendersAsRadioGroup,
+} from "@/lib/forms/field-types";
 import type { PublicFormField } from "@/lib/api/types";
 import { PhoneField } from "@/components/forms/phone-field";
-import { ImageField } from "@/components/forms/image-field";
+import { DocumentField } from "@/components/forms/document-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -23,12 +28,26 @@ import {
 export function FormFieldsRenderer({
   fields,
   form,
+  formId,
   disabled = false,
+  onUploadingChange,
 }: {
   fields: PublicFormField[];
   form: UseFormReturn<Record<string, unknown>>;
+  formId?: string;
   disabled?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
 }) {
+  const uploadingFields = useRef(new Set<string>());
+  const updateUploading = useCallback(
+    (fieldId: string, uploading: boolean) => {
+      if (uploading) uploadingFields.current.add(fieldId);
+      else uploadingFields.current.delete(fieldId);
+      onUploadingChange?.(uploadingFields.current.size > 0);
+    },
+    [onUploadingChange],
+  );
+
   return (
     <>
       {fields.map((field) => {
@@ -109,16 +128,23 @@ export function FormFieldsRenderer({
               />
             )}
 
-            {field.type === "image" && (
+            {field.type === "document" && (
               <Controller
                 control={form.control}
                 name={key}
                 render={({ field: rhf }) => (
-                  <ImageField
+                  <DocumentField
                     inputId={key}
-                    value={(rhf.value as string) ?? ""}
+                    value={rhf.value}
                     onChange={rhf.onChange}
+                    maxFiles={documentMaxFiles(field)}
+                    upload={(file, onProgress) => {
+                      if (!formId)
+                        return Promise.reject(new Error("Formulário inválido."));
+                      return uploadPublicDocument(formId, field.id, file, onProgress);
+                    }}
                     disabled={disabled}
+                    onUploadingChange={updateUploading}
                   />
                 )}
               />

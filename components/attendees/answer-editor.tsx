@@ -1,14 +1,13 @@
 "use client";
 
-import { Download } from "lucide-react";
 import type { FormField } from "@/lib/api/types";
-import { fieldOptions } from "@/lib/forms/field-types";
-import { Button } from "@/components/ui/button";
+import { documentMaxFiles, fieldOptions } from "@/lib/forms/field-types";
+import { uploadRegistrationDocument } from "@/lib/api/form-fields";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PhoneField } from "@/components/forms/phone-field";
-import { ImageField } from "@/components/forms/image-field";
+import { DocumentField } from "@/components/forms/document-field";
 import {
   Select,
   SelectContent,
@@ -22,14 +21,18 @@ export function AnswerEditor({
   value,
   onChange,
   disabled = false,
+  eventId,
+  onUploadingChange,
 }: {
   field: FormField;
   value: unknown;
   onChange: (v: unknown) => void;
   disabled?: boolean;
+  eventId: string;
+  onUploadingChange?: (fieldId: string, uploading: boolean) => void;
 }) {
   const opts = fieldOptions(field);
-  const strVal = String(value ?? "");
+  const strVal = field.type === "document" ? "" : String(value ?? "");
   const arrVal = Array.isArray(value) ? value.map(String) : [];
 
   switch (field.type) {
@@ -84,28 +87,27 @@ export function AnswerEditor({
           onCheckedChange={(checked) => onChange(Boolean(checked))}
         />
       );
-    case "image":
+    case "document":
       return (
-        <div className="space-y-2">
-          <ImageField
-            inputId={`answer-image-${field.id}`}
-            value={strVal}
-            onChange={onChange}
-          />
-          {strVal && (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => downloadImage(strVal, imageFileName(field.label, strVal))}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Baixar imagem
-              </Button>
-            </div>
-          )}
-        </div>
+        <DocumentField
+          inputId={`answer-document-${field.id}`}
+          value={value}
+          onChange={onChange}
+          maxFiles={documentMaxFiles(field)}
+          disabled={disabled}
+          onUploadingChange={onUploadingChange}
+          upload={async (file, onProgress) => {
+            onProgress(10);
+            const reference = await uploadRegistrationDocument(
+              eventId,
+              field.formId,
+              field.id,
+              file,
+            );
+            onProgress(100);
+            return reference;
+          }}
+        />
       );
     case "linkedin":
     case "instagram":
@@ -129,25 +131,4 @@ export function AnswerEditor({
         />
       );
   }
-}
-
-/** Baixa direto via blob para o arquivo não abrir numa nova aba. */
-async function downloadImage(value: string, fileName: string) {
-  const blob = await fetch(value).then((r) => r.blob());
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/** Nome do arquivo ao baixar: rótulo do campo + extensão inferida do data URL. */
-function imageFileName(label: string, value: string) {
-  const mime = value.match(/^data:image\/([a-z0-9.+-]+)/i)?.[1];
-  const ext = mime ? (mime === "jpeg" ? "jpg" : mime) : "png";
-  const slug = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  return `${slug || "imagem"}.${ext}`;
 }

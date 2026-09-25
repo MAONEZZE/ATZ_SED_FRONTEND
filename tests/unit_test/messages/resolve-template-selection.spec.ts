@@ -13,6 +13,7 @@ const base: MessageTemplate = {
   body: "corpo",
   layoutConfig: null,
   styleKey: null,
+  attachment: null,
   createdAt: "",
   updatedAt: "",
 };

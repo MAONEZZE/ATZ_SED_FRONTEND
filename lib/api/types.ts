@@ -15,7 +15,7 @@ export type FieldType =
   | "select"
   | "multiselect"
   | "checkbox"
-  | "image"
+  | "document"
   | "date"
   | "linkedin"
   | "instagram"
@@ -70,6 +70,17 @@ export interface FormField {
   order: number;
   isFixed: boolean;
   createdAt: string;
+}
+
+export interface FileReference {
+  url: string;
+  name: string;
+  mimetype: string | null;
+  size: number | null;
+}
+
+export interface DocumentFieldOptions {
+  maxFiles: number;
 }
 
 export interface Form {
@@ -129,8 +140,16 @@ export interface MessageTemplate {
   body: string;
   layoutConfig: EmailLayoutConfig | null;
   styleKey: EmailTemplateKey | null;
+  attachment: TemplateAttachment | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface TemplateAttachment {
+  path: string;
+  name: string;
+  mimetype: string;
+  size: number;
 }
 
 export interface EventRef {
@@ -283,7 +302,7 @@ export interface MessageAttachment {
   path: string;
   filename: string;
   mimetype: string;
-  /** bytes do arquivo — usado só na UI, não vai no envio */
+  /** bytes do arquivo — também é repassado para o backend. */
   size: number;
 }
 
@@ -297,7 +316,7 @@ export interface SendMessageInput {
   registrationIds?: string[];
   manualRecipients: ManualRecipient[];
   groupIds?: string[];
-  attachments?: Omit<MessageAttachment, "size">[];
+  attachments?: MessageAttachment[];
 }
 
 export interface SendMessageResult {

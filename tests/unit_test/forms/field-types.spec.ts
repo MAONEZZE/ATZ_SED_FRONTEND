@@ -4,6 +4,7 @@ import {
   fieldHasOptions,
   fieldOptions,
   formatAnswer,
+  documentMaxFiles,
   rendersAsRadioGroup,
 } from "@/lib/forms/field-types";
 
@@ -13,13 +14,19 @@ describe("field-types registry", () => {
     expect(fieldHasOptions("multiselect")).toBe(true);
     expect(fieldHasOptions("text")).toBe(false);
     expect(fieldHasOptions("checkbox")).toBe(false);
-    expect(fieldHasOptions("image")).toBe(false);
+    expect(fieldHasOptions("document")).toBe(false);
   });
 
   it("normaliza options, filtrando não-strings e ausência", () => {
     expect(fieldOptions({ options: ["a", 1, "b", null] })).toEqual(["a", "b"]);
     expect(fieldOptions({})).toEqual([]);
     expect(fieldOptions({ options: "nope" })).toEqual([]);
+  });
+
+  it("normaliza maxFiles de document e usa 1 para dados legados", () => {
+    expect(documentMaxFiles({ options: { maxFiles: 3 } })).toBe(3);
+    expect(documentMaxFiles({ options: null })).toBe(1);
+    expect(documentMaxFiles({ options: { maxFiles: 0 } })).toBe(1);
   });
 
   it("usa radio até o limite e dropdown acima dele", () => {
@@ -34,5 +41,10 @@ describe("field-types registry", () => {
     expect(formatAnswer("")).toBe("—");
     expect(formatAnswer(null)).toBe("—");
     expect(formatAnswer("texto")).toBe("texto");
+    expect(
+      formatAnswer([
+        { url: "https://cdn/x", name: "arquivo.pdf", mimetype: null, size: null },
+      ]),
+    ).toBe("arquivo.pdf");
   });
 });
