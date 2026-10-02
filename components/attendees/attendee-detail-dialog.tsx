@@ -8,6 +8,7 @@ import type { FormField, FunnelStatus } from "@/lib/api/types";
 import { formatDate } from "@/lib/utils/format-date";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Referência estável: um `= []` no destructuring cria array novo a cada render
@@ -27,6 +28,8 @@ export interface AttendeeDetailData {
   formId: string | null;
   /** Nome do form de origem, quando houver. */
   formName: string | null;
+  /** null = o form não pede autorização de imagem (campo não é exibido). */
+  imageAuthorization: boolean | null;
 }
 
 export function AttendeeDetailDialog({
@@ -110,7 +113,7 @@ export function AttendeeDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
+      <DialogContent className="max-h-[90vh] grid-cols-[minmax(0,1fr)] overflow-y-auto overflow-x-hidden sm:max-w-xl">
         {data && (
           <>
             <DialogHeader>
@@ -124,7 +127,7 @@ export function AttendeeDetailDialog({
 
             <div className="space-y-4 text-sm">
               {sortedFields.map((field) => (
-                <div key={field.id} className="space-y-1.5">
+                <div key={field.id} className="min-w-0 space-y-1.5">
                   <Label>
                     {field.label}
                     {field.required && <span className="ml-0.5 text-destructive">*</span>}
@@ -138,6 +141,12 @@ export function AttendeeDetailDialog({
                   />
                 </div>
               ))}
+              {data.imageAuthorization !== null && (
+                <label className="flex items-center gap-2">
+                  <Checkbox checked={data.imageAuthorization} disabled />
+                  <span>Autorizo o uso de imagem</span>
+                </label>
+              )}
             </div>
 
             <EditDialogFooter

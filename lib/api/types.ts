@@ -127,6 +127,8 @@ export interface Registration {
   /** Nome do form de origem; null = inscrito sem form de origem (painel ou anterior à coluna). */
   formName: string | null;
   attended: boolean;
+  /** Aceite da autorização de uso de imagem no envio. */
+  imageAuthorization: boolean;
 }
 
 export interface MessageTemplate {

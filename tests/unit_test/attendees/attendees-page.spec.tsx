@@ -30,8 +30,8 @@ const FORMS = [
 ];
 
 const REGISTRATIONS = [
-  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: { Cidade: "São Paulo" }, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", originFormId: "form-1", formName: "Inscrição", attended: true },
-  { id: "r2", eventId: "evt-1", status: "pending", name: "Bruno", email: "bruno@x.com", phone: "+5511999997777", answers: { Cidade: "Recife" }, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "", originFormId: null, formName: null, attended: false },
+  { id: "r1", eventId: "evt-1", status: "approved", name: "Ana", email: "ana@x.com", phone: "+5511999998888", answers: { Cidade: "São Paulo" }, createdAt: "2026-08-01T00:00:00.000Z", updatedAt: "", originFormId: "form-1", formName: "Inscrição", attended: true, imageAuthorization: true },
+  { id: "r2", eventId: "evt-1", status: "pending", name: "Bruno", email: "bruno@x.com", phone: "+5511999997777", answers: { Cidade: "Recife" }, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "", originFormId: null, formName: null, attended: false, imageAuthorization: false },
 ];
 
 const FIELDS = [
@@ -215,5 +215,22 @@ describe("AttendeesPage — detalhe da inscrição", () => {
     const dialog = await screen.findByRole("dialog");
     await waitFor(() => expect(dialog.textContent).toContain("Cidade"));
     expect(dialog.textContent).not.toContain("Nota NPS");
+  });
+
+  it("mostra a autorização de imagem marcada quando a pessoa aceitou", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText("Ana"));
+
+    const checkbox = await screen.findByRole("checkbox", { name: "Autorizo o uso de imagem" });
+    expect(checkbox.getAttribute("data-state")).toBe("checked");
+  });
+
+  it("não mostra a autorização de imagem quando o form não pede e não houve aceite", async () => {
+    renderPage();
+    fireEvent.click(await screen.findByText("Bruno"));
+
+    const dialog = await screen.findByRole("dialog");
+    await waitFor(() => expect(dialog.textContent).toContain("Cidade"));
+    expect(dialog.textContent).not.toContain("Autorizo o uso de imagem");
   });
 });

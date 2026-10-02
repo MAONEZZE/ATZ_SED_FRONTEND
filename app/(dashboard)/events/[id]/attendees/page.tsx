@@ -195,6 +195,7 @@ export default function AttendeesPage() {
   const loadError = isAnonymousView ? formResponsesErrorObj : registrationsErrorObj;
 
   function openRegistrationDetails(r: Registration) {
+    const requiresImage = forms?.find((f) => f.id === r.originFormId)?.requireImageAuthorization;
     setViewing({
       id: r.id,
       name: r.name,
@@ -205,6 +206,7 @@ export default function AttendeesPage() {
       status: r.status,
       formId: r.originFormId,
       formName: r.formName,
+      imageAuthorization: requiresImage || r.imageAuthorization ? r.imageAuthorization : null,
     });
     setDetailOpen(true);
   }
@@ -220,6 +222,7 @@ export default function AttendeesPage() {
       status: r.status,
       formId: selectedForm?.id ?? null,
       formName: selectedForm?.name ?? null,
+      imageAuthorization: null,
     });
     setDetailOpen(true);
   }
