@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   buildAutomationPatch,
+  computeEventDelayFireAt,
+  eventDelayStatus,
+  formatDelaySummary,
   invalidAutomationFormReason,
+  patchRevalidatesDelay,
   sameFormIds,
+  translateAutomationError,
+  validateEventDelay,
   triggerRequiresForm,
   triggerUsesSubmissionScope,
   type AutomationSnapshot,
@@ -17,6 +23,7 @@ const ALL_TRIGGERS: AutomationTrigger[] = [
   "recurring",
   "on_date",
   "on_date_form_field",
+  "on_event_delay",
 ];
 
 describe("triggerRequiresForm", () => {
@@ -176,5 +183,209 @@ describe("buildAutomationPatch", () => {
     const original = snapshot({ trigger: "on_date", sendAt: "2026-09-01T12:00:00.000Z" });
     const current = snapshot({ trigger: "on_date", sendAt: "2026-09-01T12:00:00Z" });
     expect(buildAutomationPatch(original, current)).toEqual({});
+  });
+});
+
+describe("buildAutomationPatch — on_event_delay", () => {
+  function snapshot(overrides: Partial<AutomationSnapshot> = {}): AutomationSnapshot {
+    return {
+      templateId: "tpl-1",
+      trigger: "on_event_delay",
+      formIds: [],
+      cron: null,
+      timezone: null,
+      sendAt: null,
+      delayDirection: "before",
+      delayValue: 2,
+      delayUnit: "hours",
+      active: true,
+      ...overrides,
+    };
+  }
+
+  it("trocar para on_event_delay envia os 3 campos de delay no mesmo PATCH", () => {
+    const original = snapshot({
+      trigger: "on_approval",
+      delayDirection: null,
+      delayValue: null,
+      delayUnit: null,
+    });
+    expect(buildAutomationPatch(original, snapshot())).toEqual({
+      trigger: "on_event_delay",
+      delayDirection: "before",
+      delayValue: 2,
+      delayUnit: "hours",
+    });
+  });
+
+  it("alterar só o valor envia só delayValue", () => {
+    expect(buildAutomationPatch(snapshot(), snapshot({ delayValue: 3 }))).toEqual({
+      delayValue: 3,
+    });
+  });
+
+  it("sair de on_event_delay não envia campos de delay (backend zera)", () => {
+    const current = snapshot({
+      trigger: "on_approval",
+      delayDirection: null,
+      delayValue: null,
+      delayUnit: null,
+    });
+    expect(buildAutomationPatch(snapshot(), current)).toEqual({ trigger: "on_approval" });
+  });
+
+  it("delay inalterado não entra no PATCH", () => {
+    expect(buildAutomationPatch(snapshot(), snapshot({ active: false }))).toEqual({
+      active: false,
+    });
+  });
+});
+
+describe("patchRevalidatesDelay", () => {
+  it("muda delay, ativa ou troca para on_event_delay → revalida", () => {
+    expect(patchRevalidatesDelay({ delayValue: 3 })).toBe(true);
+    expect(patchRevalidatesDelay({ delayUnit: "days" })).toBe(true);
+    expect(patchRevalidatesDelay({ active: true })).toBe(true);
+    expect(patchRevalidatesDelay({ trigger: "on_event_delay" })).toBe(true);
+  });
+
+  it("formIds, desativar ou PATCH vazio não revalidam", () => {
+    expect(patchRevalidatesDelay({ formIds: ["f1"] })).toBe(false);
+    expect(patchRevalidatesDelay({ active: false })).toBe(false);
+    expect(patchRevalidatesDelay({})).toBe(false);
+  });
+});
+
+describe("computeEventDelayFireAt", () => {
+  const event = {
+    eventDate: "2027-03-10T23:00:00.000Z",
+    endDate: "2027-03-11T02:00:00.000Z",
+  };
+
+  it("before subtrai o delay de eventDate", () => {
+    const at = computeEventDelayFireAt(event, {
+      delayDirection: "before",
+      delayValue: 2,
+      delayUnit: "hours",
+    });
+    expect(at?.toISOString()).toBe("2027-03-10T21:00:00.000Z");
+  });
+
+  it("after soma o delay a endDate", () => {
+    const at = computeEventDelayFireAt(event, {
+      delayDirection: "after",
+      delayValue: 1,
+      delayUnit: "days",
+    });
+    expect(at?.toISOString()).toBe("2027-03-12T02:00:00.000Z");
+  });
+
+  it("after sem endDate usa eventDate", () => {
+    const at = computeEventDelayFireAt(
+      { eventDate: event.eventDate, endDate: null },
+      { delayDirection: "after", delayValue: 30, delayUnit: "minutes" },
+    );
+    expect(at?.toISOString()).toBe("2027-03-10T23:30:00.000Z");
+  });
+
+  it("evento sem eventDate → null", () => {
+    expect(
+      computeEventDelayFireAt(
+        { eventDate: null, endDate: null },
+        { delayDirection: "before", delayValue: 1, delayUnit: "days" },
+      ),
+    ).toBeNull();
+  });
+});
+
+describe("validateEventDelay", () => {
+  const ok = { delayDirection: "before" as const, delayUnit: "days" as const };
+
+  it("aceita limites válidos", () => {
+    expect(validateEventDelay({ ...ok, delayValue: 1 })).toBeNull();
+    expect(validateEventDelay({ ...ok, delayValue: 365 })).toBeNull();
+    expect(validateEventDelay({ ...ok, delayValue: 8760, delayUnit: "hours" })).toBeNull();
+    expect(
+      validateEventDelay({ ...ok, delayValue: 525600, delayUnit: "minutes" }),
+    ).toBeNull();
+  });
+
+  it("rejeita 0, 1.5 e vazio", () => {
+    expect(validateEventDelay({ ...ok, delayValue: 0 })).toMatch(/inteiro/);
+    expect(validateEventDelay({ ...ok, delayValue: 1.5 })).toMatch(/inteiro/);
+    expect(validateEventDelay({ ...ok, delayValue: null })).toMatch(/Informe/);
+  });
+
+  it("rejeita acima de 365 dias em qualquer unidade", () => {
+    expect(validateEventDelay({ ...ok, delayValue: 366 })).toMatch(/365 dias/);
+    expect(validateEventDelay({ ...ok, delayValue: 8761, delayUnit: "hours" })).toMatch(
+      /365 dias/,
+    );
+  });
+
+  it("exige direção e unidade", () => {
+    expect(validateEventDelay({ ...ok, delayDirection: null, delayValue: 1 })).not.toBeNull();
+    expect(validateEventDelay({ ...ok, delayUnit: null, delayValue: 1 })).not.toBeNull();
+  });
+});
+
+describe("formatDelaySummary", () => {
+  it("singular e plural, antes e depois", () => {
+    expect(
+      formatDelaySummary({ delayDirection: "before", delayValue: 2, delayUnit: "hours" }),
+    ).toBe("2 horas antes do início do evento");
+    expect(
+      formatDelaySummary({ delayDirection: "after", delayValue: 1, delayUnit: "days" }),
+    ).toBe("1 dia depois do fim do evento");
+    expect(
+      formatDelaySummary({ delayDirection: "before", delayValue: 1, delayUnit: "minutes" }),
+    ).toBe("1 minuto antes do início do evento");
+  });
+});
+
+describe("eventDelayStatus", () => {
+  const event = { eventDate: "2027-03-10T23:00:00.000Z", endDate: null };
+  const rule = {
+    delayDirection: "before" as const,
+    delayValue: 2,
+    delayUnit: "hours" as const,
+  };
+
+  it("sem firedForAt → pending", () => {
+    expect(eventDelayStatus({ ...rule, firedForAt: null }, event)).toBe("pending");
+  });
+
+  it("firedForAt igual ao momento atual (formato ISO diferente) → fired", () => {
+    expect(
+      eventDelayStatus({ ...rule, firedForAt: "2027-03-10T21:00:00Z" }, event),
+    ).toBe("fired");
+  });
+
+  it("evento remarcado: firedForAt antigo → pending", () => {
+    expect(
+      eventDelayStatus({ ...rule, firedForAt: "2027-03-09T21:00:00.000Z" }, event),
+    ).toBe("pending");
+  });
+
+  it("evento sem data → no_date", () => {
+    expect(
+      eventDelayStatus({ ...rule, firedForAt: null }, { eventDate: null, endDate: null }),
+    ).toBe("no_date");
+  });
+});
+
+describe("translateAutomationError", () => {
+  it("traduz o 409 de template+delay duplicado", () => {
+    expect(
+      translateAutomationError(
+        "An active automation with this template and delay already exists on this event",
+      ),
+    ).toMatch(/Já existe uma automação ativa/);
+  });
+
+  it("mantém as demais mensagens", () => {
+    expect(translateAutomationError("delay máximo é de 365 dias")).toBe(
+      "delay máximo é de 365 dias",
+    );
   });
 });

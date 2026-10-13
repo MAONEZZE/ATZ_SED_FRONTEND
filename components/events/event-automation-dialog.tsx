@@ -2,16 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import {
   buildAutomationPatch,
+  computeEventDelayFireAt,
+  DELAY_DIRECTION_LABELS,
+  DELAY_UNIT_LABELS,
   invalidAutomationFormReason,
+  patchRevalidatesDelay,
+  translateAutomationError,
+  validateEventDelay,
   sameFormIds,
   triggerRequiresForm,
   triggerUsesSubmissionScope,
   TRIGGER_LABELS,
   type AutomationInput,
   type AutomationSnapshot,
+  type EventDelay,
 } from "@/lib/api/automations";
+import { ApiError } from "@/lib/api/client";
+import { useEvent } from "@/lib/api/events";
 import {
   useAllTemplates,
   useCreateAutomationGlobal,
@@ -21,7 +31,14 @@ import { useForms } from "@/lib/api/forms";
 import { useFormFields } from "@/lib/api/form-fields";
 import { buildCron, parseCron, type CronFreq } from "@/lib/utils/automation-cron";
 import { zonedInputToUtcIso, utcIsoToZonedInput } from "@/lib/utils/date-time-picker";
-import type { Automation, AutomationTrigger, Form } from "@/lib/api/types";
+import { formatDateTime } from "@/lib/utils/format-date";
+import type {
+  Automation,
+  AutomationTrigger,
+  DelayDirection,
+  DelayUnit,
+  Form,
+} from "@/lib/api/types";
 import { EditDialogFooter } from "@/components/common/edit-dialog-footer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +103,14 @@ export function EventAutomationDialog({
   const [formsOpen, setFormsOpen] = useState(false);
   const [formSearch, setFormSearch] = useState("");
   const [sendAt, setSendAt] = useState("");
+  const [delayDirection, setDelayDirection] = useState<DelayDirection>("before");
+  // String para permitir o campo vazio (valor inicial obrigatório de preencher).
+  const [delayValue, setDelayValue] = useState("");
+  const [delayUnit, setDelayUnit] = useState<DelayUnit>("hours");
+  // Erros de delay/data (cliente ou API) ficam dentro do dialog, perto dos campos.
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
+  const { data: event } = useEvent(eventId);
 
   const { data: forms } = useForms(eventId);
   const sortedForms = [...(forms ?? [])].sort((a, b) => a.order - b.order);
@@ -136,6 +161,10 @@ export function EventAutomationDialog({
         automation?.sendAt ? utcIsoToZonedInput(automation.sendAt, SEND_AT_TIMEZONE) : "",
       );
       setActive(automation?.active ?? true);
+      setDelayDirection(automation?.delayDirection ?? "before");
+      setDelayValue(automation?.delayValue != null ? String(automation.delayValue) : "");
+      setDelayUnit(automation?.delayUnit ?? "hours");
+      setInlineError(null);
 
       const parsed = automation?.cron ? parseCron(automation.cron) : null;
       setCronFreq(parsed?.freq ?? "WEEKLY");
@@ -150,6 +179,23 @@ export function EventAutomationDialog({
   const isRecurring = trigger === "recurring";
   const requiresForm = triggerRequiresForm(trigger);
   const isSubmissionScope = triggerUsesSubmissionScope(trigger);
+  const isEventDelay = trigger === "on_event_delay";
+  const eventHasDate = Boolean(event?.eventDate);
+
+  const currentDelay: EventDelay = {
+    delayDirection,
+    delayValue: delayValue === "" ? null : Number(delayValue),
+    delayUnit,
+  };
+  const delayFireAt =
+    isEventDelay && event && !validateEventDelay(currentDelay)
+      ? computeEventDelayFireAt(event, currentDelay)
+      : null;
+
+  // Limpa o erro inline assim que o usuário mexe em qualquer campo do delay.
+  useEffect(() => {
+    setInlineError(null);
+  }, [trigger, delayDirection, delayValue, delayUnit, active]);
 
   function toggleForm(formId: string, checked: boolean) {
     setFormIds((prev) =>
@@ -189,6 +235,11 @@ export function EventAutomationDialog({
       }
     }
 
+    if (isEventDelay) {
+      const delayError = validateEventDelay(currentDelay);
+      if (delayError) return setInlineError(delayError);
+    }
+
     const cronValue = isRecurring
       ? buildCron({
           freq: cronFreq,
@@ -204,8 +255,37 @@ export function EventAutomationDialog({
         toast.success(isEdit ? "Automação atualizada" : "Automação criada");
         onOpenChange(false);
       },
-      onError: (e: Error) => toast.error(e.message),
+      onError: (e: Error) => {
+        const message = translateAutomationError(e.message);
+        if (isEventDelay && e instanceof ApiError && (e.status === 400 || e.status === 409)) {
+          setInlineError(message);
+        } else {
+          toast.error(message);
+        }
+      },
     };
+
+    // Evento sem data / momento no passado: o backend só rejeita quando cria,
+    // ativa, muda o delay ou troca para este gatilho. Regra inativa pode ter
+    // momento passado.
+    function delayDateError(): string | null {
+      if (!event) return "Carregando os dados do evento, tente novamente.";
+      if (!eventHasDate) {
+        return "Este evento não tem data. Defina a data do evento para usar este gatilho.";
+      }
+      if (active && delayFireAt && delayFireAt <= new Date()) {
+        return "O momento do disparo já passou. Ajuste o delay ou salve a regra como inativa.";
+      }
+      return null;
+    }
+
+    const delayFields = isEventDelay
+      ? {
+          delayDirection,
+          delayValue: currentDelay.delayValue,
+          delayUnit,
+        }
+      : { delayDirection: null, delayValue: null, delayUnit: null };
 
     if (automation) {
       const original: AutomationSnapshot = {
@@ -215,6 +295,9 @@ export function EventAutomationDialog({
         cron: automation.cron,
         timezone: automation.timezone,
         sendAt: automation.sendAt,
+        delayDirection: automation.delayDirection,
+        delayValue: automation.delayValue,
+        delayUnit: automation.delayUnit,
         active: automation.active,
       };
       const current: AutomationSnapshot = {
@@ -224,13 +307,20 @@ export function EventAutomationDialog({
         cron: cronValue,
         timezone: timezoneValue,
         sendAt: sendAtIso,
+        ...delayFields,
         active,
       };
-      update.mutate(
-        { eventId, id: automation.id, input: buildAutomationPatch(original, current) },
-        onDone,
-      );
+      const patch = buildAutomationPatch(original, current);
+      if (isEventDelay && patchRevalidatesDelay(patch)) {
+        const dateError = delayDateError();
+        if (dateError) return setInlineError(dateError);
+      }
+      update.mutate({ eventId, id: automation.id, input: patch }, onDone);
     } else {
+      if (isEventDelay) {
+        const dateError = delayDateError();
+        if (dateError) return setInlineError(dateError);
+      }
       const input: AutomationInput = {
         templateId,
         trigger,
@@ -238,6 +328,11 @@ export function EventAutomationDialog({
         cron: cronValue ?? undefined,
         timezone: timezoneValue ?? undefined,
         sendAt: sendAtIso ?? undefined,
+        ...(isEventDelay && {
+          delayDirection,
+          delayValue: currentDelay.delayValue ?? undefined,
+          delayUnit,
+        }),
         active,
       };
       create.mutate({ eventId, input }, onDone);
@@ -369,6 +464,83 @@ export function EventAutomationDialog({
             </Popover>
           </div>
 
+          {isEventDelay && (
+            <div className="space-y-4 rounded-xl border p-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-2 sm:col-span-3">
+                  <Label>Quando *</Label>
+                  <Select
+                    value={delayDirection}
+                    onValueChange={(v) => setDelayDirection(v as DelayDirection)}
+                  >
+                    <SelectTrigger aria-label="Direção do delay">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(DELAY_DIRECTION_LABELS) as DelayDirection[]).map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {DELAY_DIRECTION_LABELS[d]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 sm:col-span-1">
+                  <Label htmlFor="eauto-delay-value">Valor *</Label>
+                  <Input
+                    id="eauto-delay-value"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
+                    value={delayValue}
+                    onChange={(e) => setDelayValue(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Unidade *</Label>
+                  <Select value={delayUnit} onValueChange={(v) => setDelayUnit(v as DelayUnit)}>
+                    <SelectTrigger aria-label="Unidade do delay">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(DELAY_UNIT_LABELS) as DelayUnit[]).map((u) => (
+                        <SelectItem key={u} value={u}>
+                          {DELAY_UNIT_LABELS[u]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Dispara uma vez, só para inscritos aprovados nesse momento. Se a data do
+                evento mudar, o disparo acompanha.
+              </p>
+
+              {event && !eventHasDate ? (
+                <p className="inline-flex items-center gap-1 text-sm text-status-danger-fg">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Este evento não tem data. Defina a data do evento para usar este gatilho.
+                </p>
+              ) : (
+                delayFireAt && (
+                  <p className="text-sm font-medium">
+                    Dispara em {formatDateTime(delayFireAt.toISOString())}
+                    {delayFireAt <= new Date() && (
+                      <span className="ml-1 font-normal text-status-danger-fg">
+                        (já passou)
+                      </span>
+                    )}
+                  </p>
+                )
+              )}
+            </div>
+          )}
+
           {trigger === "on_date" && (
             <div className="space-y-2">
               <Label htmlFor="eauto-send-at">Data e hora de envio *</Label>
@@ -459,6 +631,16 @@ export function EventAutomationDialog({
             <Label htmlFor="eauto-active">Ativa</Label>
             <Switch id="eauto-active" checked={active} onCheckedChange={setActive} />
           </div>
+
+          {inlineError && (
+            <p
+              role="alert"
+              className="flex items-start gap-1 rounded-md border border-status-danger-fg/30 bg-status-danger-bg p-2 text-sm text-status-danger-fg"
+            >
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              {inlineError}
+            </p>
+          )}
         </div>
 
         <EditDialogFooter

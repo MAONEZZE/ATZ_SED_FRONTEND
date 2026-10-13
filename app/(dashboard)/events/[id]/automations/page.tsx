@@ -8,7 +8,13 @@ import {
   useDeleteAutomationGlobal,
   useEventAutomations,
 } from "@/lib/api/global-messaging";
-import { TRIGGER_LABELS } from "@/lib/api/automations";
+import {
+  eventDelayStatus,
+  formatDelaySummary,
+  TRIGGER_LABELS,
+  type EventDelayStatus,
+} from "@/lib/api/automations";
+import { useEvent } from "@/lib/api/events";
 import type { Automation } from "@/lib/api/types";
 import { EventAutomationDialog } from "@/components/events/event-automation-dialog";
 import { DataTable, DataTableDeleteButton } from "@/components/common/data-table";
@@ -27,12 +33,25 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+const DELAY_STATUS_BADGES: Record<EventDelayStatus, { label: string; className: string }> = {
+  pending: { label: "Aguardando", className: "border-transparent bg-warn-soft text-warn-text" },
+  fired: {
+    label: "Disparada",
+    className: "border-transparent bg-status-success-bg text-status-success-fg",
+  },
+  no_date: {
+    label: "Sem data",
+    className: "border-transparent bg-status-danger-bg text-status-danger-fg",
+  },
+};
+
 export default function EventAutomationsPage() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { data: response, isLoading } = useEventAutomations(id, page, pageSize);
   const automations = response?.data ?? [];
+  const { data: event } = useEvent(id);
   const deleteAutomation = useDeleteAutomationGlobal();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Automation | null>(null);
@@ -93,7 +112,25 @@ export default function EventAutomationsPage() {
             key: "trigger",
             header: "Gatilho",
             align: "left",
-            cell: (a) => TRIGGER_LABELS[a.trigger],
+            cell: (a) => {
+              if (a.trigger !== "on_event_delay") return TRIGGER_LABELS[a.trigger];
+              // Status só em regra ativa: a coluna Status já diz "Inativa".
+              const badge =
+                a.active && event ? DELAY_STATUS_BADGES[eventDelayStatus(a, event)] : null;
+              return (
+                <div className="space-y-1">
+                  <div>{TRIGGER_LABELS[a.trigger]}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                    {formatDelaySummary(a)}
+                    {badge && (
+                      <Badge variant="outline" className={badge.className}>
+                        {badge.label}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            },
           },
           { key: "template", header: "Template", cell: (a) => a.template.name },
           {

@@ -30,7 +30,13 @@ export type AutomationTrigger =
   | "on_form_submitted"
   | "recurring"
   | "on_date"
-  | "on_date_form_field";
+  | "on_date_form_field"
+  | "on_event_delay";
+
+/** `before` conta a partir de `eventDate`; `after`, de `endDate` (ou `eventDate`). */
+export type DelayDirection = "before" | "after";
+
+export type DelayUnit = "minutes" | "hours" | "days";
 
 export type RecurrenceFreq = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
 
@@ -189,6 +195,12 @@ export interface Automation {
   sendAt: string | null;
   firedAt: string | null;
   sendTime: string | null;
+  /** Só preenchidos em `on_event_delay`; `null` nos demais gatilhos. */
+  delayDirection: DelayDirection | null;
+  delayValue: number | null;
+  delayUnit: DelayUnit | null;
+  /** Momento de disparo (`on_event_delay`) já processado, ou `null`. */
+  firedForAt: string | null;
   name: string | null;
   createdAt: string;
   template: {
