@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import type { EventObject } from "@/lib/api/types";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
+import { slugErrorFromApi } from "@/lib/utils/slug";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -65,7 +66,14 @@ export default function NewEventPage() {
         }
         router.push(`/events/${event.id}/edit`);
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => {
+        const slugError = slugErrorFromApi(e);
+        if (slugError) {
+          form.setError("slug", { message: slugError }, { shouldFocus: true });
+          return;
+        }
+        toast.error(e.message);
+      },
     });
   }
 
@@ -76,7 +84,7 @@ export default function NewEventPage() {
       <h1 className="text-2xl font-bold tracking-tight">Novo evento</h1>
 
       <form className="space-y-6">
-        <EventFormFields form={form} />
+        <EventFormFields form={form} suggestSlug />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Button

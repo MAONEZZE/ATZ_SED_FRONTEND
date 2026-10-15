@@ -14,6 +14,7 @@ import type {
 
 export interface EventInput {
   title: string;
+  slug?: string;
   location?: string;
   capacity?: number;
   dressCode?: string;
@@ -159,11 +160,16 @@ export function useCreateEvent() {
 }
 
 export function useUpdateEvent(id: string) {
+  const queryClient = useQueryClient();
   const invalidate = useInvalidateEvents();
   return useMutation({
     mutationFn: (input: EventUpdateInput) =>
       api.patch<EventObject>(`/events/${id}`, input),
-    onSuccess: () => invalidate(id),
+    onSuccess: (updated) => {
+      // Slug novo já vale na hora para links, QR codes e prévias que leem o evento.
+      queryClient.setQueryData(queryKeys.event(id), updated);
+      invalidate(id);
+    },
   });
 }
 

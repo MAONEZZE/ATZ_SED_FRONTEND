@@ -1,9 +1,22 @@
 import { z } from "zod";
 import { APP_TIME_ZONE, zonedInputToUtcIso } from "@/lib/utils/date-time-picker";
+import {
+  SLUG_FORMAT_MESSAGE,
+  SLUG_LENGTH_MESSAGE,
+  SLUG_MAX,
+  SLUG_MIN,
+  SLUG_PATTERN,
+} from "@/lib/utils/slug";
 
 export const eventSchema = z
   .object({
     title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
+    // Vazio = o backend gera (criação) ou mantém o atual (edição).
+    slug: z
+      .string()
+      .optional()
+      .refine((v) => !v || (v.length >= SLUG_MIN && v.length <= SLUG_MAX), SLUG_LENGTH_MESSAGE)
+      .refine((v) => !v || SLUG_PATTERN.test(v), SLUG_FORMAT_MESSAGE),
     location: z.string().optional(),
     capacity: z
       .string()
@@ -43,6 +56,8 @@ export function toEventInput(values: EventFormValues) {
   const hasRecurrence = Boolean(values.recurrenceFreq);
   return {
     title: values.title,
+    // Nunca enviar "" nem null: o backend responde 400.
+    ...(values.slug ? { slug: values.slug } : {}),
     location: values.location || undefined,
     capacity: values.capacity ? Number(values.capacity) : undefined,
     dressCode: values.dressCode || undefined,

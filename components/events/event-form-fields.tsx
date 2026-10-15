@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { EventFormValues } from "@/lib/validation/event-schema";
+import { normalizeSlugInput, publicEventUrl, slugFromTitle } from "@/lib/utils/slug";
 import { useWhatsAppInstances } from "@/lib/api/whatsapp-instances";
 import { InstanceStatusBadge } from "@/components/common/status-badge";
 import { Input } from "@/components/ui/input";
@@ -38,12 +39,30 @@ const NO_INSTANCE = "none";
 export function EventFormFields({
   form,
   disabled = false,
+  suggestSlug = false,
 }: {
   form: UseFormReturn<EventFormValues>;
   disabled?: boolean;
+  /** Na criação, o slug acompanha o título até o usuário editar o campo. */
+  suggestSlug?: boolean;
 }) {
   const { register, formState } = form;
   const errors = formState.errors;
+  const title = form.watch("title");
+  const slug = form.watch("slug");
+  const slugEdited = useRef(false);
+
+  useEffect(() => {
+    if (suggestSlug && !slugEdited.current) {
+      form.setValue("slug", slugFromTitle(title ?? ""));
+    }
+  }, [suggestSlug, title, form]);
+
+  // A URL é absoluta, então a origem só existe no cliente.
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
   const freq = form.watch("recurrenceFreq");
   const isRecurring = Boolean(freq);
   const { data: whatsappInstances } = useWhatsAppInstances();
@@ -61,6 +80,42 @@ export function EventFormFields({
         <Input id="title" disabled={disabled} {...register("title")} />
         {errors.title && (
           <p className="text-sm text-destructive">{errors.title.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="slug">Slug / URL do evento</Label>
+        <Controller
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <Input
+              id="slug"
+              disabled={disabled}
+              placeholder={
+                suggestSlug ? "Deixe em branco para gerar automaticamente" : undefined
+              }
+              aria-describedby="slug-preview"
+              name={field.name}
+              ref={field.ref}
+              onBlur={field.onBlur}
+              value={field.value ?? ""}
+              onChange={(e) => {
+                slugEdited.current = true;
+                field.onChange(normalizeSlugInput(e.target.value));
+              }}
+            />
+          )}
+        />
+        <p id="slug-preview" className="break-all text-sm text-muted-foreground">
+          {slug
+            ? publicEventUrl(origin, slug)
+            : suggestSlug
+              ? "Em branco: o endereço é gerado automaticamente a partir do título."
+              : "Em branco: o endereço atual é mantido."}
+        </p>
+        {errors.slug && (
+          <p className="text-sm text-destructive">{errors.slug.message}</p>
         )}
       </div>
 

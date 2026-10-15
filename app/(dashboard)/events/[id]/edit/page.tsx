@@ -16,16 +16,29 @@ import {
 import { APP_TIME_ZONE, utcIsoToZonedInput } from "@/lib/utils/date-time-picker";
 import { canTransitionEvent } from "@/lib/utils/transition-maps";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
+import { publicEventUrl, slugErrorFromApi } from "@/lib/utils/slug";
 import { EventFormFields } from "@/components/events/event-form-fields";
 import { CancelEventDialog } from "@/components/events/cancel-event-dialog";
 import { CoverUploader } from "@/components/events/cover-uploader";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import type { EventUpdateInput } from "@/lib/api/events";
 import type { EventObject } from "@/lib/api/types";
 
 function toFormValues(event: EventObject): EventFormValues {
   return {
     title: event.title,
+    slug: event.slug,
     location: event.location ?? "",
     capacity: event.capacity != null ? String(event.capacity) : "",
     dressCode: event.dressCode ?? "",
@@ -48,6 +61,10 @@ export default function EditEventPage() {
   const { data: whatsappInstances } = useWhatsAppInstances();
   const updateEvent = useUpdateEvent(params.id);
   const updateStatus = useUpdateEventStatus(params.id);
+  // Payload aguardando o "Deseja continuar?" da troca de slug.
+  const [pendingSlugChange, setPendingSlugChange] = useState<EventUpdateInput | null>(
+    null,
+  );
 
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -82,14 +99,39 @@ export default function EditEventPage() {
   const isDirty = form.formState.isDirty;
 
   function onSave(values: EventFormValues) {
-    updateEvent.mutate(toEventInput(values), {
+    // Só manda o slug quando mudou: vazio ou igual ao atual mantém o slug.
+    const { slug, ...rest } = toEventInput(values);
+    if (slug && slug !== event!.slug) {
+      setPendingSlugChange({ ...rest, slug });
+      return;
+    }
+    save(rest);
+  }
+
+  function save(input: EventUpdateInput) {
+    const previousSlug = event!.slug;
+    updateEvent.mutate(input, {
       onSuccess: (updated) => {
         form.reset(toFormValues(updated));
         revalidatePublicEvent(updated.slug);
+        // A página do slug antigo não pode continuar servida pelo cache.
+        if (updated.slug !== previousSlug) revalidatePublicEvent(previousSlug);
         toast.success("Evento salvo!");
       },
-      onError: (e) => toast.error(e.message),
+      onError: (e) => {
+        const slugError = slugErrorFromApi(e);
+        if (slugError) {
+          form.setError("slug", { message: slugError }, { shouldFocus: true });
+          return;
+        }
+        toast.error(e.message);
+      },
     });
+  }
+
+  function confirmSlugChange() {
+    if (pendingSlugChange) save(pendingSlugChange);
+    setPendingSlugChange(null);
   }
 
   function changeStatus(status: "published" | "ended") {
@@ -166,6 +208,37 @@ export default function EditEventPage() {
           </div>
         )}
       </aside>
+
+      <AlertDialog
+        open={pendingSlugChange !== null}
+        onOpenChange={(open) => !open && setPendingSlugChange(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alterar o endereço do evento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ao alterar o slug, o link atual (
+              <span className="break-all font-medium text-foreground">
+                {publicEventUrl(window.location.origin, event.slug)}
+              </span>
+              ) deixará de funcionar. Links, QR codes e formulários já divulgados
+              precisarão ser atualizados. Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {event.status === "published" && (
+            <p className="rounded-lg border border-yellow-300 bg-yellow-50 p-3 text-sm text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-200">
+              Este evento está publicado: quem acessar o link antigo verá uma página
+              não encontrada.
+            </p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSlugChange}>
+              Alterar slug e salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

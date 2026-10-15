@@ -82,3 +82,42 @@ describe("toEventInput — fuso fixo da aplicação", () => {
     expect(devolta.eventDate).toBe(original);
   });
 });
+
+describe("eventSchema — slug", () => {
+  it.each(["abc", "meu-evento-2026", "a1-b2"])("aceita %j", (slug) => {
+    expect(eventSchema.safeParse({ ...base, slug }).success).toBe(true);
+  });
+
+  it("aceita vazio (backend gera ou mantém)", () => {
+    expect(eventSchema.safeParse({ ...base, slug: "" }).success).toBe(true);
+    expect(eventSchema.safeParse(base).success).toBe(true);
+  });
+
+  it.each([
+    "Ab",
+    "ab",
+    "Meu-Evento",
+    "evento-ação",
+    "meu evento",
+    "-evento",
+    "evento-",
+    "meu--evento",
+    "meu_evento",
+    "a".repeat(101),
+  ])("rejeita %j no campo slug", (slug) => {
+    const result = eventSchema.safeParse({ ...base, slug });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(["slug"]);
+  });
+});
+
+describe("toEventInput — slug", () => {
+  it("envia o slug preenchido", () => {
+    expect(toEventInput({ ...base, slug: "meu-evento" }).slug).toBe("meu-evento");
+  });
+
+  it("omite a chave quando vazio — nunca manda '' nem null", () => {
+    expect(toEventInput({ ...base, slug: "" })).not.toHaveProperty("slug");
+    expect(toEventInput(base)).not.toHaveProperty("slug");
+  });
+});
