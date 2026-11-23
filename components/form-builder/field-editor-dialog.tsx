@@ -52,6 +52,7 @@ const creatableTypes: FieldType[] = [
   "textarea",
   "email",
   "phone",
+  "name",
   "select",
   "multiselect",
   "checkbox",
