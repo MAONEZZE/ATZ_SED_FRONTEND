@@ -127,6 +127,31 @@ describe("RegistrationForm — envio", () => {
     expect(byKey(fields[0]).value).toBe("");
     expect(localStorage.getItem("reg_draft_ev_old")).toBeNull();
   });
+
+  it("campo Nome é enviado com o rótulo como chave, no mesmo payload de texto", async () => {
+    const fields: PublicFormField[] = [
+      {
+        id: "1",
+        label: "Nome completo",
+        type: "name",
+        required: true,
+        options: null,
+        order: 0,
+      },
+    ];
+    render(<RegistrationForm slug="ev" formSlug="nome" fields={fields} anonymous />);
+    await waitFor(() => screen.getByText("Enviar"));
+
+    fireEvent.change(byKey(fields[0]), { target: { value: "Ana Souza" } });
+    fireEvent.click(screen.getByText("Enviar"));
+
+    await waitFor(() => expect(submitMock).toHaveBeenCalledTimes(1));
+    expect(submitMock.mock.calls[0][2]).toEqual({
+      phone: undefined,
+      answers: { "Nome completo": "Ana Souza" },
+      image_authorization: undefined,
+    });
+  });
 });
 
 describe("RegistrationForm — telefone", () => {
