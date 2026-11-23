@@ -107,4 +107,24 @@ describe("FieldEditorDialog", () => {
     expect(labels).toContain("Nome");
     expect(labels.indexOf("Nome")).toBe(labels.indexOf("Telefone") + 1);
   });
+
+  it("cria campo do tipo Nome com type name e sem options", () => {
+    renderDialog({ field: null, fields: [] });
+    fireEvent.change(screen.getByLabelText("Label *"), {
+      target: { value: "Nome completo" },
+    });
+    openTypeSelect();
+    fireEvent.click(screen.getByRole("option", { name: "Nome" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    expect(createMutate).toHaveBeenCalledTimes(1);
+    expect(createMutate.mock.calls[0][0]).toEqual({
+      label: "Nome completo",
+      type: "name",
+      formId: "form-1",
+      required: true,
+      options: undefined,
+      order: 0,
+    });
+  });
 });
