@@ -68,7 +68,7 @@ export function FormFieldsRenderer({
               <Textarea id={key} disabled={disabled} {...form.register(key)} />
             )}
 
-            {(field.type === "text" || field.type === "email") && (
+            {(field.type === "text" || field.type === "email" || field.type === "name") && (
               <Input
                 id={key}
                 type={field.type === "email" ? "email" : "text"}
