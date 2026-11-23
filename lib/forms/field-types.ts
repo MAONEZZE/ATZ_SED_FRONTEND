@@ -22,6 +22,7 @@ export const FIELD_TYPES: Record<FieldType, FieldTypeSpec> = {
   textarea: { hasOptions: false },
   email: { hasOptions: false },
   phone: { hasOptions: false },
+  name: { hasOptions: false },
   select: { hasOptions: true },
   multiselect: { hasOptions: true },
   checkbox: { hasOptions: false },

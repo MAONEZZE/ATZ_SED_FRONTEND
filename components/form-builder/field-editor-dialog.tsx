@@ -36,6 +36,7 @@ const fieldTypeLabels: Record<FieldType, string> = {
   textarea: "Texto longo",
   email: "E-mail",
   phone: "Telefone",
+  name: "Nome",
   select: "Escolha única",
   multiselect: "Múltipla escolha",
   checkbox: "Caixa de seleção",
