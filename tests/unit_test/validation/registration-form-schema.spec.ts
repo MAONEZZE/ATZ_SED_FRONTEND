@@ -219,3 +219,35 @@ describe("buildSchema — image_authorization", () => {
     expect("image_authorization" in defaultValues([])).toBe(false);
   });
 });
+
+function nameField(overrides: Partial<PublicFormField> = {}): PublicFormField {
+  return {
+    id: "f5",
+    label: "Nome completo",
+    type: "name",
+    required: true,
+    options: null,
+    order: 0,
+    ...overrides,
+  };
+}
+
+describe("buildSchema — name", () => {
+  it("campo Nome obrigatório exige valor e aceita qualquer texto", () => {
+    const key = fieldKey({ id: "f5" });
+    const schema = buildSchema([nameField()]);
+    const result = schema.safeParse({ [key]: "" });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe("Campo obrigatório");
+    }
+    expect(schema.safeParse({ [key]: "Ana Souza" }).success).toBe(true);
+  });
+
+  it("campo Nome opcional aceita vazio", () => {
+    const key = fieldKey({ id: "f5" });
+    const schema = buildSchema([nameField({ required: false })]);
+    expect(schema.safeParse({ [key]: "" }).success).toBe(true);
+    expect(defaultValues([nameField()])[key]).toBe("");
+  });
+});

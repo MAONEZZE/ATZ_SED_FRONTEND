@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import {
@@ -36,6 +37,7 @@ const fieldTypeLabels: Record<FieldType, string> = {
   textarea: "Texto longo",
   email: "E-mail",
   phone: "Telefone",
+  name: "Nome",
   select: "Escolha única",
   multiselect: "Múltipla escolha",
   checkbox: "Caixa de seleção",
@@ -51,6 +53,7 @@ const creatableTypes: FieldType[] = [
   "textarea",
   "email",
   "phone",
+  "name",
   "select",
   "multiselect",
   "checkbox",
@@ -87,11 +90,17 @@ export function FieldEditorDialog({
 }) {
   const create = useCreateFormField(eventId);
   const update = useUpdateFormField(eventId);
+  const queryClient = useQueryClient();
 
   const [label, setLabel] = useState("");
   const [type, setType] = useState<FieldType>("text");
   const [required, setRequired] = useState(true);
   const [optionsText, setOptionsText] = useState("");
+
+  const existingNameField = fields.find((f) => f.type === "name" && f.id !== field?.id);
+  const availableTypes = existingNameField
+    ? creatableTypes.filter((t) => t !== "name")
+    : creatableTypes;
 
   useEffect(() => {
     if (open) {
@@ -140,7 +149,12 @@ export function FieldEditorDialog({
         toast.success(field ? "Campo atualizado" : "Campo criado");
         onOpenChange(false);
       },
-      onError: (e: Error) => toast.error(e.message),
+      onError: (e: Error) => {
+        toast.error(e.message);
+        void queryClient.invalidateQueries({
+          queryKey: ["events", eventId, "form-fields"],
+        });
+      },
     };
 
     if (field) {
@@ -180,13 +194,23 @@ export function FieldEditorDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {creatableTypes.map((t) => (
+                {availableTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     {fieldTypeLabels[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {type === "name" && (
+              <p className="text-sm text-muted-foreground">
+                Usado como nome do inscrito (e no Pipedrive). Só um por formulário.
+              </p>
+            )}
+            {existingNameField && (
+              <p className="text-sm text-muted-foreground">
+                Este formulário já tem um campo Nome: {existingNameField.label}
+              </p>
+            )}
           </div>
 
           {needsOptions && (
