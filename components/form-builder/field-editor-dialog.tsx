@@ -189,6 +189,11 @@ export function FieldEditorDialog({
                 ))}
               </SelectContent>
             </Select>
+            {type === "name" && (
+              <p className="text-sm text-muted-foreground">
+                Usado como nome do inscrito (e no Pipedrive). Só um por formulário.
+              </p>
+            )}
           </div>
 
           {needsOptions && (

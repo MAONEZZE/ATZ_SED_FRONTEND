@@ -127,4 +127,16 @@ describe("FieldEditorDialog", () => {
       order: 0,
     });
   });
+
+  it("mostra o texto de ajuda só quando o tipo selecionado é Nome", () => {
+    renderDialog({ field: null, fields: [] });
+    const helpText =
+      "Usado como nome do inscrito (e no Pipedrive). Só um por formulário.";
+    expect(screen.queryByText(helpText)).toBeNull();
+
+    openTypeSelect();
+    fireEvent.click(screen.getByRole("option", { name: "Nome" }));
+
+    expect(screen.getByText(helpText)).toBeTruthy();
+  });
 });
