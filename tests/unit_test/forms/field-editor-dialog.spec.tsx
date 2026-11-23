@@ -140,3 +140,33 @@ describe("FieldEditorDialog", () => {
     expect(screen.getByText(helpText)).toBeTruthy();
   });
 });
+
+describe("trava de um campo Nome por formulário", () => {
+  it("esconde Nome ao criar campo quando o formulário já tem campo Nome", () => {
+    renderDialog({ field: null, fields: [nameField()] });
+    openTypeSelect();
+
+    expect(optionLabels()).not.toContain("Nome");
+    expect(
+      screen.getByText("Este formulário já tem um campo Nome: Nome completo"),
+    ).toBeTruthy();
+  });
+
+  it("esconde Nome ao trocar o tipo de outro campo quando o formulário já tem campo Nome", () => {
+    renderDialog({ field: textField(), fields: [nameField(), textField()] });
+    openTypeSelect();
+
+    expect(optionLabels()).not.toContain("Nome");
+    expect(
+      screen.getByText("Este formulário já tem um campo Nome: Nome completo"),
+    ).toBeTruthy();
+  });
+
+  it("mantém Nome disponível ao editar o próprio campo Nome", () => {
+    renderDialog({ field: nameField(), fields: [nameField(), textField()] });
+    openTypeSelect();
+
+    expect(optionLabels()).toContain("Nome");
+    expect(screen.queryByText(/Este formulário já tem um campo Nome/)).toBeNull();
+  });
+});

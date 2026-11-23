@@ -95,6 +95,11 @@ export function FieldEditorDialog({
   const [required, setRequired] = useState(true);
   const [optionsText, setOptionsText] = useState("");
 
+  const existingNameField = fields.find((f) => f.type === "name" && f.id !== field?.id);
+  const availableTypes = existingNameField
+    ? creatableTypes.filter((t) => t !== "name")
+    : creatableTypes;
+
   useEffect(() => {
     if (open) {
       setLabel(field?.label ?? "");
@@ -182,7 +187,7 @@ export function FieldEditorDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {creatableTypes.map((t) => (
+                {availableTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     {fieldTypeLabels[t]}
                   </SelectItem>
@@ -192,6 +197,11 @@ export function FieldEditorDialog({
             {type === "name" && (
               <p className="text-sm text-muted-foreground">
                 Usado como nome do inscrito (e no Pipedrive). Só um por formulário.
+              </p>
+            )}
+            {existingNameField && (
+              <p className="text-sm text-muted-foreground">
+                Este formulário já tem um campo Nome: {existingNameField.label}
               </p>
             )}
           </div>
