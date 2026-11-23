@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from "vite
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FormField } from "@/lib/api/types";
+import { ApiError } from "@/lib/api/client";
+import { toast } from "sonner";
 
 beforeAll(() => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -168,5 +170,31 @@ describe("trava de um campo Nome por formulário", () => {
 
     expect(optionLabels()).toContain("Nome");
     expect(screen.queryByText(/Este formulário já tem um campo Nome/)).toBeNull();
+  });
+});
+
+describe("erro do backend ao salvar", () => {
+  it("no 400 mostra a mensagem do backend, recarrega os campos e mantém o diálogo aberto", () => {
+    const MSG =
+      'Este formulário já tem um campo Nome ("Nome completo"). Só é permitido um por formulário.';
+    createMutate.mockImplementation((_input, opts) =>
+      opts.onError(new ApiError(400, MSG)),
+    );
+    const onOpenChange = vi.fn();
+    const { queryClient } = renderDialog({ onOpenChange });
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    fireEvent.change(screen.getByLabelText("Label *"), {
+      target: { value: "Nome completo" },
+    });
+    openTypeSelect();
+    fireEvent.click(screen.getByRole("option", { name: "Nome" }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    expect(toast.error).toHaveBeenCalledWith(MSG);
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["events", "evt-1", "form-fields"],
+    });
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });

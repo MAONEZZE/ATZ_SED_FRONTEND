@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCreateFormField, useUpdateFormField } from "@/lib/api/form-fields";
 import { revalidatePublicEvent } from "@/lib/utils/revalidate-public";
 import {
@@ -89,6 +90,7 @@ export function FieldEditorDialog({
 }) {
   const create = useCreateFormField(eventId);
   const update = useUpdateFormField(eventId);
+  const queryClient = useQueryClient();
 
   const [label, setLabel] = useState("");
   const [type, setType] = useState<FieldType>("text");
@@ -147,7 +149,12 @@ export function FieldEditorDialog({
         toast.success(field ? "Campo atualizado" : "Campo criado");
         onOpenChange(false);
       },
-      onError: (e: Error) => toast.error(e.message),
+      onError: (e: Error) => {
+        toast.error(e.message);
+        void queryClient.invalidateQueries({
+          queryKey: ["events", eventId, "form-fields"],
+        });
+      },
     };
 
     if (field) {
