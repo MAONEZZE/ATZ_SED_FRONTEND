@@ -4,6 +4,7 @@ import { useCallback, useRef } from "react";
 import { Controller, type UseFormReturn } from "react-hook-form";
 import { fieldKey, uploadPublicDocument } from "@/lib/api/public";
 import {
+  FIELD_TYPES,
   documentMaxFiles,
   fieldOptions,
   rendersAsRadioGroup,
@@ -68,7 +69,9 @@ export function FormFieldsRenderer({
               <Textarea id={key} disabled={disabled} {...form.register(key)} />
             )}
 
-            {(field.type === "text" || field.type === "email" || field.type === "name") && (
+            {(field.type === "text" ||
+              field.type === "email" ||
+              field.type === "name") && (
               <Input
                 id={key}
                 type={field.type === "email" ? "email" : "text"}
@@ -244,6 +247,10 @@ export function FormFieldsRenderer({
                   </div>
                 )}
               />
+            )}
+
+            {!(field.type in FIELD_TYPES) && (
+              <Input id={key} type="text" disabled={disabled} {...form.register(key)} />
             )}
 
             {error && (
